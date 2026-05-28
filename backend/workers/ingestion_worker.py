@@ -153,6 +153,7 @@ async def _process(task: Task, document_id: str) -> dict:
             raise task.retry(exc=exc, countdown=30)
 
         # ── 10 & 11. Build points and upsert to Qdrant ────────────────────────
+        now_iso = datetime.now(timezone.utc).isoformat()
         qdrant_points = []
         for idx, (chunk, vector) in enumerate(zip(chunks, vectors)):
             page = chunk.metadata.get("page")
@@ -164,6 +165,7 @@ async def _process(task: Task, document_id: str) -> dict:
                 "tags": doc.tags,
                 "pageNumber": page,
                 "chunkIndex": idx,
+                "createdAt": now_iso,
             }
             qdrant_points.append(build_point(vector, payload))
 

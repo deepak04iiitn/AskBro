@@ -6,14 +6,14 @@ collection and its indexes are registered in one place.
 
 from models.audit_log import AuditLog
 from models.chunk import Chunk
-from models.document import Document
+from models.document import UploadedDocument
 from models.user import User
 from models.workspace import Workspace
 
 DOCUMENT_MODELS = [
     Workspace,
     User,
-    Document,
+    UploadedDocument,
     Chunk,
     AuditLog,
 ]

@@ -1,0 +1,23 @@
+# Virtual environment
+.venv/
+
+# Environment variables — never commit real secrets
+.env
+
+# Firebase service account key — contains private key, never commit
+serviceAccountKey.json
+*serviceAccount*.json
+*firebase*credentials*.json
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# uv
+.python-version
+
+# OS
+.DS_Store
+Thumbs.db

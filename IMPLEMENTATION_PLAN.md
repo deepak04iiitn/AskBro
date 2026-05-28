@@ -806,10 +806,10 @@ Implement deletion as a Celery task (`workers/cleanup_worker.py`) to handle larg
 
 ### Step 11: Frontend ? Project Bootstrap
 
-**Stack:** Next.js 14 (App Router) ? Tailwind CSS ? shadcn/ui ? Zustand ? TypeScript
+**Stack:** Next.js 14 (App Router) ? Tailwind CSS ? shadcn/ui ? Zustand ? JavaScript
 
 ```bash
-npx create-next-app@latest frontend --typescript --tailwind --app --src-dir
+npx create-next-app@latest frontend --js --tailwind --app --src-dir
 cd frontend
 npx shadcn-ui@latest init
 npm install zustand
@@ -820,39 +820,37 @@ npm install zustand
 frontend/src/
   app/
     (auth)/
-      create/page.tsx       ? Create workspace
-      login/page.tsx        ? Login
-    dashboard/page.tsx      ? Main app shell
-    upload/page.tsx         ? Upload page
-    layout.tsx              ? Root layout
-    page.tsx                ? Landing / redirect
+      create/page.jsx       ? Create workspace
+      login/page.jsx        ? Login
+    dashboard/page.jsx      ? Main app shell
+    upload/page.jsx         ? Upload page
+    layout.jsx              ? Root layout
+    page.jsx                ? Landing / redirect
   components/
     auth/
-      CreateWorkspaceForm.tsx
-      LoginForm.tsx
+      CreateWorkspaceForm.jsx
+      LoginForm.jsx
     chat/
-      ChatWindow.tsx
-      MessageBubble.tsx
-      CitationCard.tsx
-      ChatInput.tsx
+      ChatWindow.jsx
+      MessageBubble.jsx
+      CitationCard.jsx
+      ChatInput.jsx
     documents/
-      DocumentList.tsx
-      DocumentCard.tsx
-      StatusBadge.tsx
-      UploadZone.tsx
+      DocumentList.jsx
+      DocumentCard.jsx
+      StatusBadge.jsx
+      UploadZone.jsx
     layout/
-      Sidebar.tsx
-      Header.tsx
+      Sidebar.jsx
+      Header.jsx
   lib/
-    api.ts                  ? Typed API client
-    stream.ts               ? SSE stream consumer
-    auth.ts                 ? Token cookie helpers
+    api.js                  ? API client
+    stream.js               ? SSE stream consumer
+    auth.js                 ? Token helpers
   store/
-    useAuthStore.ts         ? Zustand: user + token
-    useDocumentStore.ts     ? Zustand: document list + polling
-    useChatStore.ts         ? Zustand: chat history
-  types/
-    index.ts                ? Shared TypeScript types
+    useAuthStore.js         ? Zustand: user + token
+    useDocumentStore.js     ? Zustand: document list + polling
+    useChatStore.js         ? Zustand: chat history
 ```
 
 **Environment variables (`frontend/.env.local`):**
@@ -864,9 +862,9 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
 ### Step 12: Frontend ? Auth Pages
 
-**Files:** `app/(auth)/create/page.tsx`, `app/(auth)/login/page.tsx`, `lib/auth.ts`
+**Files:** `app/(auth)/create/page.jsx`, `app/(auth)/login/page.jsx`, `lib/auth.js`
 
-**`lib/auth.ts`** ? token helpers:
+**`lib/auth.js`** ? token helpers:
 - `saveToken(token)` ? store JWT in `localStorage` (or `httpOnly` cookie via Next.js API route for production)
 - `getToken()` ? retrieve token
 - `clearToken()` ? logout
@@ -886,19 +884,19 @@ NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
 ### Step 13: Frontend ? API Client & State
 
-**File:** `lib/api.ts`
+**File:** `lib/api.js`
 
-Typed wrapper around `fetch` that:
+Wrapper around `fetch` that:
 - Prepends `NEXT_PUBLIC_API_URL` to every path
 - Attaches `Authorization: Bearer {token}` header automatically
 - Intercepts `401` responses ? clears token ? redirects to `/auth/login`
-- Exposes typed functions: `createWorkspace`, `login`, `listDocuments`, `uploadDocument`, `deleteDocument`, `getDocumentStatus`
+- Exposes functions: `createWorkspace`, `login`, `listDocuments`, `uploadDocument`, `deleteDocument`, `getDocumentStatus`
 
-**File:** `lib/stream.ts`
+**File:** `lib/stream.js`
 
 SSE consumer for the chat endpoint:
-```typescript
-async function* streamChat(query: string, documentIds?: string[]) {
+```javascript
+async function* streamChat(query, documentIds) {
   const res = await fetch(`${API_URL}/chat`, { method: "POST", ... })
   const reader = res.body.getReader()
   // yield parsed tokens until { done: true }
@@ -923,7 +921,7 @@ async function* streamChat(query: string, documentIds?: string[]) {
 
 ### Step 14: Frontend ? Dashboard & Chat UI
 
-**Files:** `app/dashboard/page.tsx`, `components/chat/*`, `components/layout/*`
+**Files:** `app/dashboard/page.jsx`, `components/chat/*`, `components/layout/*`
 
 **Dashboard layout (three-column):**
 ```
@@ -961,7 +959,7 @@ async function* streamChat(query: string, documentIds?: string[]) {
 
 ### Step 15: Frontend ? Document Upload & List UI
 
-**Files:** `app/upload/page.tsx`, `components/documents/*`
+**Files:** `app/upload/page.jsx`, `components/documents/*`
 
 **`UploadZone`:**
 - Drag-and-drop area (use `react-dropzone` or native drag events)

@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL
+import { createWorkspace, login } from '@/lib/api'
+import useAuthStore from '@/store/useAuthStore'
 
 export default function CreateWorkspaceForm() {
   const router = useRouter()
+  const setUser = useAuthStore((s) => s.setUser)
+
   const [form, setForm] = useState({
     name: '',
     owner_email: '',
@@ -16,7 +18,6 @@ export default function CreateWorkspaceForm() {
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [workspaceCode, setWorkspaceCode] = useState(null)
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -32,61 +33,27 @@ export default function CreateWorkspaceForm() {
       : []
 
     try {
-      const res = await fetch(`${API_URL}/workspaces/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          owner_email: form.owner_email,
-          password: form.password,
-          member_emails: memberEmails,
-        }),
+      const created = await createWorkspace({
+        name: form.name,
+        owner_email: form.owner_email,
+        password: form.password,
+        member_emails: memberEmails,
       })
 
-      const data = await res.json()
+      // Auto-login with the new workspace code
+      const { access_token } = await login({
+        workspace_code: created.workspace_code,
+        email: form.owner_email,
+        password: form.password,
+      })
 
-      if (!res.ok) {
-        setError(data.detail || 'Failed to create workspace.')
-        return
-      }
-
-      setWorkspaceCode(data.workspace_code)
-    } catch {
-      setError('Network error. Please try again.')
+      setUser(access_token)
+      router.replace('/dashboard')
+    } catch (err) {
+      setError(err.message || 'Failed to create workspace.')
     } finally {
       setLoading(false)
     }
-  }
-
-  // ── Success state — show workspace code ──────────────────────────────────────
-  if (workspaceCode) {
-    return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-sm text-center">
-          <div className="bg-white border border-zinc-200 rounded-xl p-8 shadow-sm">
-            <div className="w-12 h-12 bg-zinc-900 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-lg font-bold text-zinc-900 mb-1">Workspace created!</h2>
-            <p className="text-sm text-zinc-500 mb-6">Share this code with your team so they can log in.</p>
-
-            <div className="bg-zinc-50 border border-zinc-200 rounded-lg px-4 py-4 mb-6">
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">Workspace Code</p>
-              <p className="text-2xl font-bold text-zinc-900 tracking-widest">{workspaceCode}</p>
-            </div>
-
-            <button
-              onClick={() => router.push('/login')}
-              className="w-full py-2.5 text-sm font-semibold bg-zinc-900 text-white rounded-lg hover:bg-zinc-700 transition-colors"
-            >
-              Go to login
-            </button>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   // ── Form ─────────────────────────────────────────────────────────────────────

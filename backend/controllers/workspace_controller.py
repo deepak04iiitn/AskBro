@@ -1,5 +1,5 @@
+import bcrypt
 from fastapi import HTTPException, status
-from passlib.context import CryptContext
 
 from middleware.auth import create_access_token
 from models.user import User
@@ -16,13 +16,19 @@ from schemas.workspace import (
     TokenResponse,
 )
 
-_pwd = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def _hash_password(plain: str) -> str:
+    return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
+
+
+def _verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 # ── Create workspace ──────────────────────────────────────────────────────────
 
 async def create_workspace(req: WorkspaceCreateRequest) -> WorkspaceCreateResponse:
-    hashed = _pwd.hash(req.password)
+    hashed = _hash_password(req.password)
     workspace = Workspace(name=req.name, hashed_password=hashed)
     await workspace.insert()
 
@@ -55,7 +61,7 @@ async def login(req: LoginRequest) -> TokenResponse:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid workspace code or password.")
 
     # 2. Verify password
-    if not _pwd.verify(req.password, workspace.hashed_password):
+    if not _verify_password(req.password, workspace.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid workspace code or password.")
 
     # 3. Verify email belongs to this workspace
@@ -126,6 +132,6 @@ async def change_password(req: ChangePasswordRequest, current_user: CurrentUser)
     if not workspace:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Workspace not found.")
 
-    workspace.hashed_password = _pwd.hash(req.new_password)
+    workspace.hashed_password = _hash_password(req.new_password)
     await workspace.save()
     return {"message": "Password updated successfully."}

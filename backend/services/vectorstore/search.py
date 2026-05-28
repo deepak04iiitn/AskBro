@@ -15,10 +15,12 @@ def semantic_search(
     Returns up to top_k scored points.
     """
     client = get_qdrant_client()
-    return client.search(
+    # qdrant-client >= 1.9 replaced client.search() with client.query_points()
+    result = client.query_points(
         collection_name=settings.QDRANT_COLLECTION_NAME,
-        query_vector=query_vector,
+        query=query_vector,
         query_filter=qdrant_filter,
         limit=top_k,
         with_payload=True,
     )
+    return result.points

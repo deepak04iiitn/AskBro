@@ -1,48 +1,28 @@
 """
 Celery application factory.
 
-Broker & result backend: MongoDB (same cluster as the app — no extra service).
-Celery's MongoDB transport creates two collections automatically:
-  celery_broker.messages   — task queue
-  celery_results.celery_taskmeta — task results
+Broker & result backend: local MongoDB on localhost:27017.
+Atlas SRV URIs (mongodb+srv://) are not supported by Celery's MongoDB transport,
+so a separate local URI is used regardless of the main MONGODB_URI.
 """
+
+import sys
+from pathlib import Path
+
+# Ensure the backend/ directory is on sys.path regardless of where Celery
+# is invoked from, so all local modules (db, config, models, …) resolve.
+_backend_dir = str(Path(__file__).resolve().parent)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
 
 from celery import Celery
 
 from config.env import settings
 
-
-def _mongo_transport_url(uri: str, db_name: str) -> str:
-    """
-    Convert a standard MongoDB URI to the format Celery's MongoDB transport expects.
-
-    Standard:  mongodb+srv://user:pass@host/?appName=X
-    Celery:    mongodb://user:pass@host/db_name   (no +srv, no query params)
-
-    For Atlas SRV URIs we keep the host and credentials but switch to mongodb://
-    and append the target database name.
-    """
-    # Strip scheme variants
-    for scheme in ("mongodb+srv://", "mongodb://"):
-        if uri.startswith(scheme):
-            rest = uri[len(scheme):]
-            break
-    else:
-        rest = uri
-
-    # Drop query string (?appName=... etc.)
-    rest = rest.split("?")[0].rstrip("/")
-
-    return f"mongodb://{rest}/{db_name}"
-
-
-_broker_url = _mongo_transport_url(settings.MONGODB_URI, "celery_broker")
-_backend_url = _mongo_transport_url(settings.MONGODB_URI, "celery_results")
-
 celery_app = Celery(
     "askbro",
-    broker=_broker_url,
-    backend=_backend_url,
+    broker=settings.CELERY_BROKER_URL,
+    backend=settings.CELERY_RESULT_BACKEND,
     include=[
         "workers.ingestion_worker",
         "workers.cleanup_worker",

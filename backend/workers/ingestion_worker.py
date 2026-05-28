@@ -5,6 +5,16 @@ Full pipeline for a single uploaded document:
   download → load → chunk → enrich → embed → upsert to Qdrant → save Chunks → mark done
 """
 
+import sys
+from pathlib import Path
+
+# Add backend/ to sys.path so local packages (db, models, …) are importable
+# when Celery discovers this module as a console-script (uv run celery),
+# which does NOT add CWD to sys.path the way `python -m` does.
+_backend_dir = str(Path(__file__).resolve().parent.parent)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
 import asyncio
 import tempfile
 import traceback
@@ -14,7 +24,6 @@ from pathlib import Path
 from beanie import PydanticObjectId
 from bson import ObjectId
 from celery import Task
-from motor.motor_asyncio import AsyncIOMotorClient
 
 from celery_app import celery_app
 from config.env import settings
@@ -41,20 +50,11 @@ _LOADER_MAP = {
 
 # ── helpers ──────────────────────────────────────────────────────────────────
 
-def _run(coro):
-    """Run an async coroutine from sync Celery context."""
-    return asyncio.get_event_loop().run_until_complete(coro)
-
-
-async def _init_beanie():
-    """Initialise Beanie inside the Celery worker process."""
-    from beanie import init_beanie
-    from db.base import DOCUMENT_MODELS
-
-    client = AsyncIOMotorClient(settings.MONGODB_URI)
-    db = client[settings.MONGODB_DB_NAME]
-    await init_beanie(database=db, document_models=DOCUMENT_MODELS)
-    return client
+async def _init_db():
+    """Initialise Beanie + Motor singleton inside the Celery worker process."""
+    from db.session import init_db, get_motor_client
+    await init_db()
+    return get_motor_client()
 
 
 async def _download_gridfs(gridfs_file_id: str) -> bytes:
@@ -85,16 +85,14 @@ def process_document(self: Task, document_id: str) -> dict:
     Returns:
         {"status": "completed", "chunk_count": N}
     """
-    mongo_client = _run(_init_beanie())
-    tmp_path: Path | None = None
+    async def _task():
+        mongo_client = await _init_db()
+        try:
+            return await _process(self, document_id)
+        finally:
+            mongo_client.close()
 
-    try:
-        result = _run(_process(self, document_id))
-        return result
-    finally:
-        mongo_client.close()
-        if tmp_path and tmp_path.exists():
-            tmp_path.unlink(missing_ok=True)
+    return asyncio.run(_task())
 
 
 async def _process(task: Task, document_id: str) -> dict:

@@ -48,6 +48,8 @@ async def handle_chat(
 
     retrieved_doc_ids: list[str] = []
 
+    import json as _json
+
     try:
         async for sse_data, doc_ids in run_rag_chain(
             query=request.query,
@@ -61,10 +63,12 @@ async def handle_chat(
 
     except Exception as exc:
         logger.error("RAG chain failed", error=str(exc), workspace_id=workspace_id)
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="The AI service encountered an error. Please try again.",
-        ) from exc
+        # The HTTP 200 + SSE headers are already sent by the time we enter the
+        # generator body, so raising HTTPException would produce a "response
+        # already started" crash.  Yield an error SSE event instead so the
+        # frontend can surface the message.
+        error_event = _json.dumps({"error": "The AI service encountered an error. Please try again.", "done": True})
+        yield f"data: {error_event}\n\n"
 
     finally:
         # ── Always write audit log, even on partial failure ───────────────────

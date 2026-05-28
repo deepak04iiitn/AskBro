@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
@@ -13,24 +13,24 @@ export default function DashboardPage() {
   const hydrate = useAuthStore((s) => s.hydrate)
   const user = useAuthStore((s) => s.user)
   const fetchDocuments = useDocumentStore((s) => s.fetchDocuments)
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     hydrate()
+    setHydrated(true)
   }, [hydrate])
 
   useEffect(() => {
-    if (user === null) {
-      // hydrate() has run but found no valid token
+    if (!hydrated) return
+    if (!user) {
       router.replace('/login')
       return
     }
-    if (user) {
-      fetchDocuments()
-    }
-  }, [user, router, fetchDocuments])
+    fetchDocuments()
+  }, [hydrated, user, router, fetchDocuments])
 
-  // Brief loading flash while hydrating
-  if (user === null) return null
+  // Wait until hydration has run before deciding to redirect
+  if (!hydrated || !user) return null
 
   return (
     <div className="flex flex-col h-screen bg-zinc-50 overflow-hidden">

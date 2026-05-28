@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import useAuthStore from '@/store/useAuthStore'
@@ -14,17 +14,20 @@ export default function UploadPage() {
   const hydrate = useAuthStore((s) => s.hydrate)
   const user = useAuthStore((s) => s.user)
   const fetchDocuments = useDocumentStore((s) => s.fetchDocuments)
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     hydrate()
+    setHydrated(true)
   }, [hydrate])
 
   useEffect(() => {
-    if (user === null) { router.replace('/login'); return }
-    if (user) fetchDocuments()
-  }, [user, router, fetchDocuments])
+    if (!hydrated) return
+    if (!user) { router.replace('/login'); return }
+    fetchDocuments()
+  }, [hydrated, user, router, fetchDocuments])
 
-  if (user === null) return null
+  if (!hydrated || !user) return null
 
   return (
     <div className="flex flex-col h-screen bg-zinc-50 overflow-hidden">

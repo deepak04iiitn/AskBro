@@ -145,7 +145,7 @@ async def list_documents(
 async def delete_document(
     document_id: str,
     current_user: CurrentUser,
-) -> DocumentDeleteResponse:
+) -> None:
     doc = await _get_workspace_doc(document_id, current_user)
 
     # Only owner or the uploader can delete

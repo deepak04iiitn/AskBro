@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { saveToken } from '@/lib/auth'
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL
+import { login } from '@/lib/api'
+import useAuthStore from '@/store/useAuthStore'
 
 export default function LoginForm() {
   const router = useRouter()
+  const setUser = useAuthStore((s) => s.setUser)
   const [form, setForm] = useState({ workspace_code: '', email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,23 +23,11 @@ export default function LoginForm() {
     setLoading(true)
 
     try {
-      const res = await fetch(`${API_URL}/workspaces/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.detail || 'Login failed. Please check your credentials.')
-        return
-      }
-
-      saveToken(data.access_token)
+      const data = await login(form)
+      setUser(data.access_token)   // saves token + populates Zustand store
       router.push('/dashboard')
-    } catch {
-      setError('Network error. Please try again.')
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.')
     } finally {
       setLoading(false)
     }

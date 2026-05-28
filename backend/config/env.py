@@ -43,13 +43,18 @@ class Settings(BaseSettings):
     LLM_MODEL_NAME: str = "Qwen/Qwen3-32B"
     LLM_API_KEY: str = "EMPTY"
     LLM_TIMEOUT_SECONDS: int = 30
-    LLM_MAX_TOKENS: int = 1024
+    LLM_MAX_TOKENS: int = 8192
     LLM_TEMPERATURE: float = 0.1
 
     # ── JWT ───────────────────────────────────────────────────────────────────
     SECRET_KEY: str = Field(..., min_length=32, description="Long random string for JWT signing")
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
+    # ── Celery ────────────────────────────────────────────────────────────────
+    # kombu 5.3+ supports mongodb+srv:// — append the target db name to the path
+    CELERY_BROKER_URL: str = "mongodb://localhost:27017/celery_broker"
+    CELERY_RESULT_BACKEND: str = "mongodb://localhost:27017/celery_results"
 
     # ── Rate limiting ─────────────────────────────────────────────────────────
     RATE_LIMIT_REQUESTS_PER_MINUTE: int = 30

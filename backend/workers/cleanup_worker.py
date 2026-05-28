@@ -8,12 +8,18 @@ Removes all artefacts for a document that has been deleted via the API:
   4. UploadedDocument record itself
 """
 
+import sys
+from pathlib import Path
+
+_backend_dir = str(Path(__file__).resolve().parent.parent)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
 import asyncio
 from datetime import datetime, timezone
 
 from beanie import PydanticObjectId
 from bson import ObjectId
-from motor.motor_asyncio import AsyncIOMotorClient
 from qdrant_client.models import FieldCondition, Filter, MatchValue
 
 from celery_app import celery_app
@@ -25,18 +31,10 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-def _run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
-
-
-async def _init_beanie():
-    from beanie import init_beanie
-    from db.base import DOCUMENT_MODELS
-
-    client = AsyncIOMotorClient(settings.MONGODB_URI)
-    db = client[settings.MONGODB_DB_NAME]
-    await init_beanie(database=db, document_models=DOCUMENT_MODELS)
-    return client
+async def _init_db():
+    from db.session import init_db, get_motor_client
+    await init_db()
+    return get_motor_client()
 
 
 @celery_app.task(
@@ -48,11 +46,14 @@ async def _init_beanie():
     acks_late=True,
 )
 def delete_document(self, document_id: str) -> dict:
-    mongo_client = _run(_init_beanie())
-    try:
-        return _run(_cleanup(document_id))
-    finally:
-        mongo_client.close()
+    async def _task():
+        mongo_client = await _init_db()
+        try:
+            return await _cleanup(document_id)
+        finally:
+            mongo_client.close()
+
+    return asyncio.run(_task())
 
 
 async def _cleanup(document_id: str) -> dict:

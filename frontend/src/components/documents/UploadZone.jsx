@@ -1,8 +1,8 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { uploadDocument } from '@/lib/api'
+import { getDocumentStatus, uploadDocumentWithProgress } from '@/lib/api'
 import useDocumentStore from '@/store/useDocumentStore'
 
 const ACCEPTED_EXTENSIONS = ['pdf', 'docx', 'md', 'txt']
@@ -17,9 +17,118 @@ function getExt(filename) {
   return filename.split('.').pop()?.toLowerCase() ?? ''
 }
 
-// ── States ────────────────────────────────────────────────────────────────────
-// idle | selected | uploading | processing | completed | failed
+// ── Processing stages shown after upload finishes ─────────────────────────────
+const STAGES = [
+  { id: 'upload',   label: 'Uploading file',        duration: null }, // driven by XHR
+  { id: 'extract',  label: 'Extracting text',        duration: 4000 },
+  { id: 'embed',    label: 'Generating embeddings',  duration: 12000 },
+  { id: 'index',    label: 'Indexing to vector store', duration: 4000 },
+]
 
+// ── Animated progress bar ──────────────────────────────────────────────────────
+function ProgressBar({ value, animated = false, color = 'bg-zinc-900' }) {
+  return (
+    <div className="w-full bg-zinc-100 rounded-full h-1.5 overflow-hidden">
+      <div
+        className={`h-full rounded-full transition-all duration-500 ease-out ${color} ${animated ? 'animate-pulse' : ''}`}
+        style={{ width: `${Math.min(100, Math.max(2, value))}%` }}
+      />
+    </div>
+  )
+}
+
+// ── Stage icon ─────────────────────────────────────────────────────────────────
+function StageIcon({ status }) {
+  if (status === 'done') return (
+    <div className="w-5 h-5 rounded-full bg-zinc-900 flex items-center justify-center shrink-0">
+      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+  )
+  if (status === 'active') return (
+    <div className="w-5 h-5 rounded-full border-2 border-zinc-900 flex items-center justify-center shrink-0">
+      <span className="w-2 h-2 rounded-full bg-zinc-900 animate-ping" />
+    </div>
+  )
+  return (
+    <div className="w-5 h-5 rounded-full border-2 border-zinc-200 shrink-0" />
+  )
+}
+
+// ── Main progress tracker (shown during upload + processing) ──────────────────
+function ProgressTracker({ uploadPct, processingStage, filename }) {
+  // uploadPct: 0-100  |  processingStage: 0=uploading, 1-3=active processing, >=4=all done
+  // Overall: upload occupies 0-25%, the 3 processing stages split 25-100%
+  // Progress only advances when a stage is COMPLETED, not when it starts.
+  const overallPct = processingStage === 0
+    ? uploadPct * 0.25
+    : processingStage >= STAGES.length
+      ? 100
+      : 25 + ((processingStage - 1) / (STAGES.length - 1)) * 75
+
+  return (
+    <div className="w-full space-y-6">
+      {/* Filename */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-zinc-100 flex items-center justify-center shrink-0">
+          <svg className="w-5 h-5 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-zinc-900 truncate">{filename}</p>
+          <p className="text-xs text-zinc-400 mt-0.5">{Math.round(overallPct)}% complete</p>
+        </div>
+      </div>
+
+      {/* Overall bar */}
+      <ProgressBar value={overallPct} color="bg-zinc-900" />
+
+      {/* Stage list */}
+      <div className="space-y-3">
+        {STAGES.map((stage, i) => {
+          const status =
+            i < processingStage ? 'done' :
+            i === processingStage ? 'active' :
+            'waiting'
+
+          return (
+            <div key={stage.id} className="flex items-center gap-3">
+              <StageIcon status={status} />
+              <div className="flex-1 min-w-0">
+                <p className={`text-xs font-medium ${
+                  status === 'done' ? 'text-zinc-400 line-through' :
+                  status === 'active' ? 'text-zinc-900' :
+                  'text-zinc-300'
+                }`}>
+                  {stage.label}
+                </p>
+                {/* Per-stage bar for active upload stage */}
+                {status === 'active' && stage.id === 'upload' && (
+                  <div className="mt-1.5">
+                    <ProgressBar value={uploadPct} color="bg-zinc-600" />
+                  </div>
+                )}
+                {/* Indeterminate bar for active processing stages */}
+                {status === 'active' && stage.id !== 'upload' && (
+                  <div className="mt-1.5">
+                    <ProgressBar value={60} animated color="bg-zinc-400" />
+                  </div>
+                )}
+              </div>
+              {status === 'done' && (
+                <span className="text-[10px] text-zinc-300 shrink-0">done</span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Main component ─────────────────────────────────────────────────────────────
 export default function UploadZone() {
   const router = useRouter()
   const inputRef = useRef(null)
@@ -30,19 +139,42 @@ export default function UploadZone() {
   const [file, setFile] = useState(null)
   const [tags, setTags] = useState('')
   const [dragOver, setDragOver] = useState(false)
-  const [phase, setPhase] = useState('idle') // idle | selected | uploading | processing | completed | failed
+  const [phase, setPhase] = useState('idle') // idle | selected | active | completed | failed
   const [error, setError] = useState('')
-  const [result, setResult] = useState(null) // { document_id, chunk_count }
+  const [uploadPct, setUploadPct] = useState(0)
+  const [processingStage, setProcessingStage] = useState(0) // 0=upload, 1=extract, 2=embed, 3=index
+  const [result, setResult] = useState(null)
 
-  // ── File validation ──────────────────────────────────────────────────────────
+  // Advance through fake processing stages after upload completes
+  useEffect(() => {
+    if (phase !== 'active') return
+    if (processingStage === 0) return // still uploading, driven by XHR
+
+    let stageIdx = processingStage
+    const advance = () => {
+      stageIdx++
+      if (stageIdx < STAGES.length) {
+        setProcessingStage(stageIdx)
+      }
+    }
+
+    // Schedule advances based on stage durations, but stop if real status resolves first
+    const timers = []
+    let elapsed = 0
+    for (let i = processingStage; i < STAGES.length - 1; i++) {
+      elapsed += STAGES[i].duration ?? 0
+      timers.push(setTimeout(() => setProcessingStage(i + 1), elapsed))
+    }
+    return () => timers.forEach(clearTimeout)
+  }, [phase, processingStage])
+
+  // ── File validation ────────────────────────────────────────────────────────
   function validateFile(f) {
     const ext = getExt(f.name)
-    if (!ACCEPTED_EXTENSIONS.includes(ext)) {
+    if (!ACCEPTED_EXTENSIONS.includes(ext))
       return `File type .${ext} is not supported. Accepted: ${ACCEPTED_EXTENSIONS.join(', ')}`
-    }
-    if (f.size > MAX_SIZE_MB * 1024 * 1024) {
-      return `File is too large (${formatBytes(f.size)}). Max size is ${MAX_SIZE_MB} MB.`
-    }
+    if (f.size > MAX_SIZE_MB * 1024 * 1024)
+      return `File too large (${formatBytes(f.size)}). Max is ${MAX_SIZE_MB} MB.`
     return null
   }
 
@@ -54,29 +186,30 @@ export default function UploadZone() {
     setPhase('selected')
   }
 
-  // ── Drag events ──────────────────────────────────────────────────────────────
   function onDragOver(e) { e.preventDefault(); setDragOver(true) }
   function onDragLeave() { setDragOver(false) }
   function onDrop(e) {
-    e.preventDefault()
-    setDragOver(false)
+    e.preventDefault(); setDragOver(false)
     const dropped = e.dataTransfer.files[0]
     if (dropped) selectFile(dropped)
   }
 
-  // ── Submit ───────────────────────────────────────────────────────────────────
+  // ── Upload ────────────────────────────────────────────────────────────────
   async function handleUpload() {
-    if (!file || phase === 'uploading') return
-    setPhase('uploading')
+    if (!file || phase === 'active') return
+    setPhase('active')
     setError('')
+    setUploadPct(0)
+    setProcessingStage(0)
 
     const parsedTags = tags.split(',').map((t) => t.trim()).filter(Boolean)
 
     try {
-      const data = await uploadDocument(file, parsedTags)
+      const data = await uploadDocumentWithProgress(file, parsedTags, (pct) => {
+        setUploadPct(pct)
+      })
       const docId = data.document_id
 
-      // Optimistically add to store
       addDocument({
         document_id: docId,
         original_filename: file.name,
@@ -88,27 +221,27 @@ export default function UploadZone() {
         created_at: new Date().toISOString(),
       })
 
-      setPhase('processing')
+      // Move to processing stage 1
+      setUploadPct(100)
+      setProcessingStage(1)
       setResult({ document_id: docId })
-
-      // Poll until done/failed
       startPolling(docId)
 
-      // Listen via polling — check every 3s ourselves here for UI feedback
+      // Poll for real completion
       const interval = setInterval(async () => {
-        const { getDocumentStatus } = await import('@/lib/api')
         try {
           const status = await getDocumentStatus(docId)
           if (status.status === 'completed') {
             clearInterval(interval)
             setResult({ document_id: docId, chunk_count: status.chunk_count })
-            setPhase('completed')
+            setProcessingStage(STAGES.length) // all done
             updateDocument(docId, { status: 'completed', chunk_count: status.chunk_count })
+            setTimeout(() => setPhase('completed'), 600)
           } else if (status.status === 'failed') {
             clearInterval(interval)
             setError(status.error_message || 'Processing failed.')
-            setPhase('failed')
             updateDocument(docId, { status: 'failed', error_message: status.error_message })
+            setPhase('failed')
           }
         } catch { /* keep polling */ }
       }, 3000)
@@ -119,8 +252,7 @@ export default function UploadZone() {
     }
   }
 
-  // ── Render ───────────────────────────────────────────────────────────────────
-
+  // ── Completed ─────────────────────────────────────────────────────────────
   if (phase === 'completed') {
     return (
       <div className="text-center py-10">
@@ -135,7 +267,7 @@ export default function UploadZone() {
         )}
         <div className="flex justify-center gap-3 mt-6">
           <button
-            onClick={() => { setFile(null); setPhase('idle'); setResult(null); setTags('') }}
+            onClick={() => { setFile(null); setPhase('idle'); setResult(null); setTags(''); setUploadPct(0); setProcessingStage(0) }}
             className="px-4 py-2 text-sm font-medium border border-zinc-200 rounded-lg text-zinc-700 hover:bg-zinc-50 transition-colors"
           >
             Upload another
@@ -151,6 +283,20 @@ export default function UploadZone() {
     )
   }
 
+  // ── Active (uploading / processing) ───────────────────────────────────────
+  if (phase === 'active') {
+    return (
+      <div className="bg-white border border-zinc-200 rounded-2xl px-6 py-8">
+        <ProgressTracker
+          uploadPct={uploadPct}
+          processingStage={processingStage}
+          filename={file?.name ?? ''}
+        />
+      </div>
+    )
+  }
+
+  // ── Idle / selected ───────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
       {/* Drop zone */}
@@ -161,10 +307,9 @@ export default function UploadZone() {
         onClick={() => phase === 'idle' && inputRef.current?.click()}
         className={`
           relative flex flex-col items-center justify-center gap-3
-          border-2 border-dashed rounded-2xl px-6 py-14 cursor-pointer
-          transition-colors select-none
+          border-2 border-dashed rounded-2xl px-6 py-14 transition-colors select-none
+          ${phase === 'idle' ? 'cursor-pointer' : ''}
           ${dragOver ? 'border-zinc-500 bg-zinc-50' : 'border-zinc-300 bg-white hover:border-zinc-400 hover:bg-zinc-50'}
-          ${phase !== 'idle' && phase !== 'selected' ? 'cursor-default' : ''}
         `}
       >
         <input
@@ -175,21 +320,12 @@ export default function UploadZone() {
           onChange={(e) => { const f = e.target.files?.[0]; if (f) selectFile(f) }}
         />
 
-        {/* Icon */}
         <div className="w-12 h-12 rounded-xl bg-zinc-100 flex items-center justify-center">
-          {phase === 'uploading' || phase === 'processing' ? (
-            <svg className="w-6 h-6 text-zinc-400 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          ) : (
-            <svg className="w-6 h-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-            </svg>
-          )}
+          <svg className="w-6 h-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+          </svg>
         </div>
 
-        {/* Copy */}
         {phase === 'idle' && (
           <>
             <div className="text-center">
@@ -202,8 +338,7 @@ export default function UploadZone() {
           </>
         )}
 
-        {/* Selected file info */}
-        {(phase === 'selected') && file && (
+        {phase === 'selected' && file && (
           <div className="text-center">
             <p className="text-sm font-semibold text-zinc-800">{file.name}</p>
             <p className="text-xs text-zinc-400 mt-0.5">{formatBytes(file.size)}</p>
@@ -216,18 +351,6 @@ export default function UploadZone() {
           </div>
         )}
 
-        {/* Uploading / processing */}
-        {phase === 'uploading' && (
-          <p className="text-sm font-medium text-zinc-700">Uploading…</p>
-        )}
-        {phase === 'processing' && (
-          <div className="text-center">
-            <p className="text-sm font-semibold text-zinc-800">Processing</p>
-            <p className="text-xs text-zinc-400 mt-0.5">Chunking and indexing your document…</p>
-          </div>
-        )}
-
-        {/* Failed overlay */}
         {phase === 'failed' && (
           <div className="text-center">
             <p className="text-sm font-semibold text-red-600">Upload failed</p>
@@ -241,7 +364,6 @@ export default function UploadZone() {
         )}
       </div>
 
-      {/* Error */}
       {error && (
         <div className="flex items-start gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
           <span className="mt-0.5">⚠</span>
@@ -249,8 +371,7 @@ export default function UploadZone() {
         </div>
       )}
 
-      {/* Tags input — only show when file selected */}
-      {(phase === 'selected') && (
+      {phase === 'selected' && (
         <div>
           <label className="block text-xs font-semibold text-zinc-700 uppercase tracking-wide mb-1.5">
             Tags <span className="normal-case font-normal text-zinc-400">(comma-separated, optional)</span>
@@ -264,7 +385,6 @@ export default function UploadZone() {
         </div>
       )}
 
-      {/* Upload button */}
       {phase === 'selected' && (
         <button
           onClick={handleUpload}

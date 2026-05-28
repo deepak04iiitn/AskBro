@@ -1,18 +1,21 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import StatusBadge from '@/components/documents/StatusBadge'
+import MembersPanel from '@/components/workspace/MembersPanel'
 
 export default function Sidebar() {
-  const router = useRouter()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const documents = useDocumentStore((s) => s.documents)
+  const [showMembers, setShowMembers] = useState(false)
 
   return (
+    <>
+    {showMembers && <MembersPanel onClose={() => setShowMembers(false)} />}
     <aside className="w-64 shrink-0 border-r border-zinc-200 bg-white flex flex-col h-full">
       {/* Workspace info */}
       <div className="px-4 py-5 border-b border-zinc-100">
@@ -55,6 +58,17 @@ export default function Sidebar() {
           Upload Document
         </Link>
 
+        {/* Members — visible to all, add/remove restricted to owner inside the panel */}
+        <button
+          onClick={() => setShowMembers(true)}
+          className="flex items-center justify-center gap-2 w-full py-2 text-xs font-medium text-zinc-600 border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0 015-3.87m6-4a4 4 0 11-8 0 4 4 0 018 0zm6 0a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          {user?.role === 'owner' ? 'Manage Members' : 'View Members'}
+        </button>
+
         <button
           onClick={logout}
           className="w-full py-2 text-xs font-medium text-zinc-500 rounded-lg hover:bg-zinc-50 hover:text-zinc-800 transition-colors"
@@ -63,6 +77,7 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   )
 }
 

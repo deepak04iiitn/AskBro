@@ -16,17 +16,16 @@ from motor.motor_asyncio import AsyncIOMotorGridFSBucket
 from config.env import settings
 from db.session import get_motor_client
 
-_bucket: AsyncIOMotorGridFSBucket | None = None
-
 
 def get_gridfs_bucket() -> AsyncIOMotorGridFSBucket:
-    """Return the GridFS bucket. Requires init_db() to have run first."""
-    global _bucket
-    if _bucket is None:
-        client = get_motor_client()
-        db = client[settings.MONGODB_DB_NAME]
-        _bucket = AsyncIOMotorGridFSBucket(
-            db,
-            bucket_name=settings.GRIDFS_BUCKET_NAME,
-        )
-    return _bucket
+    """Return a GridFS bucket bound to the current Motor client.
+
+    Not cached — Motor objects are tied to the asyncio event loop that was
+    running when they were created. Celery workers spin up a new event loop
+    per task via asyncio.run(), so caching across calls would hand back a
+    bucket bound to a closed loop.  AsyncIOMotorGridFSBucket is a thin
+    wrapper and cheap to construct.
+    """
+    client = get_motor_client()
+    db = client[settings.MONGODB_DB_NAME]
+    return AsyncIOMotorGridFSBucket(db, bucket_name=settings.GRIDFS_BUCKET_NAME)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import StatusBadge from './StatusBadge'
 import useDocumentStore from '@/store/useDocumentStore'
 
@@ -21,6 +21,37 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString(undefined, {
     month: 'short', day: 'numeric', year: 'numeric',
   })
+}
+
+// Animated indeterminate bar shown while a document is processing
+function ProcessingBar() {
+  const [width, setWidth] = useState(8)
+
+  useEffect(() => {
+    // Slowly crawl toward 85% — never reaches 100 until actually done
+    const interval = setInterval(() => {
+      setWidth((w) => {
+        if (w >= 85) return w
+        return w + (85 - w) * 0.04 // eases toward 85
+      })
+    }, 800)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="mt-2.5 space-y-1">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-zinc-400 font-medium">Processing…</span>
+        <span className="text-[10px] text-zinc-300">{Math.round(width)}%</span>
+      </div>
+      <div className="w-full h-1 bg-zinc-100 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-zinc-400 rounded-full transition-all duration-700 ease-out"
+          style={{ width: `${width}%` }}
+        />
+      </div>
+    </div>
+  )
 }
 
 export default function DocumentCard({ doc }) {
@@ -82,6 +113,9 @@ export default function DocumentCard({ doc }) {
             ))}
           </div>
         )}
+
+        {/* Processing bar */}
+        {doc.status === 'processing' && <ProcessingBar />}
 
         {/* Error message */}
         {doc.status === 'failed' && doc.error_message && (

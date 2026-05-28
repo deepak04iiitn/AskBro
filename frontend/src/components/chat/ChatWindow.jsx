@@ -33,7 +33,9 @@ export default function ChatWindow() {
 
     try {
       for await (const event of streamChat(query)) {
-        if (event.done && event.citations !== undefined) {
+        if (event.error) {
+          appendToken('\n\n⚠ ' + event.error)
+        } else if (event.done && event.citations !== undefined) {
           setCitations(event.citations)
         } else if (event.token) {
           appendToken(event.token)

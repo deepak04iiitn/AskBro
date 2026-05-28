@@ -22,11 +22,15 @@
   - [Step 8: Qdrant Vector Store Setup](#step-8-qdrant-vector-store-setup)
   - [Step 9: RAG Chain & Chat Endpoint](#step-9-rag-chain--chat-endpoint)
   - [Step 10: Document Listing & Deletion](#step-10-document-listing--deletion)
-  - [Step 11: Frontend (Next.js)](#step-11-frontend-nextjs)
-5. [Phase 2 ??? Retrieval Quality](#5-phase-2--retrieval-quality)
-  - [Step 12: BM25 + Hybrid Search](#step-12-bm25--hybrid-search)
-  - [Step 13: BGE Reranker](#step-13-bge-reranker)
-  - [Step 14: Metadata Filtering UI](#step-14-metadata-filtering-ui)
+  - [Step 11: Frontend ? Project Bootstrap](#step-11-frontend--project-bootstrap)
+  - [Step 12: Frontend ? Auth Pages](#step-12-frontend--auth-pages)
+  - [Step 13: Frontend ? API Client & State](#step-13-frontend--api-client--state)
+  - [Step 14: Frontend ? Dashboard & Chat UI](#step-14-frontend--dashboard--chat-ui)
+  - [Step 15: Frontend ? Document Upload & List UI](#step-15-frontend--document-upload--list-ui)
+5. [Phase 2 ? Retrieval Quality](#5-phase-2--retrieval-quality)
+  - [Step 16: BM25 + Hybrid Search](#step-16-bm25--hybrid-search)
+  - [Step 17: BGE Reranker](#step-17-bge-reranker)
+  - [Step 18: Metadata Filtering UI](#step-18-metadata-filtering-ui)
 6. [Phase 3 ??? Integrations](#6-phase-3--integrations)
 7. [Phase 4 ??? Analytics](#7-phase-4--analytics)
 8. [Testing Strategy](#8-testing-strategy)
@@ -800,73 +804,185 @@ Implement deletion as a Celery task (`workers/cleanup_worker.py`) to handle larg
 
 ---
 
-### Step 11: Frontend (Next.js)
+### Step 11: Frontend ? Project Bootstrap
 
-**Directory:** `frontend/`
+**Stack:** Next.js 14 (App Router) ? Tailwind CSS ? shadcn/ui ? Zustand ? TypeScript
 
-#### Pages to build
+```bash
+npx create-next-app@latest frontend --typescript --tailwind --app --src-dir
+cd frontend
+npx shadcn-ui@latest init
+npm install zustand
+```
 
+**Directory structure to create:**
+```
+frontend/src/
+  app/
+    (auth)/
+      create/page.tsx       ? Create workspace
+      login/page.tsx        ? Login
+    dashboard/page.tsx      ? Main app shell
+    upload/page.tsx         ? Upload page
+    layout.tsx              ? Root layout
+    page.tsx                ? Landing / redirect
+  components/
+    auth/
+      CreateWorkspaceForm.tsx
+      LoginForm.tsx
+    chat/
+      ChatWindow.tsx
+      MessageBubble.tsx
+      CitationCard.tsx
+      ChatInput.tsx
+    documents/
+      DocumentList.tsx
+      DocumentCard.tsx
+      StatusBadge.tsx
+      UploadZone.tsx
+    layout/
+      Sidebar.tsx
+      Header.tsx
+  lib/
+    api.ts                  ? Typed API client
+    stream.ts               ? SSE stream consumer
+    auth.ts                 ? Token cookie helpers
+  store/
+    useAuthStore.ts         ? Zustand: user + token
+    useDocumentStore.ts     ? Zustand: document list + polling
+    useChatStore.ts         ? Zustand: chat history
+  types/
+    index.ts                ? Shared TypeScript types
+```
 
-| Route          | Description                      |
-| -------------- | -------------------------------- |
-| `/`            | Landing / auth choice screen     |
-| `/auth/create` | Create new workspace form        |
-| `/auth/login`  | Login to existing workspace form |
-| `/dashboard`   | Main app ??? chat + document list  |
-| `/upload`      | Document upload page             |
+**Environment variables (`frontend/.env.local`):**
+```
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+```
 
+---
 
-#### Key components
+### Step 12: Frontend ? Auth Pages
 
-**Auth pages:**
+**Files:** `app/(auth)/create/page.tsx`, `app/(auth)/login/page.tsx`, `lib/auth.ts`
 
-- `CreateWorkspaceForm` ??? workspace name, password, email list input
-- `LoginForm` ??? workspace ID, email, password
-- JWT token stored in `httpOnly` cookie (not localStorage)
+**`lib/auth.ts`** ? token helpers:
+- `saveToken(token)` ? store JWT in `localStorage` (or `httpOnly` cookie via Next.js API route for production)
+- `getToken()` ? retrieve token
+- `clearToken()` ? logout
+- `getPayload()` ? decode JWT claims without verification (for reading `email`, `role`, `workspace_code`)
 
-**Dashboard layout:**
+**`CreateWorkspaceForm`:**
+- Fields: workspace name, owner email, password, member emails (add one by one or comma-separated)
+- On submit ? `POST /workspaces/create`
+- On success ? show workspace code in a prominent callout ("Share this code with your team: WSP-XXXX") ? redirect to `/auth/login`
 
-- Left sidebar: document list with status badges, upload button
-- Main area: chat interface
-- Right panel: source citations from last response
+**`LoginForm`:**
+- Fields: workspace code (e.g. WSP-A3F9), email, password
+- On submit ? `POST /workspaces/auth/login`
+- On success ? save JWT ? redirect to `/dashboard`
 
-**Chat interface:**
+---
 
-- Input box with send button
-- Message list (user + assistant turns)
-- Streaming text display (consume SSE token by token)
-- Citations shown as expandable cards below each assistant response
+### Step 13: Frontend ? API Client & State
 
-**Document upload:**
+**File:** `lib/api.ts`
 
-- Drag-and-drop or file picker
-- Accepted types: PDF, DOCX, MD, TXT
-- Upload progress indicator
-- Poll `/documents/{id}/status` every 3s until `completed` or `failed`
-- Show chunk count when done
+Typed wrapper around `fetch` that:
+- Prepends `NEXT_PUBLIC_API_URL` to every path
+- Attaches `Authorization: Bearer {token}` header automatically
+- Intercepts `401` responses ? clears token ? redirects to `/auth/login`
+- Exposes typed functions: `createWorkspace`, `login`, `listDocuments`, `uploadDocument`, `deleteDocument`, `getDocumentStatus`
 
-**Document list:**
+**File:** `lib/stream.ts`
 
-- Table/card list of uploaded docs
-- Status badge: pending (grey) ??? processing (yellow spinner) ??? completed (green) ??? failed (red)
-- Delete button (confirm dialog)
-- Filter by status/tags
+SSE consumer for the chat endpoint:
+```typescript
+async function* streamChat(query: string, documentIds?: string[]) {
+  const res = await fetch(`${API_URL}/chat`, { method: "POST", ... })
+  const reader = res.body.getReader()
+  // yield parsed tokens until { done: true }
+}
+```
 
-#### API client
+**`useAuthStore`** (Zustand):
+- `user: CurrentUser | null`
+- `setUser(user)`, `logout()`
+- Hydrates from token on app load
 
-Create a typed API client (`lib/api.ts`) that:
+**`useDocumentStore`** (Zustand):
+- `documents: Document[]`
+- `fetchDocuments()`, `addDocument(doc)`, `removeDocument(id)`
+- `startPolling(docId)` ? polls `GET /documents/{id}/status` every 3s; stops when status is `completed` or `failed`
 
-- Attaches `Authorization: Bearer {token}` to every request
-- Handles 401 by redirecting to `/auth/login`
-- Provides `streamChat(query)` that returns an async iterator of SSE tokens
+**`useChatStore`** (Zustand):
+- `messages: Message[]`
+- `addMessage(msg)`, `appendToken(token)`, `setCitations(citations)`
 
-#### State management
+---
 
-Use React Context or Zustand (lightweight) for:
+### Step 14: Frontend ? Dashboard & Chat UI
 
-- Current user / token
-- Active workspace info
-- Document list (with polling for processing statuses)
+**Files:** `app/dashboard/page.tsx`, `components/chat/*`, `components/layout/*`
+
+**Dashboard layout (three-column):**
+```
+????????????????????????????????????????????????????????????
+?   Sidebar   ?       Chat Window         ?  Citations     ?
+?             ?                           ?  Panel         ?
+? Doc list    ?  Message history          ?                ?
+? + Upload    ?  + streaming response     ?  Source cards  ?
+?   button    ?  + input box              ?  per response  ?
+????????????????????????????????????????????????????????????
+```
+
+**`ChatWindow`:**
+- Renders `MessageBubble` for each turn (user = right-aligned, assistant = left)
+- Streams assistant response token by token from `streamChat()`
+- Shows a blinking cursor while streaming
+- When `done: true` received, renders `CitationCard` list below the message
+
+**`CitationCard`:**
+- Shows: source filename, page number
+- Expandable to show the chunk text preview
+
+**`ChatInput`:**
+- Textarea + send button
+- Disabled while streaming
+- `Enter` to send, `Shift+Enter` for newline
+
+**`Sidebar`:**
+- Workspace name + code at the top
+- `DocumentList` below
+- "Upload Document" button at the bottom ? navigates to `/upload`
+- Logout button
+
+---
+
+### Step 15: Frontend ? Document Upload & List UI
+
+**Files:** `app/upload/page.tsx`, `components/documents/*`
+
+**`UploadZone`:**
+- Drag-and-drop area (use `react-dropzone` or native drag events)
+- File picker fallback
+- Accepts: `.pdf`, `.docx`, `.md`, `.txt` only ? reject others with a toast
+- Shows selected filename + size before upload
+- Tags input (comma-separated)
+- On submit ? `POST /documents/upload` ? gets `document_id`
+- Immediately begins polling `GET /documents/{id}/status` every 3s
+- Shows progress states: Uploading ? Processing ? Done ? / Failed ?
+- On completion ? shows chunk count ? "Go to Dashboard" button
+
+**`DocumentCard`:**
+- Filename, file type icon, size, tags, upload date
+- `StatusBadge`: grey (pending) ? yellow spinner (processing) ? green (completed) ? red (failed)
+- Delete button ? confirm dialog ? `DELETE /documents/{id}` ? removes from list
+
+**`DocumentList`:**
+- Renders `DocumentCard` for each doc
+- Filter bar: All / Pending / Processing / Completed / Failed
+- Empty state illustration when no docs uploaded yet
 
 ---
 
@@ -879,7 +995,7 @@ Use React Context or Zustand (lightweight) for:
 
 ---
 
-### Step 12: BM25 + Hybrid Search
+### Step 16: BM25 + Hybrid Search
 
 **Files:** `services/retrieval/bm25_retriever.py`, `services/retrieval/fusion.py`, `services/retrieval/hybrid_retriever.py`
 
@@ -935,7 +1051,7 @@ async def hybrid_retrieve(query, workspace_id, top_k=20):
 
 ---
 
-### Step 13: BGE Reranker
+### Step 17: BGE Reranker
 
 **File:** `services/reranking/reranker.py`
 
@@ -955,7 +1071,7 @@ top-20 (hybrid) ??? reranker ??? top-5 ??? context builder ??? LLM
 
 ---
 
-### Step 14: Metadata Filtering UI
+### Step 18: Metadata Filtering UI
 
 Add to the chat interface:
 

@@ -7,7 +7,6 @@ from fastapi import HTTPException, UploadFile, status
 from models.chunk import Chunk
 from models.document import UploadedDocument
 from schemas.document import (
-    DocumentDeleteResponse,
     DocumentListItem,
     DocumentStatusResponse,
     DocumentUploadResponse,
@@ -66,8 +65,8 @@ async def upload_document(
 
     # Enqueue Celery ingestion task
     try:
-        from workers.ingestion_worker import ingest_document
-        ingest_document.delay(str(doc.id))
+        from workers.ingestion_worker import process_document
+        process_document.delay(str(doc.id))
         doc.status = "processing"
         doc.updated_at = datetime.now(timezone.utc)
         await doc.save()
@@ -100,14 +99,32 @@ async def get_document_status(
 async def list_documents(
     current_user: CurrentUser,
     status_filter: str | None = None,
+    tags: list[str] | None = None,
+    uploaded_by: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[DocumentListItem]:
     query = UploadedDocument.find(
         UploadedDocument.workspace_id == PydanticObjectId(current_user.workspace_id)
     )
+
     if status_filter:
         query = query.find(UploadedDocument.status == status_filter)
 
-    docs = await query.sort(-UploadedDocument.created_at).to_list()
+    if tags:
+        # Match documents that contain ALL requested tags
+        query = query.find({"tags": {"$all": tags}})
+
+    if uploaded_by:
+        try:
+            query = query.find(
+                UploadedDocument.uploaded_by == PydanticObjectId(uploaded_by)
+            )
+        except Exception:
+            pass  # invalid ID format — ignore filter silently
+
+    docs = await query.sort(-UploadedDocument.created_at).skip(offset).limit(limit).to_list()
+
     return [
         DocumentListItem(
             document_id=str(d.id),
@@ -138,19 +155,16 @@ async def delete_document(
             detail="You don't have permission to delete this document.",
         )
 
-    # Enqueue cleanup task (handles Qdrant vector deletion + chunk record removal)
+    # Enqueue cleanup task — it handles GridFS, Qdrant vectors, Chunk records,
+    # and the UploadedDocument record itself inside the worker.
     try:
-        from workers.cleanup_worker import cleanup_document
-        cleanup_document.delay(str(doc.id), doc.gridfs_file_id)
+        from workers.cleanup_worker import delete_document as celery_delete
+        celery_delete.delay(str(doc.id))
     except Exception as exc:
         logger.error("Failed to enqueue cleanup task", doc_id=str(doc.id), error=str(exc))
         raise HTTPException(status_code=500, detail="Failed to schedule deletion. Please try again.")
 
-    # Delete the document record immediately; chunks/vectors cleaned up async
-    await doc.delete()
-
-    logger.info("Document deleted", doc_id=document_id, workspace=current_user.workspace_id)
-    return DocumentDeleteResponse(message="Document deleted successfully.")
+    logger.info("Document deletion queued", doc_id=document_id, workspace=current_user.workspace_id)
 
 
 # ── Shared helper ─────────────────────────────────────────────────────────────

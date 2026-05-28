@@ -165,6 +165,7 @@ async def _process(task: Task, document_id: str) -> dict:
                 "tags": doc.tags,
                 "pageNumber": page,
                 "chunkIndex": idx,
+                "chunkText": chunk.page_content,   # stored for context retrieval at query time
                 "createdAt": now_iso,
             }
             qdrant_points.append(build_point(vector, payload))

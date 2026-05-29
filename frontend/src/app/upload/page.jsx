@@ -3,32 +3,50 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { animate } from 'framer-motion'
+import { ArrowLeft, FileText, CheckCircle2, Clock, HardDrive } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import Sidebar from '@/components/layout/Sidebar'
 import UploadZone from '@/components/documents/UploadZone'
 import DocumentList from '@/components/documents/DocumentList'
-import { PAGE_ANIM, ITEM_ANIM } from '@/lib/animations'
+
+// ── Blue theme tokens ─────────────────────────────────────────
+const B = {
+  navy:        '#1E3A8A',   // deep navy — header bg, primary text
+  blue:        '#2563EB',   // accent — buttons, icons
+  blueMid:     '#3B82F6',   // medium blue — stat icons
+  lightBlue:   '#EFF6FF',   // page bg
+  cardBorder:  '#BFDBFE',   // card borders
+  softBlue:    '#DBEAFE',   // card bg, tints
+  linkBlue:    '#93C5FD',   // muted link on dark bg
+  textPrimary: '#1E3A8A',   // section headings
+  textMuted:   '#6B7280',   // secondary text
+  textFaint:   '#9CA3AF',   // faint labels
+  divider:     '#BFDBFE',   // dividers
+}
 
 function CountUp({ value }) {
   const [display, setDisplay] = useState(0)
-
   useEffect(() => {
     const num = typeof value === 'number' ? value : parseFloat(value)
     if (isNaN(num)) { setDisplay(value); return }
-
     const controls = animate(0, num, {
-      duration: 0.9,
+      duration: 0.8,
       ease: 'easeOut',
       onUpdate(latest) { setDisplay(Math.round(latest * 10) / 10) },
     })
     return controls.stop
   }, [value])
-
   return <>{typeof value === 'number' ? display : value}</>
 }
+
+const STATS_CONFIG = [
+  { key: 'total',      Icon: FileText,     label: 'Total',      unit: 'documents'   },
+  { key: 'ready',      Icon: CheckCircle2, label: 'Ready',      unit: 'indexed'     },
+  { key: 'processing', Icon: Clock,        label: 'Processing', unit: 'in progress' },
+  { key: 'storage',    Icon: HardDrive,    label: 'Storage',    unit: 'MB used'     },
+]
 
 export default function UploadPage() {
   const router = useRouter()
@@ -38,11 +56,7 @@ export default function UploadPage() {
   const documents = useDocumentStore((s) => s.documents)
   const [hydrated, setHydrated] = useState(false)
 
-  useEffect(() => {
-    hydrate()
-    setHydrated(true)
-  }, [hydrate])
-
+  useEffect(() => { hydrate(); setHydrated(true) }, [hydrate])
   useEffect(() => {
     if (!hydrated) return
     if (!user) { router.replace('/login'); return }
@@ -52,71 +66,103 @@ export default function UploadPage() {
   if (!hydrated || !user) return null
 
   const totalSize = documents.reduce((acc, d) => acc + (d.file_size_bytes ?? 0), 0)
-  const stats = [
-    { label: 'Total',       value: documents.length,                                          unit: 'docs' },
-    { label: 'Ready',       value: documents.filter((d) => d.status === 'completed').length,  unit: 'indexed' },
-    { label: 'Processing',  value: documents.filter((d) => ['processing','pending'].includes(d.status)).length, unit: 'in progress' },
-    { label: 'Storage',     value: parseFloat((totalSize / (1024 * 1024)).toFixed(1)),        unit: 'MB used' },
-  ]
+  const statsValues = {
+    total:      documents.length,
+    ready:      documents.filter((d) => d.status === 'completed').length,
+    processing: documents.filter((d) => ['processing', 'pending'].includes(d.status)).length,
+    storage:    parseFloat((totalSize / (1024 * 1024)).toFixed(1)),
+  }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F7F5F2' }}>
       <div className="hidden md:flex">
         <Sidebar />
       </div>
 
-      <main className="flex-1 overflow-y-auto">
-        {/* ── Hero header ──────────────────────────────────── */}
-        <div className="bg-white border-b border-border px-8 py-7">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h1 className="text-[1.625rem] font-bold text-fg tracking-tight">Knowledge Library</h1>
-                <p className="text-[13px] text-fg-3 mt-1">
-                  {documents.length} document{documents.length !== 1 ? 's' : ''} in your workspace
-                </p>
-              </div>
-              <Link
-                href="/dashboard"
-                className="text-[13px] font-medium text-brand hover:opacity-75 transition-opacity mt-1"
-              >
-                ← Back to chat
-              </Link>
-            </div>
+      <main className="flex-1 overflow-y-auto" style={{ backgroundColor: B.lightBlue }}>
 
-            {/* Stat cards */}
-            <motion.div {...PAGE_ANIM} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {stats.map((s) => (
-                <motion.div
-                  key={s.label}
-                  {...ITEM_ANIM}
-                  className="bg-surface border border-border rounded-xl px-5 py-4"
-                >
-                  <p className="text-[26px] font-bold text-fg leading-none">
-                    <CountUp value={s.value} />
-                  </p>
-                  <p className="text-[11px] text-fg-4 mt-1.5">{s.label}</p>
-                  <p className="text-[10px] text-fg-4 opacity-70">{s.unit}</p>
-                </motion.div>
-              ))}
-            </motion.div>
+        {/* ── Top bar ─────────────────────────────────────────── */}
+        <div
+          className="sticky top-0 z-10 px-8 h-14 flex items-center justify-between shrink-0 bg-white"
+          style={{ borderBottom: `1px solid ${B.cardBorder}` }}
+        >
+          <div className="flex items-center gap-3">
+            <h1
+              className="text-[15px] font-semibold tracking-[-0.01em]"
+              style={{ color: B.navy }}
+            >
+              Knowledge Library
+            </h1>
+            <span
+              className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: B.softBlue, color: B.blue }}
+            >
+              {documents.length} docs
+            </span>
           </div>
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-1.5 text-[13px] font-medium transition-colors"
+            style={{ color: B.blue }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = B.navy }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = B.blue }}
+          >
+            <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2} />
+            Back to chat
+          </Link>
         </div>
 
-        {/* ── Content ──────────────────────────────────────── */}
-        <div className="max-w-4xl mx-auto px-8 py-8 space-y-10">
+        <div className="max-w-5xl mx-auto px-8 py-10 space-y-10">
 
-          {/* Upload */}
+          {/* ── Stats row ──────────────────────────────────────── */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {STATS_CONFIG.map(({ key, Icon, label, unit }) => (
+              <div
+                key={key}
+                className="rounded-xl px-5 py-4 flex flex-col gap-3 bg-white"
+                style={{ border: `1px solid ${B.cardBorder}` }}
+              >
+                <Icon className="w-4 h-4" style={{ color: B.blueMid }} strokeWidth={1.8} />
+                <div>
+                  <p
+                    className="font-bold leading-none tabular-nums"
+                    style={{ fontSize: '24px', color: B.navy }}
+                  >
+                    <CountUp value={statsValues[key]} />
+                  </p>
+                  <p className="text-[11px] font-medium mt-1.5" style={{ color: B.textMuted }}>{label}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: B.textFaint }}>{unit}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Upload section ─────────────────────────────────── */}
           <section>
-            <p className="text-[13px] font-semibold text-fg-2 mb-3">Upload a document</p>
+            <div className="flex items-baseline justify-between mb-4">
+              <p className="text-[13px] font-semibold" style={{ color: B.textPrimary }}>
+                Upload a document
+              </p>
+              <p className="text-[11px]" style={{ color: B.textFaint }}>
+                PDF · DOCX · TXT · Markdown
+              </p>
+            </div>
             <UploadZone />
           </section>
 
-          <div className="border-t border-border" />
+          {/* ── Divider ────────────────────────────────────────── */}
+          <div style={{ borderTop: `1px solid ${B.divider}` }} />
 
-          {/* Library */}
+          {/* ── Document list ──────────────────────────────────── */}
           <section className="pb-20">
-            <p className="text-[13px] font-semibold text-fg-2 mb-4">All documents</p>
+            <div className="flex items-baseline justify-between mb-4">
+              <p className="text-[13px] font-semibold" style={{ color: B.textPrimary }}>
+                All documents
+              </p>
+              <p className="text-[11px]" style={{ color: B.textFaint }}>
+                {documents.length} total
+              </p>
+            </div>
             <DocumentList />
           </section>
         </div>

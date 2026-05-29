@@ -2,18 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Upload, FileText, CheckCircle2, XCircle } from 'lucide-react'
 import { getDocumentStatus, uploadDocumentWithProgress } from '@/lib/api'
 import useDocumentStore from '@/store/useDocumentStore'
 
 const ACCEPTED_EXTENSIONS = ['pdf', 'docx', 'md', 'txt']
 const MAX_SIZE_MB = 50
-
-const TYPE_CONFIG = {
-  pdf:  { label: 'PDF', bg: '#FEF2F2', color: '#EF4444', icon: '📄' },
-  docx: { label: 'DOC', bg: '#EFF6FF', color: '#3B82F6', icon: '📝' },
-  md:   { label: 'MD',  bg: '#F5F3FF', color: '#8B5CF6', icon: '✍️' },
-  txt:  { label: 'TXT', bg: '#F9FAFB', color: '#6B7280', icon: '📃' },
-}
 
 const STAGE_LABELS = ['Uploading', 'Extracting text', 'Generating embeddings', 'Indexing']
 const STAGE_DURATIONS = [null, 4000, 12000, 4000]
@@ -29,8 +23,6 @@ function getExt(filename) {
 
 function UploadProgressCard({ upload }) {
   const { file, uploadPct, processingStage, phase } = upload
-  const ext = getExt(file.name)
-  const cfg = TYPE_CONFIG[ext] ?? TYPE_CONFIG.txt
   const isComplete = phase === 'completed'
   const isFailed   = phase === 'failed'
 
@@ -40,47 +32,57 @@ function UploadProgressCard({ upload }) {
       ? 100
       : 25 + ((processingStage - 1) / (STAGE_LABELS.length - 1)) * 75
 
-  const stageLabel = isComplete ? 'Ready!' : isFailed ? 'Failed'
-    : STAGE_LABELS[Math.min(processingStage, STAGE_LABELS.length - 1)] + '...'
+  const stageLabel = isComplete ? 'Ready'
+    : isFailed ? 'Failed'
+    : STAGE_LABELS[Math.min(processingStage, STAGE_LABELS.length - 1)] + '…'
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -12, height: 0 }}
+      initial={{ opacity: 0, y: -8, height: 0 }}
       animate={{ opacity: 1, y: 0, height: 'auto' }}
-      exit={{ opacity: 0, y: -12, height: 0 }}
+      exit={{ opacity: 0, y: -8, height: 0 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="bg-white border rounded-2xl overflow-hidden"
+      className="overflow-hidden rounded-xl"
       style={{
-        borderColor: isComplete ? '#86EFAC' : isFailed ? '#FCA5A5' : '#E4E7EF',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+        border: `1px solid ${isComplete ? '#BBF7D0' : isFailed ? '#FECACA' : '#E3E1DC'}`,
+        backgroundColor: isComplete ? '#F0FDF4' : isFailed ? '#FEF2F2' : '#FAFAF9',
       }}
     >
-      <div className="flex items-center gap-4 p-4">
-        {/* File type icon */}
+      <div className="flex items-center gap-4 px-4 py-3.5">
+        {/* Icon */}
         <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0"
-          style={{ backgroundColor: cfg.bg }}
+          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+          style={{ backgroundColor: isComplete ? '#DCFCE7' : isFailed ? '#FEE2E2' : '#F0EFEC' }}
         >
-          {cfg.icon}
+          {isComplete
+            ? <CheckCircle2 className="w-4.5 h-4.5" style={{ color: '#16A34A' }} strokeWidth={2} />
+            : isFailed
+            ? <XCircle className="w-4.5 h-4.5" style={{ color: '#DC2626' }} strokeWidth={2} />
+            : <FileText className="w-4.5 h-4.5" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
+          }
         </div>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1.5">
-            <p className="text-[13px] font-semibold text-fg truncate">{file.name}</p>
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <p className="text-[13px] font-medium truncate" style={{ color: '#111110' }}>
+              {file.name}
+            </p>
             <span
-              className={`text-[12px] font-medium shrink-0 ml-3 ${
-                isComplete ? 'text-success' : isFailed ? 'text-danger' : 'text-fg-3'
-              }`}
+              className="text-[11px] font-semibold shrink-0"
+              style={{
+                color: isComplete ? '#16A34A' : isFailed ? '#DC2626' : '#AEABA6',
+              }}
             >
-              {isComplete ? '✓ Ready' : isFailed ? '✗ Failed' : stageLabel}
+              {stageLabel}
             </span>
           </div>
 
+          {/* Progress bar */}
           {!isComplete && !isFailed && (
-            <div className="h-1.5 bg-border-2 rounded-full overflow-hidden">
+            <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#E3E1DC' }}>
               <motion.div
                 className="h-full rounded-full"
-                style={{ background: 'linear-gradient(90deg, #4361EE, #7C3AED)' }}
+                style={{ backgroundColor: '#2563EB' }}
                 animate={{ width: `${Math.max(2, overallPct)}%` }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
               />
@@ -91,12 +93,20 @@ function UploadProgressCard({ upload }) {
             <motion.div
               initial={{ scaleX: 0 }}
               animate={{ scaleX: 1 }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-              className="h-1.5 rounded-full bg-success"
-              style={{ transformOrigin: 'left' }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+              className="h-1 rounded-full"
+              style={{ backgroundColor: '#16A34A', transformOrigin: 'left' }}
             />
           )}
+
+          {isFailed && (
+            <div className="h-1 rounded-full" style={{ backgroundColor: '#FECACA' }} />
+          )}
         </div>
+
+        <span className="text-[11px] shrink-0" style={{ color: '#AEABA6' }}>
+          {formatBytes(file.size)}
+        </span>
       </div>
     </motion.div>
   )
@@ -190,21 +200,19 @@ export default function UploadZone() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Drop zone */}
-      <motion.div
+    <div className="space-y-3">
+
+      {/* ── Drop zone ─────────────────────────────────────────── */}
+      <div
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
-        animate={{
-          borderColor: dragOver ? '#4361EE' : '#C7D2FE',
-          backgroundColor: dragOver ? '#EEF2FF' : '#FFFFFF',
-          scale: dragOver ? 1.008 : 1,
+        className="flex flex-col items-center justify-center gap-5 cursor-pointer rounded-xl px-6 py-14 select-none transition-all duration-150"
+        style={{
+          border: `1.5px dashed ${dragOver ? '#2563EB' : '#BFDBFE'}`,
+          backgroundColor: dragOver ? '#DBEAFE' : '#FFFFFF',
         }}
-        transition={{ duration: 0.18 }}
-        className="flex flex-col items-center justify-center gap-4 cursor-pointer border-2 border-dashed rounded-2xl px-6 py-12 select-none"
-        style={{ borderColor: '#C7D2FE' }}
       >
         <input
           ref={inputRef}
@@ -214,47 +222,68 @@ export default function UploadZone() {
           onChange={(e) => { const f = e.target.files?.[0]; if (f) startUpload(f) }}
         />
 
-        <motion.div
-          animate={{ scale: dragOver ? 1.12 : 1 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+        {/* Icon */}
+        <div
+          className="w-14 h-14 rounded-2xl flex items-center justify-center transition-colors duration-150"
+          style={{ backgroundColor: dragOver ? '#BFDBFE' : '#DBEAFE' }}
         >
-          <svg className="w-12 h-12 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round"
-              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-          </svg>
-        </motion.div>
+          <Upload
+            className="w-6 h-6 transition-colors duration-150"
+            style={{ color: dragOver ? '#1D4ED8' : '#3B82F6' }}
+            strokeWidth={2}
+          />
+        </div>
 
+        {/* Text */}
         <div className="text-center">
-          <p className="text-[15px] font-semibold text-fg">
+          <p className="text-[15px] font-semibold" style={{ color: dragOver ? '#1D4ED8' : '#1E3A8A' }}>
             {dragOver ? 'Drop to upload' : 'Drop your document here'}
           </p>
-          <p className="text-[12px] text-fg-4 mt-1">
-            PDF, DOCX, TXT, Markdown · max {MAX_SIZE_MB} MB
+          <p className="text-[12px] mt-1.5" style={{ color: '#9CA3AF' }}>
+            or click to browse · max {MAX_SIZE_MB} MB
           </p>
         </div>
 
-        <motion.button
+        {/* Browse button */}
+        <button
           type="button"
           onClick={(e) => e.stopPropagation()}
-          whileHover={{ backgroundColor: '#E0E7FF' }}
-          whileTap={{ scale: 0.97 }}
-          className="h-9 px-5 bg-brand-light border border-brand-border text-brand text-[13px] font-semibold rounded-lg transition-colors"
+          className="h-9 px-5 text-[13px] font-semibold rounded-lg transition-colors cursor-pointer"
+          style={{
+            backgroundColor: '#EFF6FF',
+            border: '1.5px solid #BFDBFE',
+            color: '#2563EB',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#DBEAFE'
+            e.currentTarget.style.borderColor = '#93C5FD'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#EFF6FF'
+            e.currentTarget.style.borderColor = '#BFDBFE'
+          }}
         >
           Browse files
-        </motion.button>
-      </motion.div>
+        </button>
+      </div>
 
-      {error && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-[13px] text-danger"
-        >
-          {error}
-        </motion.p>
-      )}
+      {/* ── Error ─────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="rounded-lg px-4 py-3"
+            style={{ backgroundColor: '#FEF2F2', borderLeft: '3px solid #DC2626' }}
+          >
+            <p className="text-[13px]" style={{ color: '#DC2626' }}>{error}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Upload progress cards */}
+      {/* ── Upload progress cards ─────────────────────────────── */}
       <AnimatePresence>
         {uploads.map((u) => (
           <UploadProgressCard key={u.id} upload={u} />

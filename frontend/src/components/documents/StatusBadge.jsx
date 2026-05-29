@@ -1,8 +1,8 @@
 const CONFIG = {
-  pending:    { label: 'Pending',    dot: '#9CA3AF', text: '#6B7280', bg: '#F9FAFB' },
-  processing: { label: 'Processing', dot: '#F59E0B', text: '#D97706', bg: '#FFFBEB' },
-  completed:  { label: 'Ready',      dot: '#10B981', text: '#059669', bg: '#F0FDF4' },
-  failed:     { label: 'Failed',     dot: '#EF4444', text: '#DC2626', bg: '#FFF5F5' },
+  pending:    { label: 'Pending',    dot: '#AEABA6', text: '#7A7874', bg: '#F4F3F0' },
+  processing: { label: 'Processing', dot: '#D97706', text: '#D97706', bg: '#FFFBEB' },
+  completed:  { label: 'Ready',      dot: '#16A34A', text: '#16A34A', bg: '#F0FDF4' },
+  failed:     { label: 'Failed',     dot: '#DC2626', text: '#DC2626', bg: '#FEF2F2' },
 }
 
 export default function StatusBadge({ status, small = false }) {
@@ -14,7 +14,7 @@ export default function StatusBadge({ status, small = false }) {
     >
       <span
         className={`rounded-full shrink-0 ${status === 'processing' ? 'animate-pulse' : ''}`}
-        style={{ width: 6, height: 6, backgroundColor: cfg.dot, display: 'inline-block' }}
+        style={{ width: 5, height: 5, backgroundColor: cfg.dot, display: 'inline-block' }}
       />
       {cfg.label}
     </span>

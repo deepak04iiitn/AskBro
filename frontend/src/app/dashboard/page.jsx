@@ -28,7 +28,7 @@ export default function DashboardPage() {
   if (!hydrated || !user) return null
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F7F5F2' }}>
       <div className="hidden md:flex">
         <Sidebar />
       </div>

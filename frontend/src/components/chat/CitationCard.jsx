@@ -1,44 +1,42 @@
 'use client'
 
-import { motion } from 'framer-motion'
-
-const EXT_CONFIG = {
-  PDF:  { bg: '#FEF2F2', color: '#EF4444' },
-  DOC:  { bg: '#EFF6FF', color: '#3B82F6' },
-  DOCX: { bg: '#EFF6FF', color: '#3B82F6' },
-  MD:   { bg: '#F5F3FF', color: '#8B5CF6' },
-  TXT:  { bg: '#F9FAFB', color: '#6B7280' },
-}
+import { FileText } from 'lucide-react'
 
 export default function CitationCard({ citation, onOpen, isActive }) {
   const ext = citation.fileName?.split('.').pop()?.toUpperCase() ?? 'FILE'
   const page = citation.pageNumber != null ? `p.${citation.pageNumber}` : null
-  const cfg = EXT_CONFIG[ext] ?? EXT_CONFIG.TXT
 
   return (
-    <motion.button
+    <button
       onClick={() => onOpen?.(citation)}
-      whileHover={{ scale: 1.02, backgroundColor: isActive ? '#EEF2FF' : '#F8F9FC' }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-left cursor-pointer transition-colors"
+      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-left cursor-pointer transition-colors"
       style={{
-        borderColor: isActive ? '#4361EE' : '#E4E7EF',
-        backgroundColor: isActive ? '#EEF2FF' : 'white',
+        backgroundColor: isActive ? '#EEF1FD' : '#F4F3F0',
+        border: `1px solid ${isActive ? '#4361EE' : '#E3E1DC'}`,
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.backgroundColor = '#EEECEA'
+          e.currentTarget.style.borderColor = '#4361EE'
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isActive) {
+          e.currentTarget.style.backgroundColor = '#F4F3F0'
+          e.currentTarget.style.borderColor = '#E3E1DC'
+        }
       }}
     >
-      <span
-        className="text-[9px] font-bold rounded px-1.5 py-0.5 shrink-0 leading-none"
-        style={{ backgroundColor: cfg.bg, color: cfg.color }}
-      >
+      <FileText className="w-3 h-3 shrink-0" style={{ color: '#AEABA6' }} strokeWidth={2} />
+      <span className="text-[9px] font-semibold uppercase shrink-0" style={{ color: '#AEABA6' }}>
         {ext}
       </span>
-      <span className="text-[12px] text-fg-2 truncate max-w-[130px]">
+      <span className="text-[12px] truncate max-w-[120px]" style={{ color: '#3D3C3A' }}>
         {citation.fileName ?? 'Unknown file'}
       </span>
       {page && (
-        <span className="text-[11px] text-fg-4 shrink-0">{page}</span>
+        <span className="text-[11px] shrink-0" style={{ color: '#AEABA6' }}>{page}</span>
       )}
-    </motion.button>
+    </button>
   )
 }

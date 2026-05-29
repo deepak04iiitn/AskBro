@@ -3,14 +3,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import { MoreHorizontal, MessageSquare, Trash2 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import useDocumentStore from '@/store/useDocumentStore'
 
 const TYPE_CONFIG = {
-  pdf:  { label: 'PDF',  headerBg: '#FEF2F2', iconColor: '#EF4444', icon: '📄' },
-  docx: { label: 'DOC',  headerBg: '#EFF6FF', iconColor: '#3B82F6', icon: '📝' },
-  md:   { label: 'MD',   headerBg: '#F5F3FF', iconColor: '#8B5CF6', icon: '✍️' },
-  txt:  { label: 'TXT',  headerBg: '#F9FAFB', iconColor: '#6B7280', icon: '📃' },
+  pdf:  { label: 'PDF' },
+  docx: { label: 'DOC' },
+  md:   { label: 'MD'  },
+  txt:  { label: 'TXT' },
 }
 
 function formatBytes(bytes) {
@@ -26,14 +27,14 @@ function formatDate(iso) {
 function ProcessingBar() {
   const [width, setWidth] = useState(8)
   useEffect(() => {
-    const id = setInterval(() => setWidth((w) => w >= 85 ? w : w + (85 - w) * 0.04), 800)
+    const id = setInterval(() => setWidth((w) => (w >= 85 ? w : w + (85 - w) * 0.04)), 800)
     return () => clearInterval(id)
   }, [])
   return (
-    <div className="mt-2 h-1 bg-border-2 rounded-full overflow-hidden">
+    <div className="mt-2 h-0.5 rounded-full overflow-hidden" style={{ backgroundColor: '#E3E1DC' }}>
       <motion.div
         className="h-full rounded-full"
-        style={{ background: 'linear-gradient(90deg, #4361EE, #7C3AED)', width: `${width}%` }}
+        style={{ width: `${width}%`, backgroundColor: '#4361EE' }}
         transition={{ duration: 0.7, ease: 'easeOut' }}
       />
     </div>
@@ -60,32 +61,39 @@ function GridCard({ doc, isSelected, onToggle }) {
   }
 
   return (
-    <motion.div
-      whileHover={{ y: -4, boxShadow: '0 20px 40px rgba(0,0,0,0.10)', borderColor: '#C7D2FE' }}
-      transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-      onHoverStart={() => setShowFooter(true)}
-      onHoverEnd={() => { setShowFooter(false); setConfirming(false) }}
-      className="bg-white border border-border rounded-2xl overflow-hidden cursor-default"
-      style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.03)' }}
+    <div
+      className="bg-white rounded-xl overflow-hidden cursor-default transition-shadow"
+      style={{ border: '1px solid #E3E1DC' }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.08)'
+        e.currentTarget.style.borderColor = '#4361EE'
+        setShowFooter(true)
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = 'none'
+        e.currentTarget.style.borderColor = '#E3E1DC'
+        setShowFooter(false)
+        setConfirming(false)
+      }}
     >
-      {/* Colored header */}
+      {/* Header */}
       <div
         className="h-20 flex items-center justify-center relative"
-        style={{ backgroundColor: cfg.headerBg }}
+        style={{ backgroundColor: '#F4F3F0' }}
       >
-        <span className="text-3xl">{cfg.icon}</span>
-        {/* Status badge — top right */}
+        <span className="text-[11px] font-bold uppercase tracking-wide" style={{ color: '#AEABA6' }}>
+          {cfg.label}
+        </span>
         <div className="absolute top-2.5 right-2.5">
           <StatusBadge status={doc.status} small />
         </div>
-        {/* Checkbox — top left on hover */}
         <div className="absolute top-2.5 left-2.5">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={() => onToggle(doc.document_id)}
             onClick={(e) => e.stopPropagation()}
-            className={`w-4 h-4 rounded cursor-pointer transition-opacity duration-150 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+            className={`w-4 h-4 rounded cursor-pointer transition-opacity duration-150 ${isSelected ? 'opacity-100' : 'opacity-0'}`}
             style={{ accentColor: '#4361EE' }}
           />
         </div>
@@ -93,23 +101,12 @@ function GridCard({ doc, isSelected, onToggle }) {
 
       {/* Body */}
       <div className="px-4 py-3.5">
-        <p className="text-[13px] font-semibold text-fg leading-snug line-clamp-2 mb-1.5">
+        <p className="text-[13px] font-semibold leading-snug line-clamp-2 mb-1.5" style={{ color: '#111110' }}>
           {doc.original_filename}
         </p>
-        <p className="text-[11px] text-fg-4">
+        <p className="text-[11px]" style={{ color: '#AEABA6' }}>
           {formatDate(doc.created_at)} · {formatBytes(doc.file_size_bytes)}
         </p>
-
-        {doc.tags?.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {doc.tags.slice(0, 2).map((tag) => (
-              <span key={tag} className="text-[10px] text-fg-3 bg-surface-2 rounded-full px-2 py-0.5">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-
         {doc.status === 'processing' && <ProcessingBar />}
       </div>
 
@@ -120,29 +117,44 @@ function GridCard({ doc, isSelected, onToggle }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.18 }}
-            className="border-t border-border-2 bg-surface-2 overflow-hidden"
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden"
+            style={{ borderTop: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}
           >
             <div className="flex items-center px-4 py-2.5 gap-2">
-              <motion.button
-                whileTap={{ scale: 0.96 }}
+              <button
                 onClick={() => router.push('/dashboard')}
-                className="flex-1 text-[12px] font-semibold text-brand cursor-pointer hover:underline text-left"
+                className="flex-1 text-[12px] font-semibold cursor-pointer hover:underline text-left"
+                style={{ color: '#4361EE' }}
               >
                 Ask about this →
-              </motion.button>
+              </button>
               {confirming ? (
                 <div className="flex items-center gap-2">
-                  <button onClick={handleDelete} disabled={deleting}
-                    className="text-[11px] text-danger font-semibold cursor-pointer disabled:opacity-50">
-                    {deleting ? '...' : 'Confirm'}
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="text-[11px] font-semibold cursor-pointer disabled:opacity-50"
+                    style={{ color: '#DC2626' }}
+                  >
+                    {deleting ? '…' : 'Confirm'}
                   </button>
-                  <button onClick={() => setConfirming(false)}
-                    className="text-[11px] text-fg-4 cursor-pointer">Cancel</button>
+                  <button
+                    onClick={() => setConfirming(false)}
+                    className="text-[11px] cursor-pointer"
+                    style={{ color: '#AEABA6' }}
+                  >
+                    Cancel
+                  </button>
                 </div>
               ) : (
-                <button onClick={handleDelete}
-                  className="text-[11px] text-fg-4 hover:text-danger transition-colors cursor-pointer">
+                <button
+                  onClick={handleDelete}
+                  className="text-[11px] transition-colors cursor-pointer"
+                  style={{ color: '#AEABA6' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#DC2626' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#AEABA6' }}
+                >
                   Delete
                 </button>
               )}
@@ -150,7 +162,7 @@ function GridCard({ doc, isSelected, onToggle }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   )
 }
 
@@ -169,7 +181,8 @@ function ListRow({ doc, isSelected, onToggle }) {
     if (!menuOpen) return
     function handler(e) {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setMenuOpen(false); setConfirming(false)
+        setMenuOpen(false)
+        setConfirming(false)
       }
     }
     document.addEventListener('mousedown', handler)
@@ -180,82 +193,123 @@ function ListRow({ doc, isSelected, onToggle }) {
     if (!confirming) { setConfirming(true); return }
     setDeleting(true)
     try { await deleteDocument(doc.document_id) } catch {
-      setDeleting(false); setConfirming(false)
+      setDeleting(false)
+      setConfirming(false)
     }
     setMenuOpen(false)
   }
 
   return (
-    <motion.div
-      whileHover={{ backgroundColor: '#F8F9FC' }}
-      transition={{ duration: 0.15 }}
-      className="flex items-center gap-3 px-5 h-12 group"
+    <div
+      className="flex items-center gap-3 px-5 h-14 group transition-colors"
+      style={{ backgroundColor: 'transparent' }}
+      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
+      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
     >
+      {/* Checkbox */}
       <input
         type="checkbox"
         checked={isSelected}
         onChange={() => onToggle(doc.document_id)}
         onClick={(e) => e.stopPropagation()}
-        className={`w-3.5 h-3.5 shrink-0 cursor-pointer transition-opacity duration-150 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+        className={`w-4 h-4 shrink-0 cursor-pointer transition-opacity duration-150 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
         style={{ accentColor: '#4361EE' }}
       />
 
+      {/* Type label */}
       <span
-        className="shrink-0 text-[9px] font-bold rounded px-1.5 py-0.5 leading-none"
-        style={{ backgroundColor: cfg.headerBg, color: cfg.iconColor }}
+        className="shrink-0 text-[9px] font-bold uppercase w-10 tracking-wide"
+        style={{ color: '#AEABA6' }}
       >
         {cfg.label}
       </span>
 
-      <span className="flex-1 min-w-0 text-[13px] font-medium text-fg truncate">{doc.original_filename}</span>
+      {/* Filename */}
+      <span className="flex-1 min-w-0 text-[13px] font-medium truncate" style={{ color: '#111110' }}>
+        {doc.original_filename}
+      </span>
 
-      <div className="w-24 shrink-0 hidden sm:flex items-center">
+      {/* Status */}
+      <div className="w-28 shrink-0 hidden sm:flex items-center">
         <StatusBadge status={doc.status} />
       </div>
 
-      <span className="w-16 shrink-0 text-[11px] text-fg-4 hidden md:block">{formatDate(doc.created_at)}</span>
-      <span className="w-14 shrink-0 text-[11px] text-fg-4 hidden lg:block text-right">{formatBytes(doc.file_size_bytes)}</span>
+      {/* Date */}
+      <span className="w-20 shrink-0 text-[12px] hidden md:block" style={{ color: '#AEABA6' }}>
+        {formatDate(doc.created_at)}
+      </span>
 
-      {/* Actions */}
-      <div ref={menuRef} className="w-7 shrink-0 flex justify-center relative">
+      {/* Size */}
+      <span className="w-16 shrink-0 text-[12px] hidden lg:block text-right" style={{ color: '#AEABA6' }}>
+        {formatBytes(doc.file_size_bytes)}
+      </span>
+
+      {/* Actions menu */}
+      <div ref={menuRef} className="w-8 shrink-0 flex justify-center relative">
         <button
           onClick={() => { setMenuOpen((v) => !v); setConfirming(false) }}
-          className="w-6 h-6 flex items-center justify-center rounded text-fg-4 hover:text-fg hover:bg-border transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+          className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+          style={{ color: '#AEABA6' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#E3E1DC'
+            e.currentTarget.style.color = '#3D3C3A'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent'
+            e.currentTarget.style.color = '#AEABA6'
+          }}
         >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-            <circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" />
-          </svg>
+          <MoreHorizontal className="w-4 h-4" strokeWidth={2} />
         </button>
 
         <AnimatePresence>
           {menuOpen && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 4 }}
+              initial={{ opacity: 0, scale: 0.95, y: 4 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: 4 }}
-              transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute right-0 top-full mt-1 w-44 bg-white border border-border rounded-xl overflow-hidden z-10"
-              style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
+              exit={{ opacity: 0, scale: 0.95, y: 4 }}
+              transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl overflow-hidden z-10"
+              style={{ border: '1px solid #E3E1DC', boxShadow: '0 8px 24px rgba(0,0,0,0.10)' }}
             >
               <button
                 onClick={() => { router.push('/dashboard'); setMenuOpen(false) }}
-                className="w-full flex items-center px-4 py-2.5 text-[13px] text-fg-2 hover:bg-surface transition-colors cursor-pointer text-left"
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] cursor-pointer transition-colors text-left"
+                style={{ color: '#3D3C3A' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
               >
+                <MessageSquare className="w-3.5 h-3.5 shrink-0" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
                 Ask about this
               </button>
-              <div className="border-t border-border-2" />
+              <div style={{ borderTop: '1px solid #E3E1DC' }} />
               {confirming ? (
                 <div className="flex items-center gap-3 px-4 py-2.5">
-                  <button onClick={handleDelete} disabled={deleting}
-                    className="text-[12px] text-danger font-semibold disabled:opacity-50 cursor-pointer">
-                    {deleting ? 'Deleting...' : 'Confirm'}
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="text-[12px] font-semibold disabled:opacity-50 cursor-pointer"
+                    style={{ color: '#DC2626' }}
+                  >
+                    {deleting ? 'Deleting…' : 'Confirm delete'}
                   </button>
-                  <button onClick={() => setConfirming(false)}
-                    className="text-[12px] text-fg-4 cursor-pointer">Cancel</button>
+                  <button
+                    onClick={() => setConfirming(false)}
+                    className="text-[12px] cursor-pointer"
+                    style={{ color: '#AEABA6' }}
+                  >
+                    Cancel
+                  </button>
                 </div>
               ) : (
-                <button onClick={handleDelete}
-                  className="w-full flex items-center px-4 py-2.5 text-[13px] text-danger hover:bg-red-50 transition-colors cursor-pointer text-left">
+                <button
+                  onClick={handleDelete}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] cursor-pointer transition-colors text-left"
+                  style={{ color: '#DC2626' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FEF2F2' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
+                >
+                  <Trash2 className="w-3.5 h-3.5 shrink-0" strokeWidth={1.8} />
                   Delete
                 </button>
               )}
@@ -263,7 +317,7 @@ function ListRow({ doc, isSelected, onToggle }) {
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </div>
   )
 }
 

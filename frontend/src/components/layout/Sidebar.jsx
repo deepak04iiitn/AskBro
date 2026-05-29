@@ -3,26 +3,26 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  Plus, Upload, ChevronUp, Users, LogOut,
+  ChevronLeft, ChevronRight, FileText,
+} from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import useChatStore from '@/store/useChatStore'
 import MembersPanel from '@/components/workspace/MembersPanel'
-import { PAGE_ANIM, ITEM_ANIM, SCALE_IN } from '@/lib/animations'
+import { SCALE_IN } from '@/lib/animations'
 
-const TYPE_CONFIG = {
-  pdf:  { label: 'PDF', bg: '#FEF2F2', color: '#EF4444' },
-  docx: { label: 'DOC', bg: '#EFF6FF', color: '#3B82F6' },
-  md:   { label: 'MD',  bg: '#F5F3FF', color: '#8B5CF6' },
-  txt:  { label: 'TXT', bg: '#F9FAFB', color: '#6B7280' },
-}
-
-const STATUS_DOT = {
-  completed:  '#10B981',
-  processing: '#F59E0B',
-  failed:     '#EF4444',
+const STATUS_COLOR = {
+  completed:  '#16A34A',
+  processing: '#D97706',
+  failed:     '#DC2626',
   pending:    '#D1D5DB',
 }
+
+// Fades text labels out fast so they're invisible before the sidebar noticeably narrows
+const LABEL_TRANSITION = { duration: 0.12 }
 
 export default function Sidebar() {
   const router = useRouter()
@@ -31,6 +31,7 @@ export default function Sidebar() {
   const documents = useDocumentStore((s) => s.documents)
   const clearMessages = useChatStore((s) => s.clearMessages)
 
+  const [collapsed, setCollapsed] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const menuRef = useRef(null)
@@ -50,6 +51,7 @@ export default function Sidebar() {
   }
 
   const initial = user?.email?.[0]?.toUpperCase() ?? '?'
+  const completedCount = documents.filter((d) => d.status === 'completed').length
 
   return (
     <>
@@ -57,140 +59,318 @@ export default function Sidebar() {
         {showMembers && <MembersPanel onClose={() => setShowMembers(false)} />}
       </AnimatePresence>
 
-      <aside className="w-60 shrink-0 bg-white border-r border-border flex flex-col h-full">
+      <motion.aside
+        animate={{ width: collapsed ? 68 : 280 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 30 }}
+        className="shrink-0 flex flex-col h-full relative"
+        style={{ backgroundColor: '#F7F5F2', borderRight: '1px solid #E3E1DC' }}
+      >
 
-        {/* Top — workspace + new chat */}
-        <div className="px-4 pt-5 pb-4 border-b border-border shrink-0">
-          {/* Workspace pill */}
-          <div className="inline-flex items-center gap-1.5 bg-brand-light border border-brand-border rounded-lg px-3 py-1.5 mb-3">
-            <div className="w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
-            <span className="text-[12px] font-semibold text-brand truncate max-w-[140px]">
-              {user?.workspace_code ?? '—'}
-            </span>
+        {/* ── Header: workspace identity + collapse toggle ────── */}
+        <div
+          className="shrink-0 flex flex-col"
+          style={{
+            padding: collapsed ? '20px 12px 16px' : '20px 16px 16px',
+            borderBottom: '1px solid #E3E1DC',
+          }}
+        >
+          {/* Top row: workspace info + toggle */}
+          <div className={`flex items-center mb-3 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+            {!collapsed && (
+              <div className="flex items-center gap-2 min-w-0">
+                <div
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ backgroundColor: '#4361EE' }}
+                />
+                <div className="min-w-0">
+                  <motion.p
+                    animate={{ opacity: collapsed ? 0 : 1 }}
+                    transition={LABEL_TRANSITION}
+                    className="text-[13px] font-semibold truncate"
+                    style={{ color: '#111110' }}
+                  >
+                    {user?.workspace_code ?? '—'}
+                  </motion.p>
+                  <motion.p
+                    animate={{ opacity: collapsed ? 0 : 1 }}
+                    transition={LABEL_TRANSITION}
+                    className="text-[10px]"
+                    style={{ color: '#AEABA6' }}
+                  >
+                    workspace
+                  </motion.p>
+                </div>
+              </div>
+            )}
+
+            {/* Collapse / expand toggle */}
+            <button
+              onClick={() => setCollapsed((v) => !v)}
+              className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors cursor-pointer shrink-0"
+              style={{ color: '#AEABA6' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#E3E1DC'
+                e.currentTarget.style.color = '#3D3C3A'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+                e.currentTarget.style.color = '#AEABA6'
+              }}
+              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {collapsed
+                ? <ChevronRight className="w-4 h-4" strokeWidth={2} />
+                : <ChevronLeft className="w-4 h-4" strokeWidth={2} />
+              }
+            </button>
           </div>
 
-          <motion.button
+          {/* New chat button */}
+          <button
             onClick={handleNewChat}
-            whileHover={{ backgroundColor: '#F8F9FC' }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ duration: 0.15 }}
-            className="w-full h-9 flex items-center justify-center gap-2 bg-white border border-border rounded-xl text-[13px] font-medium text-fg-2 cursor-pointer"
-            style={{ borderColor: '#E4E7EF' }}
+            className="flex items-center justify-center gap-2 text-white rounded-lg cursor-pointer transition-colors"
+            style={{
+              backgroundColor: '#4361EE',
+              height: '36px',
+              width: collapsed ? '44px' : '100%',
+              margin: collapsed ? '0 auto' : '0',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3451D6' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4361EE' }}
+            onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.98)' }}
+            onMouseUp={(e) => { e.currentTarget.style.transform = '' }}
+            title={collapsed ? 'New chat' : undefined}
           >
-            <svg className="w-3.5 h-3.5 text-fg-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            New chat
-          </motion.button>
+            <Plus className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
+            {!collapsed && (
+              <motion.span
+                animate={{ opacity: collapsed ? 0 : 1 }}
+                transition={LABEL_TRANSITION}
+                className="text-[13px] font-medium whitespace-nowrap"
+              >
+                New chat
+              </motion.span>
+            )}
+          </button>
         </div>
 
-        {/* Documents list */}
-        <div className="flex-1 overflow-y-auto py-3">
-          <p className="px-4 mb-2 text-[10.5px] font-semibold text-fg-4 uppercase tracking-widest">
-            Documents
-          </p>
+        {/* ── Documents section ────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto py-4">
 
-          {documents.length === 0 && (
-            <p className="px-4 py-2 text-[12px] text-fg-4">No documents yet.</p>
+          {/* Section label */}
+          {collapsed ? (
+            <div className="flex justify-center mb-3">
+              <FileText
+                className="w-4 h-4"
+                style={{ color: '#AEABA6' }}
+                strokeWidth={1.8}
+              />
+            </div>
+          ) : (
+            <motion.div
+              animate={{ opacity: collapsed ? 0 : 1 }}
+              transition={LABEL_TRANSITION}
+              className="flex items-center justify-between px-4 mb-2"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#AEABA6' }}>
+                Documents
+              </p>
+              {completedCount > 0 && (
+                <span className="text-[10px]" style={{ color: '#AEABA6' }}>
+                  {completedCount} indexed
+                </span>
+              )}
+            </motion.div>
           )}
 
-          <motion.div {...PAGE_ANIM}>
+          {/* Empty label */}
+          {!collapsed && documents.length === 0 && (
+            <motion.p
+              animate={{ opacity: collapsed ? 0 : 1 }}
+              transition={LABEL_TRANSITION}
+              className="px-4 py-1 text-[12px]"
+              style={{ color: '#AEABA6' }}
+            >
+              No documents yet.
+            </motion.p>
+          )}
+
+          {/* Document rows */}
+          <div>
             {documents.map((doc) => {
-              const typeCfg = TYPE_CONFIG[doc.file_type] ?? TYPE_CONFIG.txt
-              const dotColor = STATUS_DOT[doc.status] ?? '#D1D5DB'
+              const ext = doc.file_type?.toUpperCase() ?? 'FILE'
+              const dotColor = STATUS_COLOR[doc.status] ?? '#D1D5DB'
               return (
-                <motion.div
+                <div
                   key={doc.document_id}
-                  {...ITEM_ANIM}
-                  whileHover={{ x: 2, backgroundColor: '#F8F9FC' }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  className="flex items-center gap-2.5 px-3 mx-1 py-2 rounded-lg cursor-default"
+                  className="flex items-center rounded-lg cursor-default transition-colors"
+                  style={{
+                    gap: collapsed ? 0 : '10px',
+                    padding: collapsed ? '8px' : '8px 12px',
+                    margin: '0 4px',
+                    justifyContent: collapsed ? 'center' : 'flex-start',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EEECEA' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
+                  title={collapsed ? doc.original_filename : undefined}
                 >
                   <span
-                    className="shrink-0 text-[9px] font-bold rounded-md px-1.5 py-0.5 leading-none"
-                    style={{ backgroundColor: typeCfg.bg, color: typeCfg.color }}
+                    className="shrink-0 text-[9px] font-bold uppercase"
+                    style={{ color: '#AEABA6', minWidth: collapsed ? 'auto' : '28px' }}
                   >
-                    {typeCfg.label}
+                    {ext}
                   </span>
-                  <span className="flex-1 min-w-0 text-[12px] text-fg-2 truncate">
-                    {doc.original_filename}
-                  </span>
-                  <span
-                    className={`shrink-0 w-1.5 h-1.5 rounded-full ${doc.status === 'processing' ? 'animate-pulse' : ''}`}
-                    style={{ backgroundColor: dotColor }}
-                  />
-                </motion.div>
+                  {!collapsed && (
+                    <>
+                      <motion.span
+                        animate={{ opacity: collapsed ? 0 : 1 }}
+                        transition={LABEL_TRANSITION}
+                        className="flex-1 min-w-0 text-[12px] truncate"
+                        style={{ color: '#3D3C3A' }}
+                      >
+                        {doc.original_filename}
+                      </motion.span>
+                      <span
+                        className={`shrink-0 w-1.5 h-1.5 rounded-full ${doc.status === 'processing' ? 'animate-pulse' : ''}`}
+                        style={{ backgroundColor: dotColor }}
+                      />
+                    </>
+                  )}
+                </div>
               )
             })}
-          </motion.div>
+          </div>
 
+          {/* Upload button */}
           <Link
             href="/upload"
-            className="flex items-center gap-1.5 px-4 mt-3 text-[12px] text-brand hover:opacity-75 transition-opacity"
+            className="flex items-center gap-2 transition-all mt-4 rounded-lg"
+            style={{
+              color: '#3D3C3A',
+              padding: collapsed ? '9px' : '9px 12px',
+              margin: collapsed ? '16px auto 0' : '16px 4px 0',
+              justifyContent: 'center',
+              fontSize: '12px',
+              fontWeight: 500,
+              border: '1.5px dashed #D9D7D2',
+              backgroundColor: 'white',
+              width: collapsed ? '44px' : 'calc(100% - 8px)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#4361EE'
+              e.currentTarget.style.backgroundColor = '#EEF1FD'
+              e.currentTarget.style.color = '#4361EE'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#D9D7D2'
+              e.currentTarget.style.backgroundColor = 'white'
+              e.currentTarget.style.color = '#3D3C3A'
+            }}
+            title={collapsed ? 'Upload document' : undefined}
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-            </svg>
-            Upload a document
+            <Upload className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
+            {!collapsed && (
+              <motion.span
+                animate={{ opacity: collapsed ? 0 : 1 }}
+                transition={LABEL_TRANSITION}
+              >
+                Upload a document
+              </motion.span>
+            )}
           </Link>
         </div>
 
-        {/* Footer — user + dropdown */}
-        <div ref={menuRef} className="border-t border-border shrink-0 relative">
-          {/* Dropdown menu */}
+        {/* ── Footer: user + dropdown ──────────────────────────── */}
+        <div
+          ref={menuRef}
+          className="shrink-0 relative"
+          style={{ borderTop: '1px solid #E3E1DC' }}
+        >
+          {/* Dropdown — pops up when expanded, pops right when collapsed */}
           <AnimatePresence>
             {showMenu && (
               <motion.div
                 {...SCALE_IN}
-                className="absolute bottom-full left-2 right-2 mb-1.5 bg-white border border-border rounded-xl overflow-hidden"
-                style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}
+                className="absolute bg-white rounded-xl overflow-hidden z-30"
+                style={{
+                  border: '1px solid #E3E1DC',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+                  ...(collapsed
+                    ? { left: '100%', marginLeft: '8px', bottom: '0', width: '180px' }
+                    : { bottom: '100%', left: '8px', right: '8px', marginBottom: '6px' }
+                  ),
+                }}
               >
                 <button
                   onClick={() => { setShowMembers(true); setShowMenu(false) }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-fg-2 hover:bg-surface transition-colors cursor-pointer text-left"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-[13px] cursor-pointer transition-colors text-left"
+                  style={{ color: '#3D3C3A' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
                 >
-                  <svg className="w-4 h-4 text-fg-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-5-3.87M9 20H4v-2a4 4 0 015-3.87m6-4a4 4 0 11-8 0 4 4 0 018 0zm6 0a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+                  <Users className="w-4 h-4 shrink-0" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
                   {user?.role === 'owner' ? 'Manage members' : 'View members'}
                 </button>
-                <div className="border-t border-border-2" />
+                <div style={{ borderTop: '1px solid #E3E1DC' }} />
                 <button
                   onClick={() => { logout(); setShowMenu(false) }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-[13px] text-danger hover:bg-red-50 transition-colors cursor-pointer text-left"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-[13px] cursor-pointer transition-colors text-left"
+                  style={{ color: '#DC2626' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FEF2F2' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
                 >
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
+                  <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.8} />
                   Sign out
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
 
+          {/* User row */}
           <button
             onClick={() => setShowMenu((v) => !v)}
-            className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-surface transition-colors cursor-pointer"
+            className="w-full flex items-center cursor-pointer transition-colors"
+            style={{
+              padding: collapsed ? '14px 12px' : '14px 16px',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              gap: collapsed ? 0 : '12px',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EEECEA' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
+            title={collapsed ? user?.email : undefined}
           >
-            {/* Gradient avatar */}
-            <div className="w-8 h-8 rounded-full gradient-brand flex items-center justify-center shrink-0">
-              <span className="text-[12px] font-bold text-white">{initial}</span>
-            </div>
-            <div className="flex-1 min-w-0 text-left">
-              <p className="text-[12px] font-medium text-fg-2 truncate">{user?.email}</p>
-              <p className="text-[10px] text-fg-4">{user?.role === 'owner' ? 'Owner' : 'Member'}</p>
-            </div>
-            <motion.svg
-              className="w-3.5 h-3.5 text-fg-4 shrink-0"
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-              animate={{ rotate: showMenu ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[12px] font-semibold"
+              style={{ backgroundColor: '#E3E1DC', color: '#3D3C3A' }}
             >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-            </motion.svg>
+              {initial}
+            </div>
+
+            {!collapsed && (
+              <>
+                <motion.div
+                  animate={{ opacity: collapsed ? 0 : 1 }}
+                  transition={LABEL_TRANSITION}
+                  className="flex-1 min-w-0 text-left"
+                >
+                  <p className="text-[12px] font-medium truncate" style={{ color: '#3D3C3A' }}>
+                    {user?.email}
+                  </p>
+                  <p className="text-[10px]" style={{ color: '#AEABA6' }}>
+                    {user?.role === 'owner' ? 'Owner' : 'Member'}
+                  </p>
+                </motion.div>
+                <motion.div
+                  animate={{ rotate: showMenu ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <ChevronUp className="w-3.5 h-3.5 shrink-0" style={{ color: '#AEABA6' }} strokeWidth={2} />
+                </motion.div>
+              </>
+            )}
           </button>
         </div>
-      </aside>
+      </motion.aside>
     </>
   )
 }

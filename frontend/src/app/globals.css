@@ -1,19 +1,136 @@
 @import 'tailwindcss';
 
-:root {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
+@theme {
+  /* Brand */
+  --color-brand:        #4361EE;
+  --color-brand-hover:  #3451D6;
+  --color-brand-light:  #EEF2FF;
+  --color-brand-border: #C7D2FE;
+  --color-violet:       #7C3AED;
+
+  /* Surfaces */
+  --color-surface:   #F8F9FC;
+  --color-surface-2: #F1F3F9;
+
+  /* Auth-specific warm surfaces */
+  --color-auth-bg:     #F7F5F2;
+  --color-auth-panel:  #F0EFEC;
+  --color-auth-input:  #F4F3F0;
+
+  /* Borders */
+  --color-border:   #E4E7EF;
+  --color-border-2: #F0F1F5;
+
+  /* Foreground */
+  --color-fg:   #0F1117;
+  --color-fg-2: #374151;
+  --color-fg-3: #6B7280;
+  --color-fg-4: #9CA3AF;
+
+  /* Semantic */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger:  #EF4444;
+
+  /* Typography */
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+}
+
+/* Scrollbar */
+* { scrollbar-width: thin; scrollbar-color: #E4E7EF transparent; }
+*::-webkit-scrollbar { width: 5px; height: 5px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background-color: #E4E7EF; border-radius: 3px; }
+
+/* ── Shared utilities ─────────────────────────────────────── */
+
+.gradient-brand {
+  background: linear-gradient(135deg, #4361EE 0%, #7C3AED 100%);
+}
+
+.shadow-blue {
+  box-shadow: 0 8px 32px rgba(67, 97, 238, 0.28);
+}
+
+.shadow-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+/* Shared form input style — applied via className="field-input" */
+.field-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 14px;
+  background: white;
+  border: 1.5px solid #E4E7EF;
+  border-radius: 10px;
+  font-size: 15px;
+  color: #0F1117;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+.field-input::placeholder {
+  color: #9CA3AF;
+}
+.field-input:focus {
+  border-color: #4361EE;
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.12);
+}
+
+/* Auth page inputs — warm neutral palette */
+.auth-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  background: #F4F3F0;
+  border: 1.5px solid #E3E1DC;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #111110;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+.auth-input::placeholder {
+  color: #AEABA6;
+}
+.auth-input:focus {
+  border-color: #4361EE;
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.12);
+}
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #F4F3F0 inset;
+  -webkit-text-fill-color: #111110;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* ── Keyframes ────────────────────────────────────────────── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-7px); }
+}
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.blink {
+  animation: blink 700ms step-start infinite;
 }

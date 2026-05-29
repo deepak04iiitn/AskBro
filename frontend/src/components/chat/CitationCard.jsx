@@ -1,44 +1,44 @@
 'use client'
 
-import { useState } from 'react'
+import { motion } from 'framer-motion'
 
-export default function CitationCard({ citation }) {
-  const [expanded, setExpanded] = useState(false)
+const EXT_CONFIG = {
+  PDF:  { bg: '#FEF2F2', color: '#EF4444' },
+  DOC:  { bg: '#EFF6FF', color: '#3B82F6' },
+  DOCX: { bg: '#EFF6FF', color: '#3B82F6' },
+  MD:   { bg: '#F5F3FF', color: '#8B5CF6' },
+  TXT:  { bg: '#F9FAFB', color: '#6B7280' },
+}
 
-  const page = citation.pageNumber != null ? `Page ${citation.pageNumber}` : null
+export default function CitationCard({ citation, onOpen, isActive }) {
+  const ext = citation.fileName?.split('.').pop()?.toUpperCase() ?? 'FILE'
+  const page = citation.pageNumber != null ? `p.${citation.pageNumber}` : null
+  const cfg = EXT_CONFIG[ext] ?? EXT_CONFIG.TXT
 
   return (
-    <div className="bg-zinc-50 border border-zinc-200 rounded-xl overflow-hidden text-xs">
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-zinc-100 transition-colors text-left"
+    <motion.button
+      onClick={() => onOpen?.(citation)}
+      whileHover={{ scale: 1.02, backgroundColor: isActive ? '#EEF2FF' : '#F8F9FC' }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-left cursor-pointer transition-colors"
+      style={{
+        borderColor: isActive ? '#4361EE' : '#E4E7EF',
+        backgroundColor: isActive ? '#EEF2FF' : 'white',
+      }}
+    >
+      <span
+        className="text-[9px] font-bold rounded px-1.5 py-0.5 shrink-0 leading-none"
+        style={{ backgroundColor: cfg.bg, color: cfg.color }}
       >
-        {/* File icon dot */}
-        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
-
-        <div className="flex-1 min-w-0">
-          <span className="font-medium text-zinc-700 truncate block">{citation.fileName ?? 'Unknown file'}</span>
-          {page && <span className="text-zinc-400">{page}</span>}
-        </div>
-
-        {/* Expand chevron */}
-        <svg
-          className={`w-3.5 h-3.5 text-zinc-400 shrink-0 transition-transform ${expanded ? 'rotate-180' : ''}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {/* Expanded preview */}
-      {expanded && citation.chunkPreview && (
-        <div className="px-3 pb-3 pt-1 border-t border-zinc-200">
-          <p className="text-zinc-500 leading-relaxed line-clamp-6">{citation.chunkPreview}</p>
-        </div>
+        {ext}
+      </span>
+      <span className="text-[12px] text-fg-2 truncate max-w-[130px]">
+        {citation.fileName ?? 'Unknown file'}
+      </span>
+      {page && (
+        <span className="text-[11px] text-fg-4 shrink-0">{page}</span>
       )}
-    </div>
+    </motion.button>
   )
 }

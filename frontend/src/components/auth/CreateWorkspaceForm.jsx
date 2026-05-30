@@ -4,8 +4,27 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Eye, EyeOff, Check, Mail, Lock, Building2, Users, ArrowRight } from 'lucide-react'
 import { createWorkspace, login } from '@/lib/api'
 import useAuthStore from '@/store/useAuthStore'
+
+const DOT_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='2' cy='2' r='1.2' fill='%23D9D7D2' opacity='0.7'/%3E%3C/svg%3E")`
+
+function IconField({ label, Icon, children }) {
+  return (
+    <div>
+      <label className="block text-[13px] font-semibold mb-1.5" style={{ color: '#111110' }}>
+        {label}
+      </label>
+      <div className="relative">
+        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+          <Icon className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
 
 // ── Password strength ─────────────────────────────────────────
 
@@ -56,7 +75,7 @@ function StepProgress({ step }) {
   const pct = ((step - 1) / (steps.length - 1)) * 100
   return (
     <div className="mb-8">
-      <p className="text-[11px] mb-3" style={{ color: '#AEABA6' }}>
+      <p className="text-[12px] font-medium mb-3" style={{ color: '#6B6865' }}>
         Step {step} of {steps.length}
       </p>
       <div className="relative h-px mb-3" style={{ backgroundColor: '#E3E1DC' }}>
@@ -71,7 +90,7 @@ function StepProgress({ step }) {
             key={label}
             className="text-[11px]"
             style={{
-              color: i + 1 === step ? '#111110' : '#AEABA6',
+              color: i + 1 === step ? '#111110' : '#7A7874',
               fontWeight: i + 1 === step ? 600 : 400,
             }}
           >
@@ -88,7 +107,7 @@ function StepProgress({ step }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-[12px] font-medium mb-1.5" style={{ color: '#3D3C3A' }}>
+      <label className="block text-[13px] font-semibold mb-1.5" style={{ color: '#111110' }}>
         {label}
       </label>
       {children}
@@ -117,7 +136,7 @@ function PrimaryButton({ children, type = 'button', onClick, loading, disabled }
       type={type}
       onClick={onClick}
       disabled={loading || disabled}
-      className="w-full h-11 text-white text-[14px] font-semibold rounded-lg cursor-pointer flex items-center justify-center gap-2 transition-colors disabled:opacity-40"
+      className="w-full h-12 text-white text-[14px] font-semibold rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-colors disabled:opacity-40"
       style={{ backgroundColor: '#4361EE' }}
       onMouseEnter={(e) => { if (!loading && !disabled) e.currentTarget.style.backgroundColor = '#3451D6' }}
       onMouseLeave={(e) => { if (!loading && !disabled) e.currentTarget.style.backgroundColor = '#4361EE' }}
@@ -139,27 +158,36 @@ function PrimaryButton({ children, type = 'button', onClick, loading, disabled }
 
 const CONTEXT = [
   {
-    num: '01',
-    heading: ['Set up your', 'workspace.'],
-    paragraphs: [
-      'Your workspace is a private environment for your team. Documents uploaded here are only accessible to members you invite.',
-      'The workspace password is shared with all members — choose something memorable.',
+    num: "01",
+    heading: ["Set up your", "workspace."],
+    tagline: "Your private environment for team knowledge.",
+    benefits: [
+      "Fully isolated from other workspaces",
+      "One shared password for your whole team",
+      "Unique workspace code generated on creation",
+      "Full admin control from the dashboard",
     ],
   },
   {
-    num: '02',
-    heading: ['Invite your', 'team.'],
-    paragraphs: [
-      "Add member emails now, or skip and manage them from the dashboard whenever you're ready.",
-      'Members log in using the workspace code and the shared password.',
+    num: "02",
+    heading: ["Invite your", "team."],
+    tagline: "Add members now or any time later.",
+    benefits: [
+      "Members log in with the shared workspace code",
+      "No individual passwords to manage",
+      "Add or remove members from the dashboard",
+      "Up to unlimited team members",
     ],
   },
   {
-    num: '03',
-    heading: ['Everything', 'looks right?'],
-    paragraphs: [
-      "After creation you’ll receive a unique workspace code to share with your team.",
-      'You can update the password and manage members from the dashboard at any time.',
+    num: "03",
+    heading: ["Everything", "looks right?"],
+    tagline: "One click away from your workspace.",
+    benefits: [
+      "Workspace code shared with your team instantly",
+      "Start uploading documents right away",
+      "Password and members editable anytime",
+      "All settings accessible from the dashboard",
     ],
   },
 ]
@@ -231,64 +259,26 @@ export default function CreateWorkspaceForm() {
   const ctx = CONTEXT[step - 1]
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F7F5F2' }}>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
+      style={{ backgroundColor: '#F7F5F2', backgroundImage: DOT_BG }}
+    >
+      {/* Card */}
+      <div
+        className="w-full max-w-[660px] bg-white rounded-3xl overflow-hidden"
+        style={{ boxShadow: '0 24px 60px rgba(0,0,0,0.10), 0 6px 16px rgba(0,0,0,0.06)' }}
+      >
+        {/* Tinted logo header */}
+        <div
+          className="flex justify-center px-12 py-8"
+          style={{ backgroundColor: '#EEF1FD', borderBottom: '1px solid #DDE3F8' }}
+        >
+          <img src="/AskBro_Logo.png" alt="AskBro" className="h-28 w-auto mix-blend-multiply" />
+        </div>
 
-      {/* ── Main ────────────────────────────────────────────── */}
-      <main className="flex-1 flex items-center justify-center px-8 py-14">
-        <div className="w-full max-w-[1100px]">
-          <div className="flex gap-0">
-
-            {/* Context column — hidden on mobile */}
-            <div
-              className="hidden lg:flex w-[50%] flex-col pr-20"
-              style={{ borderRight: '1px solid #E3E1DC' }}
-            >
-              {/* Logo — static, outside animation so it doesn't re-animate on step change */}
-              <div className="mb-7 flex justify-center">
-                <img src="/AskBro_Logo.png" alt="AskBro" className="h-50 w-auto mix-blend-multiply" />
-              </div>
-
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={step}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -12 }}
-                  transition={{ duration: 0.22, ease: 'easeInOut' }}
-                >
-                  <p
-                    className="font-bold leading-none mb-4 tabular-nums select-none"
-                    style={{ fontSize: '64px', color: '#E3E1DC' }}
-                  >
-                    {ctx.num}
-                  </p>
-                  <h2
-                    className="font-bold leading-[1.1] tracking-[-0.03em] mb-5"
-                    style={{ fontSize: '34px', color: '#111110' }}
-                  >
-                    {ctx.heading[0]}<br />{ctx.heading[1]}
-                  </h2>
-                  {ctx.paragraphs.map((para, i) => (
-                    <p
-                      key={i}
-                      className={`text-[15px] leading-[1.75] ${i > 0 ? 'mt-4' : ''}`}
-                      style={{ color: '#7A7874' }}
-                    >
-                      {para}
-                    </p>
-                  ))}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Form column */}
-            <div className="flex-1 lg:pl-20">
-              {/* Mobile logo */}
-              <div className="lg:hidden mb-10">
-                <img src="/AskBro_Logo.png" alt="AskBro" className="h-10 w-auto mix-blend-multiply" />
-              </div>
-
-              <StepProgress step={step} />
+        {/* Form body */}
+        <div className="px-12 py-9">
+        <StepProgress step={step} />
 
               <AnimatePresence mode="wait">
 
@@ -303,7 +293,7 @@ export default function CreateWorkspaceForm() {
                     onSubmit={advanceStep1}
                     className="space-y-4"
                   >
-                    <Field label="Workspace name">
+                    <IconField label="Workspace name" Icon={Building2}>
                       <input
                         name="name"
                         value={step1.name}
@@ -311,10 +301,11 @@ export default function CreateWorkspaceForm() {
                         placeholder="Acme Corp"
                         required
                         className="auth-input"
+                        style={{ paddingLeft: '42px' }}
                       />
-                    </Field>
+                    </IconField>
 
-                    <Field label="Your email">
+                    <IconField label="Your email" Icon={Mail}>
                       <input
                         name="owner_email"
                         type="email"
@@ -323,11 +314,18 @@ export default function CreateWorkspaceForm() {
                         placeholder="you@company.com"
                         required
                         className="auth-input"
+                        style={{ paddingLeft: '42px' }}
                       />
-                    </Field>
+                    </IconField>
 
-                    <Field label="Workspace password">
+                    <div>
+                      <label className="block text-[13px] font-semibold mb-1.5" style={{ color: '#111110' }}>
+                        Workspace password
+                      </label>
                       <div className="relative">
+                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                          <Lock className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
+                        </div>
                         <input
                           name="password"
                           type={showPw ? 'text' : 'password'}
@@ -335,21 +333,27 @@ export default function CreateWorkspaceForm() {
                           onChange={handleStep1Change}
                           placeholder="Choose a strong password"
                           required
-                          className="auth-input pr-14"
+                          className="auth-input"
+                          style={{ paddingLeft: '42px', paddingRight: '48px' }}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPw((v) => !v)}
-                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[12px] font-medium cursor-pointer"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer transition-colors"
                           style={{ color: '#AEABA6' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = '#4A4845' }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = '#AEABA6' }}
                         >
-                          {showPw ? 'Hide' : 'Show'}
+                          {showPw
+                            ? <EyeOff className="w-4 h-4" strokeWidth={1.8} />
+                            : <Eye className="w-4 h-4" strokeWidth={1.8} />
+                          }
                         </button>
                       </div>
                       <StrengthBar password={step1.password} />
-                    </Field>
+                    </div>
 
-                    <Field label="Confirm password">
+                    <IconField label="Confirm password" Icon={Lock}>
                       <input
                         name="confirm"
                         type="password"
@@ -358,14 +362,17 @@ export default function CreateWorkspaceForm() {
                         placeholder="Re-enter password"
                         required
                         className="auth-input"
+                        style={{ paddingLeft: '42px' }}
                       />
-                    </Field>
+                    </IconField>
 
                     <AnimatePresence>
                       {error && <ErrorAlert msg={error} />}
                     </AnimatePresence>
 
-                    <PrimaryButton type="submit">Continue</PrimaryButton>
+                    <PrimaryButton type="submit">
+                      Continue <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+                    </PrimaryButton>
                   </motion.form>
                 )}
 
@@ -403,7 +410,7 @@ export default function CreateWorkspaceForm() {
                                 type="button"
                                 onClick={() => removeEmail(i)}
                                 className="w-9 h-9 flex items-center justify-center text-lg leading-none rounded-lg cursor-pointer transition-colors"
-                                style={{ color: '#AEABA6' }}
+                                style={{ color: '#7A7874' }}
                                 onMouseEnter={(e) => {
                                   e.currentTarget.style.color = '#DC2626'
                                   e.currentTarget.style.backgroundColor = '#FEF2F2'
@@ -436,7 +443,7 @@ export default function CreateWorkspaceForm() {
                       <button
                         type="button"
                         onClick={() => setStep(3)}
-                        className="flex-1 h-11 text-[14px] font-medium rounded-lg cursor-pointer transition-colors"
+                        className="flex-1 h-12 text-[14px] font-medium rounded-xl cursor-pointer transition-colors"
                         style={{ border: '1.5px solid #E3E1DC', color: '#7A7874', backgroundColor: 'transparent' }}
                         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F0EFEC' }}
                         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
@@ -446,7 +453,7 @@ export default function CreateWorkspaceForm() {
                       <button
                         type="button"
                         onClick={() => setStep(3)}
-                        className="flex-1 h-11 text-white text-[14px] font-semibold rounded-lg cursor-pointer transition-colors"
+                        className="flex-1 h-12 text-white text-[14px] font-semibold rounded-xl cursor-pointer transition-colors"
                         style={{ backgroundColor: '#4361EE' }}
                         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3451D6' }}
                         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4361EE' }}
@@ -503,7 +510,7 @@ export default function CreateWorkspaceForm() {
                       type="button"
                       onClick={() => setStep(2)}
                       className="w-full text-[13px] cursor-pointer transition-colors"
-                      style={{ color: '#AEABA6' }}
+                      style={{ color: '#7A7874' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#7A7874' }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = '#AEABA6' }}
                     >
@@ -513,20 +520,21 @@ export default function CreateWorkspaceForm() {
                 )}
 
               </AnimatePresence>
-            </div>
-          </div>
-        </div>
-      </main>
 
-      {/* ── Footer ──────────────────────────────────────────── */}
-      <footer className="px-10 py-5 shrink-0" style={{ borderTop: '1px solid #E3E1DC' }}>
-        <p className="text-[13px]" style={{ color: '#AEABA6' }}>
-          Already have a workspace?{' '}
-          <Link href="/login" className="font-medium hover:underline" style={{ color: '#4361EE' }}>
-            Sign in →
-          </Link>
-        </p>
-      </footer>
+          {/* Footer link — inside card */}
+          <div className="mt-6 flex items-center gap-3">
+            <div className="flex-1 h-px" style={{ backgroundColor: '#E3E1DC' }} />
+            <p className="text-[13px] shrink-0" style={{ color: '#6B6865' }}>
+              Already have a workspace?{' '}
+              <Link href="/login" className="font-medium hover:underline" style={{ color: '#4361EE' }}>
+                Sign in →
+              </Link>
+            </p>
+            <div className="flex-1 h-px" style={{ backgroundColor: '#E3E1DC' }} />
+          </div>
+
+        </div>{/* end form body */}
+      </div>{/* end card */}
     </div>
   )
 }

@@ -10,9 +10,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
  *   { citations: [...], done: true } — final event; stop iterating after this
  *
  * @param {string} query
+ * @param {string} chatId — chat session ID (create via POST /chat/chats first)
  * @param {string[] | undefined} documentIds
  */
-export async function* streamChat(query, documentIds) {
+export async function* streamChat(query, chatId, documentIds) {
   const token = getToken()
 
   const res = await fetch(`${API_URL}/chat`, {
@@ -21,7 +22,7 @@ export async function* streamChat(query, documentIds) {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ query, document_ids: documentIds ?? null }),
+    body: JSON.stringify({ query, chat_id: chatId, document_ids: documentIds ?? null }),
   })
 
   if (res.status === 401) {

@@ -2,15 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Plus, Upload, ChevronUp, Users, LogOut,
-  ChevronLeft, ChevronRight, FileText, MessageSquarePlus,
+  ChevronLeft, ChevronRight, FileText, MessageSquare, Trash2,
 } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import useChatStore from '@/store/useChatStore'
+import useChatsStore from '@/store/useChatsStore'
 import MembersPanel from '@/components/workspace/MembersPanel'
 import { SCALE_IN } from '@/lib/animations'
 
@@ -33,15 +34,27 @@ const LABEL_TRANSITION = { duration: 0.12 }
 
 export default function Sidebar() {
   const router = useRouter()
+  const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const logout = useAuthStore((s) => s.logout)
   const documents = useDocumentStore((s) => s.documents)
   const clearMessages = useChatStore((s) => s.clearMessages)
 
+  const chats = useChatsStore((s) => s.chats)
+  const fetchChats = useChatsStore((s) => s.fetchChats)
+  const deleteChat = useChatsStore((s) => s.deleteChat)
+
   const [collapsed, setCollapsed] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const [hoveredChatId, setHoveredChatId] = useState(null)
+  const [visibleCount, setVisibleCount] = useState(10)
   const menuRef = useRef(null)
+
+  // Load chat list on mount (once user is available)
+  useEffect(() => {
+    if (user) fetchChats()
+  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!showMenu) return
@@ -57,8 +70,26 @@ export default function Sidebar() {
     router.push('/dashboard')
   }
 
+  async function handleDeleteChat(e, chatId) {
+    e.preventDefault()
+    e.stopPropagation()
+    try {
+      await deleteChat(chatId)
+      // If we deleted the currently active chat, go back to /dashboard
+      if (pathname === `/dashboard/${chatId}`) {
+        clearMessages()
+        router.push('/dashboard')
+      }
+    } catch {
+      // silently ignore
+    }
+  }
+
   const initial = user?.email?.[0]?.toUpperCase() ?? '?'
   const completedCount = documents.filter((d) => d.status === 'completed').length
+  const CHAT_PAGE = 10
+  const visibleChats = chats.slice(0, visibleCount)
+  const hasMore = chats.length > visibleCount
 
   return (
     <>
@@ -174,16 +205,125 @@ export default function Sidebar() {
           </button>
         </div>
 
-        {/* ── Documents section ────────────────────────────────── */}
+        {/* ── Scrollable body: chats + documents ───────────────── */}
         <div className="flex-1 overflow-y-auto py-3">
 
-          {/* Section header */}
+          {/* ── Recent chats section ─────────────────────────────── */}
           {collapsed ? (
             <div className="flex justify-center mb-3 mt-1">
-              <FileText className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
+              <MessageSquare className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
             </div>
           ) : (
             <div className="flex items-center justify-between px-4 mb-2 mt-1">
+              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#7A7874' }}>
+                Recent chats
+              </p>
+            </div>
+          )}
+
+          {!collapsed && visibleChats.length === 0 && (
+            <p className="px-4 py-2 text-[12px]" style={{ color: '#AEABA6' }}>
+              No chats yet.
+            </p>
+          )}
+
+          {/* Chat rows — scrollable, max 4 rows visible (~176px) */}
+          <div
+            className="space-y-0.5 px-2 overflow-y-auto"
+            style={{ maxHeight: '176px' }}
+          >
+            {visibleChats.map((chat) => {
+              const isActive = pathname === `/dashboard/${chat.id}`
+              return (
+                <div
+                  key={chat.id}
+                  className="relative group"
+                  onMouseEnter={() => setHoveredChatId(chat.id)}
+                  onMouseLeave={() => setHoveredChatId(null)}
+                >
+                  <Link
+                    href={`/dashboard/${chat.id}`}
+                    className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl transition-colors"
+                    style={{
+                      justifyContent: collapsed ? 'center' : 'flex-start',
+                      backgroundColor: isActive ? '#E3E1DC' : 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) e.currentTarget.style.backgroundColor = '#EEECEA'
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'
+                    }}
+                    title={collapsed ? chat.title : undefined}
+                  >
+                    <MessageSquare
+                      className="w-3.5 h-3.5 shrink-0"
+                      style={{ color: isActive ? '#4361EE' : '#AEABA6' }}
+                      strokeWidth={1.8}
+                    />
+                    {!collapsed && (
+                      <span
+                        className="flex-1 min-w-0 text-[13px] truncate"
+                        style={{
+                          color: isActive ? '#111110' : '#4A4845',
+                          fontWeight: isActive ? 600 : 400,
+                          paddingRight: hoveredChatId === chat.id ? '20px' : '0',
+                        }}
+                      >
+                        {chat.title}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Delete button — shown on hover, expanded only */}
+                  {!collapsed && hoveredChatId === chat.id && (
+                    <button
+                      onClick={(e) => handleDeleteChat(e, chat.id)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg transition-colors cursor-pointer"
+                      style={{ color: '#AEABA6' }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#FEE2E2'
+                        e.currentTarget.style.color = '#DC2626'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = ''
+                        e.currentTarget.style.color = '#AEABA6'
+                      }}
+                      title="Delete chat"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
+                    </button>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Show more */}
+          {!collapsed && hasMore && (
+            <button
+              onClick={() => setVisibleCount((n) => n + CHAT_PAGE)}
+              className="w-full text-left px-4 py-1.5 text-[11px] font-semibold transition-colors cursor-pointer"
+              style={{ color: '#4361EE' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#3451D6' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#4361EE' }}
+            >
+              ↓ Show {Math.min(CHAT_PAGE, chats.length - visibleCount)} more
+            </button>
+          )}
+
+          {/* Divider between chats and documents */}
+          {!collapsed && (
+            <div style={{ margin: '8px 16px 0', borderTop: '1px solid #E3E1DC' }} />
+          )}
+
+          {/* ── Documents section ────────────────────────────────── */}
+          {collapsed ? (
+            <div className="flex justify-center mb-3 mt-3">
+              <FileText className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
+            </div>
+          ) : (
+            <div className="flex items-center justify-between px-4 mb-2 mt-3">
               <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#7A7874' }}>
                 Documents
               </p>

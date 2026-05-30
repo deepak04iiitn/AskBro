@@ -5,8 +5,10 @@ collection and its indexes are registered in one place.
 """
 
 from models.audit_log import AuditLog
+from models.chat import Chat
 from models.chunk import Chunk
 from models.document import UploadedDocument
+from models.message import Message
 from models.user import User
 from models.workspace import Workspace
 
@@ -16,4 +18,6 @@ DOCUMENT_MODELS = [
     UploadedDocument,
     Chunk,
     AuditLog,
+    Chat,
+    Message,
 ]

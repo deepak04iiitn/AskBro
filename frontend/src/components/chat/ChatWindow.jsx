@@ -2,13 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, FileSearch, GitCompare, ListChecks,
   ArrowUpRight, X, FileX,
 } from 'lucide-react'
 import { streamChat } from '@/lib/stream'
+import { getChatMessages } from '@/lib/api'
 import useChatStore from '@/store/useChatStore'
+import useChatsStore from '@/store/useChatsStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import MessageBubble, { buildSourceId } from './MessageBubble'
 import ChatInput from './ChatInput'
@@ -134,13 +137,23 @@ function EmptyState({ readyCount, onSuggest }) {
   )
 }
 
-export default function ChatWindow() {
+export default function ChatWindow({ chatId }) {
+  const router = useRouter()
+
   const messages     = useChatStore((s) => s.messages)
   const streaming    = useChatStore((s) => s.streaming)
   const addMessage   = useChatStore((s) => s.addMessage)
   const appendToken  = useChatStore((s) => s.appendToken)
   const setCitations = useChatStore((s) => s.setCitations)
   const setStreaming  = useChatStore((s) => s.setStreaming)
+  const loadMessages = useChatStore((s) => s.loadMessages)
+  const setChatId    = useChatStore((s) => s.setChatId)
+  const storeChatId  = useChatStore((s) => s.chatId)
+
+  const createNewChat = useChatsStore((s) => s.createNewChat)
+  const bumpChat      = useChatsStore((s) => s.bumpChat)
+  const updateChatTitle = useChatsStore((s) => s.updateChatTitle)
+
   const documents    = useDocumentStore((s) => s.documents)
 
   const [activeSource, setActiveSource] = useState(null)
@@ -148,17 +161,45 @@ export default function ChatWindow() {
 
   const readyCount = documents.filter((d) => d.status === 'completed').length
 
+  // Load messages when navigating to an existing chat
+  useEffect(() => {
+    if (!chatId) return
+    // Only fetch if we're switching to a different chat
+    if (storeChatId === chatId) return
+    setChatId(chatId)
+    getChatMessages(chatId)
+      .then((msgs) => loadMessages(msgs))
+      .catch(() => {/* silently ignore — chat may be empty or invalid */})
+  }, [chatId]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   async function handleSend(query) {
     if (streaming) return
+
+    // Resolve the chat ID — create one if this is a new chat
+    let activeChatId = chatId || storeChatId
+    if (!activeChatId) {
+      try {
+        const newChat = await createNewChat()
+        activeChatId = newChat.id
+        setChatId(activeChatId)
+        // Navigate to the new chat URL (push so back button works)
+        router.push(`/dashboard/${activeChatId}`)
+      } catch {
+        appendToken('\n\n⚠ Could not create chat session. Please try again.')
+        return
+      }
+    }
+
     addMessage({ role: 'user', content: query })
     addMessage({ role: 'assistant', content: '', streaming: true })
     setStreaming(true)
+
     try {
-      for await (const event of streamChat(query)) {
+      for await (const event of streamChat(query, activeChatId)) {
         if (event.error) appendToken('\n\n⚠ ' + event.error)
         else if (event.done && event.citations !== undefined) setCitations(event.citations)
         else if (event.token) appendToken(event.token)
@@ -166,6 +207,14 @@ export default function ChatWindow() {
     } catch {
       appendToken('\n\n⚠ Something went wrong. Please try again.')
       setCitations([])
+    } finally {
+      // Move chat to top of sidebar list
+      bumpChat(activeChatId)
+      // Update title in sidebar from first message
+      if (messages.length === 0) {
+        // first message — the backend auto-sets the title, sync it
+        updateChatTitle(activeChatId, query.slice(0, 60) + (query.length > 60 ? '…' : ''))
+      }
     }
   }
 

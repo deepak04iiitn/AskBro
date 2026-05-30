@@ -183,3 +183,29 @@ export async function removeMember(email) {
   }
   return res.json()
 }
+
+// ── Chat history ──────────────────────────────────────────────
+
+export async function createChat() {
+  const res = await request('/chat/chats', { method: 'POST' })
+  if (!res.ok) throw new Error('Failed to create chat')
+  return res.json() // { id, title, created_at, updated_at }
+}
+
+export async function listChats() {
+  const res = await request('/chat/chats')
+  if (!res.ok) throw new Error('Failed to list chats')
+  return res.json()
+}
+
+export async function getChatMessages(chatId) {
+  const res = await request(`/chat/chats/${chatId}/messages`)
+  if (!res.ok) throw new Error('Failed to load messages')
+  return res.json()
+}
+
+export async function deleteChatApi(chatId) {
+  const res = await request(`/chat/chats/${chatId}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Failed to delete chat')
+  return res.json()
+}

@@ -19,6 +19,27 @@ function nextId() {
 const useChatStore = create((set, get) => ({
   messages: [],
   streaming: false,
+  chatId: null,
+
+  setChatId(id) {
+    set({ chatId: id })
+  },
+
+  /**
+   * Load messages from the API response into the store.
+   * Converts API format { id, role, content, citations, created_at }
+   * to store format { id, role, content, citations, streaming: false }.
+   */
+  loadMessages(apiMessages) {
+    const messages = apiMessages.map((m) => ({
+      id: m.id,
+      role: m.role,
+      content: m.content,
+      citations: m.citations ?? [],
+      streaming: false,
+    }))
+    set({ messages })
+  },
 
   addMessage({ role, content = '', citations = [], streaming = false }) {
     const msg = { id: nextId(), role, content, citations, streaming }
@@ -59,7 +80,7 @@ const useChatStore = create((set, get) => ({
   },
 
   clearMessages() {
-    set({ messages: [], streaming: false })
+    set({ messages: [], streaming: false, chatId: null })
   },
 }))
 

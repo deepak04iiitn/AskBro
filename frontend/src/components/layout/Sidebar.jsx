@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   Plus, Upload, ChevronUp, Users, LogOut,
-  ChevronLeft, ChevronRight, FileText,
+  ChevronLeft, ChevronRight, FileText, MessageSquarePlus,
 } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
@@ -18,10 +18,17 @@ const STATUS_COLOR = {
   completed:  '#16A34A',
   processing: '#D97706',
   failed:     '#DC2626',
-  pending:    '#D1D5DB',
+  pending:    '#CBD5E1',
 }
 
-// Fades text labels out fast so they're invisible before the sidebar noticeably narrows
+const TYPE_BADGE = {
+  PDF:  { bg: '#FEF2F2', color: '#DC2626' },
+  DOC:  { bg: '#EFF6FF', color: '#2563EB' },
+  DOCX: { bg: '#EFF6FF', color: '#2563EB' },
+  MD:   { bg: '#F5F3FF', color: '#7C3AED' },
+  TXT:  { bg: '#F8FAFC', color: '#64748B' },
+}
+
 const LABEL_TRANSITION = { duration: 0.12 }
 
 export default function Sidebar() {
@@ -60,80 +67,97 @@ export default function Sidebar() {
       </AnimatePresence>
 
       <motion.aside
-        animate={{ width: collapsed ? 68 : 280 }}
+        animate={{ width: collapsed ? 72 : 300 }}
         transition={{ type: 'spring', stiffness: 280, damping: 30 }}
         className="shrink-0 flex flex-col h-full relative"
         style={{ backgroundColor: '#F7F5F2', borderRight: '1px solid #E3E1DC' }}
       >
 
-        {/* ── Header: workspace identity + collapse toggle ────── */}
+        {/* ── Logo + workspace header ─────────────────────────── */}
         <div
-          className="shrink-0 flex flex-col"
+          className="shrink-0"
           style={{
-            padding: collapsed ? '20px 12px 16px' : '20px 16px 16px',
+            padding: collapsed ? '16px 12px' : '18px 16px 14px',
             borderBottom: '1px solid #E3E1DC',
           }}
         >
-          {/* Top row: workspace info + toggle */}
-          <div className={`flex items-center mb-3 ${collapsed ? 'justify-center' : 'justify-between'}`}>
-            {!collapsed && (
-              <div className="flex items-center gap-2 min-w-0">
-                <div
-                  className="w-2 h-2 rounded-full shrink-0"
-                  style={{ backgroundColor: '#4361EE' }}
-                />
-                <div className="min-w-0">
-                  <motion.p
-                    animate={{ opacity: collapsed ? 0 : 1 }}
-                    transition={LABEL_TRANSITION}
-                    className="text-[13px] font-semibold truncate"
-                    style={{ color: '#111110' }}
-                  >
-                    {user?.workspace_code ?? '—'}
-                  </motion.p>
-                  <motion.p
-                    animate={{ opacity: collapsed ? 0 : 1 }}
-                    transition={LABEL_TRANSITION}
-                    className="text-[10px]"
-                    style={{ color: '#AEABA6' }}
-                  >
-                    workspace
-                  </motion.p>
-                </div>
-              </div>
-            )}
+          {/* Logo row */}
+          {!collapsed && (
+            <div className="flex items-center justify-between mb-4">
+              <img
+                src="/AskBro_Logo.png"
+                alt="AskBro"
+                className="h-11 w-auto mix-blend-multiply"
+              />
+              <button
+                onClick={() => setCollapsed(true)}
+                className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors cursor-pointer"
+                style={{ color: '#AEABA6' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#E3E1DC'
+                  e.currentTarget.style.color = '#3D3C3A'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = '#AEABA6'
+                }}
+                title="Collapse sidebar"
+              >
+                <ChevronLeft className="w-4 h-4" strokeWidth={2} />
+              </button>
+            </div>
+          )}
 
-            {/* Collapse / expand toggle */}
-            <button
-              onClick={() => setCollapsed((v) => !v)}
-              className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors cursor-pointer shrink-0"
-              style={{ color: '#AEABA6' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#E3E1DC'
-                e.currentTarget.style.color = '#3D3C3A'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent'
-                e.currentTarget.style.color = '#AEABA6'
-              }}
-              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          {/* Collapsed: expand button */}
+          {collapsed && (
+            <div className="flex justify-center mb-3">
+              <button
+                onClick={() => setCollapsed(false)}
+                className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors cursor-pointer"
+                style={{ color: '#AEABA6' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#E3E1DC'
+                  e.currentTarget.style.color = '#3D3C3A'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = '#AEABA6'
+                }}
+                title="Expand sidebar"
+              >
+                <ChevronRight className="w-4 h-4" strokeWidth={2} />
+              </button>
+            </div>
+          )}
+
+          {/* Workspace badge */}
+          {!collapsed && (
+            <div
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-3"
+              style={{ backgroundColor: '#EEECEA', border: '1px solid #E3E1DC' }}
             >
-              {collapsed
-                ? <ChevronRight className="w-4 h-4" strokeWidth={2} />
-                : <ChevronLeft className="w-4 h-4" strokeWidth={2} />
-              }
-            </button>
-          </div>
+              <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: '#4361EE' }} />
+              <div className="min-w-0">
+                <p className="text-[13px] font-bold truncate" style={{ color: '#111110' }}>
+                  {user?.workspace_code ?? '—'}
+                </p>
+                <p className="text-[10px] font-medium uppercase tracking-wide" style={{ color: '#AEABA6' }}>
+                  Workspace
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* New chat button */}
           <button
             onClick={handleNewChat}
-            className="flex items-center justify-center gap-2 text-white rounded-lg cursor-pointer transition-colors"
+            className="flex items-center justify-center gap-2 text-white rounded-xl cursor-pointer transition-colors font-semibold"
             style={{
               backgroundColor: '#4361EE',
-              height: '36px',
-              width: collapsed ? '44px' : '100%',
+              height: collapsed ? '40px' : '42px',
+              width: collapsed ? '48px' : '100%',
               margin: collapsed ? '0 auto' : '0',
+              fontSize: '13px',
             }}
             onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3451D6' }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4361EE' }}
@@ -141,13 +165,9 @@ export default function Sidebar() {
             onMouseUp={(e) => { e.currentTarget.style.transform = '' }}
             title={collapsed ? 'New chat' : undefined}
           >
-            <Plus className="w-3.5 h-3.5 shrink-0" strokeWidth={2.5} />
+            <Plus className="w-4 h-4 shrink-0" strokeWidth={2.5} />
             {!collapsed && (
-              <motion.span
-                animate={{ opacity: collapsed ? 0 : 1 }}
-                transition={LABEL_TRANSITION}
-                className="text-[13px] font-medium whitespace-nowrap"
-              >
+              <motion.span animate={{ opacity: collapsed ? 0 : 1 }} transition={LABEL_TRANSITION}>
                 New chat
               </motion.span>
             )}
@@ -155,83 +175,66 @@ export default function Sidebar() {
         </div>
 
         {/* ── Documents section ────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto py-4">
+        <div className="flex-1 overflow-y-auto py-3">
 
-          {/* Section label */}
+          {/* Section header */}
           {collapsed ? (
-            <div className="flex justify-center mb-3">
-              <FileText
-                className="w-4 h-4"
-                style={{ color: '#AEABA6' }}
-                strokeWidth={1.8}
-              />
+            <div className="flex justify-center mb-3 mt-1">
+              <FileText className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
             </div>
           ) : (
-            <motion.div
-              animate={{ opacity: collapsed ? 0 : 1 }}
-              transition={LABEL_TRANSITION}
-              className="flex items-center justify-between px-4 mb-2"
-            >
-              <p className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: '#AEABA6' }}>
+            <div className="flex items-center justify-between px-4 mb-2 mt-1">
+              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#7A7874' }}>
                 Documents
               </p>
               {completedCount > 0 && (
-                <span className="text-[10px]" style={{ color: '#AEABA6' }}>
-                  {completedCount} indexed
+                <span
+                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                  style={{ backgroundColor: '#EEF1FD', color: '#4361EE' }}
+                >
+                  {completedCount}
                 </span>
               )}
-            </motion.div>
+            </div>
           )}
 
-          {/* Empty label */}
+          {/* Empty state */}
           {!collapsed && documents.length === 0 && (
-            <motion.p
-              animate={{ opacity: collapsed ? 0 : 1 }}
-              transition={LABEL_TRANSITION}
-              className="px-4 py-1 text-[12px]"
-              style={{ color: '#AEABA6' }}
-            >
+            <p className="px-4 py-2 text-[12px]" style={{ color: '#AEABA6' }}>
               No documents yet.
-            </motion.p>
+            </p>
           )}
 
           {/* Document rows */}
-          <div>
+          <div className="space-y-0.5 px-2">
             {documents.map((doc) => {
-              const ext = doc.file_type?.toUpperCase() ?? 'FILE'
-              const dotColor = STATUS_COLOR[doc.status] ?? '#D1D5DB'
+              const ext = (doc.file_type?.toUpperCase()) ?? 'FILE'
+              const badge = TYPE_BADGE[ext] ?? TYPE_BADGE.TXT
+              const dotColor = STATUS_COLOR[doc.status] ?? '#CBD5E1'
               return (
                 <div
                   key={doc.document_id}
-                  className="flex items-center rounded-lg cursor-default transition-colors"
-                  style={{
-                    gap: collapsed ? 0 : '10px',
-                    padding: collapsed ? '8px' : '8px 12px',
-                    margin: '0 4px',
-                    justifyContent: collapsed ? 'center' : 'flex-start',
-                  }}
+                  className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl cursor-default transition-colors"
+                  style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EEECEA' }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
                   title={collapsed ? doc.original_filename : undefined}
                 >
+                  {/* Type badge */}
                   <span
-                    className="shrink-0 text-[9px] font-bold uppercase"
-                    style={{ color: '#AEABA6', minWidth: collapsed ? 'auto' : '28px' }}
+                    className="shrink-0 text-[9px] font-bold rounded-md px-1.5 py-0.5 leading-none"
+                    style={{ backgroundColor: badge.bg, color: badge.color }}
                   >
                     {ext}
                   </span>
+
                   {!collapsed && (
                     <>
-                      <motion.span
-                        animate={{ opacity: collapsed ? 0 : 1 }}
-                        transition={LABEL_TRANSITION}
-                        className="flex-1 min-w-0 text-[12px] truncate"
-                        style={{ color: '#3D3C3A' }}
-                      >
+                      <span className="flex-1 min-w-0 text-[13px] font-medium truncate" style={{ color: '#111110' }}>
                         {doc.original_filename}
-                      </motion.span>
+                      </span>
                       <span
-                        className={`shrink-0 w-1.5 h-1.5 rounded-full ${doc.status === 'processing' ? 'animate-pulse' : ''}`}
+                        className={`shrink-0 w-2 h-2 rounded-full ${doc.status === 'processing' ? 'animate-pulse' : ''}`}
                         style={{ backgroundColor: dotColor }}
                       />
                     </>
@@ -242,42 +245,40 @@ export default function Sidebar() {
           </div>
 
           {/* Upload button */}
-          <Link
-            href="/upload"
-            className="flex items-center gap-2 transition-all mt-4 rounded-lg"
-            style={{
-              color: '#3D3C3A',
-              padding: collapsed ? '9px' : '9px 12px',
-              margin: collapsed ? '16px auto 0' : '16px 4px 0',
-              justifyContent: 'center',
-              fontSize: '12px',
-              fontWeight: 500,
-              border: '1.5px dashed #D9D7D2',
-              backgroundColor: 'white',
-              width: collapsed ? '44px' : 'calc(100% - 8px)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#4361EE'
-              e.currentTarget.style.backgroundColor = '#EEF1FD'
-              e.currentTarget.style.color = '#4361EE'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = '#D9D7D2'
-              e.currentTarget.style.backgroundColor = 'white'
-              e.currentTarget.style.color = '#3D3C3A'
-            }}
-            title={collapsed ? 'Upload document' : undefined}
-          >
-            <Upload className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
-            {!collapsed && (
-              <motion.span
-                animate={{ opacity: collapsed ? 0 : 1 }}
-                transition={LABEL_TRANSITION}
-              >
-                Upload a document
-              </motion.span>
-            )}
-          </Link>
+          <div style={{ padding: collapsed ? '12px 8px 0' : '12px 8px 0' }}>
+            <Link
+              href="/upload"
+              className="flex items-center gap-2.5 rounded-xl transition-all"
+              style={{
+                color: '#4A4845',
+                padding: collapsed ? '10px' : '10px 14px',
+                justifyContent: 'center',
+                fontSize: '13px',
+                fontWeight: 500,
+                border: '1.5px dashed #D9D7D2',
+                backgroundColor: 'white',
+                width: '100%',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = '#4361EE'
+                e.currentTarget.style.backgroundColor = '#EEF1FD'
+                e.currentTarget.style.color = '#4361EE'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = '#D9D7D2'
+                e.currentTarget.style.backgroundColor = 'white'
+                e.currentTarget.style.color = '#4A4845'
+              }}
+              title={collapsed ? 'Upload document' : undefined}
+            >
+              <Upload className="w-4 h-4 shrink-0" strokeWidth={2} />
+              {!collapsed && (
+                <motion.span animate={{ opacity: collapsed ? 0 : 1 }} transition={LABEL_TRANSITION}>
+                  Upload a document
+                </motion.span>
+              )}
+            </Link>
+          </div>
         </div>
 
         {/* ── Footer: user + dropdown ──────────────────────────── */}
@@ -286,7 +287,6 @@ export default function Sidebar() {
           className="shrink-0 relative"
           style={{ borderTop: '1px solid #E3E1DC' }}
         >
-          {/* Dropdown — pops up when expanded, pops right when collapsed */}
           <AnimatePresence>
             {showMenu && (
               <motion.div
@@ -296,7 +296,7 @@ export default function Sidebar() {
                   border: '1px solid #E3E1DC',
                   boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
                   ...(collapsed
-                    ? { left: '100%', marginLeft: '8px', bottom: '0', width: '180px' }
+                    ? { left: '100%', marginLeft: '8px', bottom: '0', width: '190px' }
                     : { bottom: '100%', left: '8px', right: '8px', marginBottom: '6px' }
                   ),
                 }}
@@ -331,7 +331,7 @@ export default function Sidebar() {
             onClick={() => setShowMenu((v) => !v)}
             className="w-full flex items-center cursor-pointer transition-colors"
             style={{
-              padding: collapsed ? '14px 12px' : '14px 16px',
+              padding: collapsed ? '12px' : '12px 16px',
               justifyContent: collapsed ? 'center' : 'flex-start',
               gap: collapsed ? 0 : '12px',
             }}
@@ -339,9 +339,10 @@ export default function Sidebar() {
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
             title={collapsed ? user?.email : undefined}
           >
+            {/* Avatar with accent bg */}
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[12px] font-semibold"
-              style={{ backgroundColor: '#E3E1DC', color: '#3D3C3A' }}
+              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[13px] font-bold"
+              style={{ backgroundColor: '#EEF1FD', color: '#4361EE' }}
             >
               {initial}
             </div>
@@ -353,18 +354,15 @@ export default function Sidebar() {
                   transition={LABEL_TRANSITION}
                   className="flex-1 min-w-0 text-left"
                 >
-                  <p className="text-[12px] font-medium truncate" style={{ color: '#3D3C3A' }}>
+                  <p className="text-[13px] font-semibold truncate" style={{ color: '#111110' }}>
                     {user?.email}
                   </p>
-                  <p className="text-[10px]" style={{ color: '#AEABA6' }}>
+                  <p className="text-[11px]" style={{ color: '#7A7874' }}>
                     {user?.role === 'owner' ? 'Owner' : 'Member'}
                   </p>
                 </motion.div>
-                <motion.div
-                  animate={{ rotate: showMenu ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <ChevronUp className="w-3.5 h-3.5 shrink-0" style={{ color: '#AEABA6' }} strokeWidth={2} />
+                <motion.div animate={{ rotate: showMenu ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronUp className="w-4 h-4 shrink-0" style={{ color: '#AEABA6' }} strokeWidth={2} />
                 </motion.div>
               </>
             )}

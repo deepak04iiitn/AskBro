@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Eye, EyeOff, Mail, Lock, Hash, ArrowRight } from 'lucide-react'
 import { login } from '@/lib/api'
+import { isAuthenticated } from '@/lib/auth'
 import useAuthStore from '@/store/useAuthStore'
 
 // Subtle dot pattern for page bg — SVG data URI, no CSS gradient
@@ -18,6 +19,14 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Redirect already-authenticated users away from the login page
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const seen = localStorage.getItem('askbro_onboarded')
+      router.replace(seen ? '/dashboard' : '/onboarding')
+    }
+  }, [router])
 
   function handleChange(e) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))

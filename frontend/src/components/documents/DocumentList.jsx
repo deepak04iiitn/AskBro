@@ -213,13 +213,13 @@ export default function DocumentList() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="rounded-xl overflow-hidden"
-          style={{ border: '1px solid #E3E1DC' }}
+          className="rounded-xl"
+          style={{ border: '1px solid #E3E1DC', overflow: 'visible' }}
         >
           {/* Table header */}
           <div
             className="flex items-center gap-3 px-5 h-10"
-            style={{ backgroundColor: '#F7F5F2', borderBottom: '1px solid #E3E1DC' }}
+            style={{ backgroundColor: '#F7F5F2', borderBottom: '1px solid #E3E1DC', borderRadius: '10px 10px 0 0' }}
           >
             <div className="w-4 shrink-0" />
             <div className="w-10 shrink-0" />

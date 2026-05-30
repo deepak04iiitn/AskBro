@@ -3,23 +3,30 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import CitationCard from './CitationCard'
 
+const AVATAR_SIZE = 40 // px — keep in sync with w-10 h-10
+
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 py-1">
+    // Min-height matches avatar so dots are vertically centred with it
+    <div
+      className="flex items-center gap-1"
+      style={{ minHeight: `${AVATAR_SIZE}px` }}
+    >
       {[0, 1, 2].map((i) => (
         <motion.span
           key={i}
-          className="block w-1.5 h-1.5 rounded-full"
+          className="block w-2 h-2 rounded-full"
           style={{ backgroundColor: '#AEABA6' }}
-          animate={{ y: [0, -5, 0] }}
-          transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.12, ease: 'easeInOut' }}
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 0.55, repeat: Infinity, delay: i * 0.13, ease: 'easeInOut' }}
         />
       ))}
     </div>
   )
 }
 
-// Markdown component map — warm neutral styling, no external CSS
+// ── Markdown component map ─────────────────────────────────────
+
 const MD_COMPONENTS = {
   p: ({ children }) => (
     <p className="mb-4 last:mb-0 text-[15px] leading-[1.8]" style={{ color: '#3D3C3A' }}>
@@ -37,32 +44,22 @@ const MD_COMPONENTS = {
     </ol>
   ),
   li: ({ children }) => (
-    <li className="text-[15px] leading-[1.7] pl-1" style={{ color: '#3D3C3A' }}>
-      {children}
-    </li>
+    <li className="text-[15px] leading-[1.7] pl-1" style={{ color: '#3D3C3A' }}>{children}</li>
   ),
   strong: ({ children }) => (
-    <strong className="font-semibold" style={{ color: '#111110' }}>
-      {children}
-    </strong>
+    <strong className="font-semibold" style={{ color: '#111110' }}>{children}</strong>
   ),
   em: ({ children }) => (
     <em className="italic" style={{ color: '#3D3C3A' }}>{children}</em>
   ),
   h1: ({ children }) => (
-    <h1 className="text-[18px] font-bold mb-3 mt-5 first:mt-0 tracking-tight" style={{ color: '#111110' }}>
-      {children}
-    </h1>
+    <h1 className="text-[18px] font-bold mb-3 mt-5 first:mt-0 tracking-tight" style={{ color: '#111110' }}>{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-[16px] font-semibold mb-2 mt-4 first:mt-0 tracking-tight" style={{ color: '#111110' }}>
-      {children}
-    </h2>
+    <h2 className="text-[16px] font-semibold mb-2 mt-4 first:mt-0 tracking-tight" style={{ color: '#111110' }}>{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-[15px] font-semibold mb-2 mt-3 first:mt-0" style={{ color: '#111110' }}>
-      {children}
-    </h3>
+    <h3 className="text-[15px] font-semibold mb-2 mt-3 first:mt-0" style={{ color: '#111110' }}>{children}</h3>
   ),
   code: ({ inline, children }) =>
     inline ? (
@@ -73,9 +70,7 @@ const MD_COMPONENTS = {
         {children}
       </code>
     ) : (
-      <code className="block text-[13px] font-mono leading-relaxed" style={{ color: '#3D3C3A' }}>
-        {children}
-      </code>
+      <code className="block text-[13px] font-mono leading-relaxed" style={{ color: '#3D3C3A' }}>{children}</code>
     ),
   pre: ({ children }) => (
     <pre
@@ -94,21 +89,19 @@ const MD_COMPONENTS = {
     </blockquote>
   ),
   a: ({ href, children }) => (
-    <a href={href} className="underline underline-offset-2" style={{ color: '#4361EE' }}>
-      {children}
-    </a>
+    <a href={href} className="underline underline-offset-2" style={{ color: '#4361EE' }}>{children}</a>
   ),
   hr: () => <hr className="my-4" style={{ borderColor: '#E3E1DC' }} />,
 }
 
-// Remove only the ", Page X" portion from inline citations — keep the source filename
-function stripInlineSources(text) {
-  return text.replace(/,\s*Page\s+[\d–\-]+/gi, '').trim()
+// Strip [Source: ...] entirely — citation chips below the answer handle attribution
+function stripPageNumbers(text) {
+  return text.replace(/\[Source:[^\]]*\]/gi, '').replace(/\n{3,}/g, '\n\n').trim()
 }
 
 export default function MessageBubble({ message, activeSourceId, onOpenSource }) {
   const isUser = message.role === 'user'
-  const content = isUser ? message.content : stripInlineSources(message.content || '')
+  const content = isUser ? message.content : stripPageNumbers(message.content || '')
 
   return (
     <motion.div
@@ -133,9 +126,9 @@ export default function MessageBubble({ message, activeSourceId, onOpenSource })
         </>
       ) : (
         <div className="w-full flex gap-3 items-start">
-          {/* AI avatar */}
+          {/* AI avatar — w-10 h-10 = 40px */}
           <div
-            className="w-7 h-7 rounded-full overflow-hidden shrink-0 mt-0.5 flex items-center justify-center"
+            className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center"
             style={{ backgroundColor: '#EEF1FD' }}
           >
             <img
@@ -146,16 +139,11 @@ export default function MessageBubble({ message, activeSourceId, onOpenSource })
           </div>
 
           <div className="flex-1 min-w-0">
-            <span className="block text-[11px] font-medium mb-2" style={{ color: '#AEABA6' }}>AskBro</span>
-
             {message.streaming && !message.content ? (
               <TypingIndicator />
             ) : (
               <div className="prose-content">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={MD_COMPONENTS}
-                >
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
                   {content}
                 </ReactMarkdown>
                 {message.streaming && (

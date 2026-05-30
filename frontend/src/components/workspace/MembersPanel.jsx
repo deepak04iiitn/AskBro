@@ -179,33 +179,34 @@ export default function MembersPanel({ onClose }) {
                           {m.email}
                         </span>
 
-                        {/* Role badge */}
-                        <span
-                          className="shrink-0 inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full"
-                          style={{
-                            backgroundColor: isThisOwner ? '#EEF1FD' : '#F4F3F0',
-                            color: isThisOwner ? '#4361EE' : '#7A7874',
-                          }}
-                        >
-                          {isThisOwner && <Crown className="w-2.5 h-2.5" strokeWidth={2} />}
-                          {isThisOwner ? 'Owner' : 'Member'}
-                        </span>
-
-                        {/* Remove button */}
-                        {isOwner && !isThisOwner && (
-                          <button
-                            onClick={() => handleRemove(m.email)}
-                            disabled={removeTarget === m.email}
-                            className="shrink-0 flex items-center gap-1 text-[12px] font-semibold opacity-0 group-hover:opacity-100 disabled:opacity-40 transition-all cursor-pointer"
-                            style={{ color: '#DC2626' }}
+                        {/* Fixed-width right column keeps badge aligned across all rows */}
+                        <div className="shrink-0 flex items-center justify-end gap-2" style={{ minWidth: '120px' }}>
+                          <span
+                            className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                            style={{
+                              backgroundColor: isThisOwner ? '#EEF1FD' : '#F4F3F0',
+                              color: isThisOwner ? '#4361EE' : '#7A7874',
+                            }}
                           >
-                            {removeTarget === m.email
-                              ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2} />
-                              : <UserMinus className="w-3.5 h-3.5" strokeWidth={2} />
-                            }
-                            <span>Remove</span>
-                          </button>
-                        )}
+                            {isThisOwner && <Crown className="w-2.5 h-2.5" strokeWidth={2} />}
+                            {isThisOwner ? 'Owner' : 'Member'}
+                          </span>
+
+                          {isOwner && !isThisOwner && (
+                            <button
+                              onClick={() => handleRemove(m.email)}
+                              disabled={removeTarget === m.email}
+                              className="flex items-center gap-1 text-[12px] font-semibold disabled:opacity-40 transition-colors cursor-pointer"
+                              style={{ color: '#DC2626' }}
+                            >
+                              {removeTarget === m.email
+                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={2} />
+                                : <UserMinus className="w-3.5 h-3.5" strokeWidth={2} />
+                              }
+                              <span>Remove</span>
+                            </button>
+                          )}
+                        </div>
                       </motion.li>
                     )
                   })}

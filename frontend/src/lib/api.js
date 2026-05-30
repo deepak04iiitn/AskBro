@@ -174,9 +174,8 @@ export async function addMember(email) {
 }
 
 export async function removeMember(email) {
-  const res = await request('/workspaces/members/remove', {
+  const res = await request(`/workspaces/members/${encodeURIComponent(email)}`, {
     method: 'DELETE',
-    body: JSON.stringify({ email }),
   })
   if (!res.ok) {
     const data = await res.json()

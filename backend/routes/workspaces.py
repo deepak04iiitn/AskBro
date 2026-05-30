@@ -48,11 +48,12 @@ async def add_member_route(
     return await add_member(req, current_user)
 
 
-@router.delete("/members/remove", response_model=dict)
+@router.delete("/members/{email}", response_model=dict)
 async def remove_member_route(
-    req: RemoveMemberRequest,
+    email: str,
     current_user: CurrentUser = Depends(require_owner),
 ):
+    req = RemoveMemberRequest(email=email)
     return await remove_member(req, current_user)
 
 

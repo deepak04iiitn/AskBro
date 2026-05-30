@@ -277,7 +277,7 @@ export default function UploadZone() {
               }}
               transition={{ duration: 0.15 }}
               className="flex-1 flex flex-col items-center justify-center gap-6 cursor-pointer rounded-2xl px-8 select-none"
-              style={{ minHeight: '300px', border: '2px dashed #BFDBFE', backgroundColor: '#FFFFFF' }}
+              style={{ minHeight: '420px', border: '2px dashed #BFDBFE', backgroundColor: '#FFFFFF' }}
             >
               <input
                 ref={inputRef}
@@ -341,7 +341,7 @@ export default function UploadZone() {
             transition={{ duration: 0.2, ease: 'easeInOut' }}
             onSubmit={handlePasteSubmit}
             className="flex-1 flex flex-col gap-4 bg-white rounded-2xl p-6"
-            style={{ border: '2px solid #BFDBFE', minHeight: '300px' }}
+            style={{ border: '2px solid #BFDBFE', minHeight: '420px' }}
           >
             {/* Filename row */}
             <div>
@@ -414,7 +414,7 @@ export default function UploadZone() {
                   border: '1.5px solid #BFDBFE',
                   backgroundColor: '#F8FAFF',
                   color: '#1E3A8A',
-                  minHeight: '180px',
+                  minHeight: '260px',
                   fontFamily: pasteExt === 'md' ? 'var(--font-jetbrains), monospace' : 'inherit',
                 }}
                 onFocus={(e) => {
@@ -456,7 +456,7 @@ export default function UploadZone() {
               onMouseEnter={(e) => { if (pasteName.trim() && pasteContent.trim()) e.currentTarget.style.backgroundColor = '#1D4ED8' }}
               onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563EB' }}
             >
-              Index this text
+              Submit this content
               <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
             </button>
           </motion.form>

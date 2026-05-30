@@ -1,8 +1,8 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowUp } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowUp, Loader2 } from 'lucide-react'
 
 export default function ChatInput({ onSend, disabled }) {
   const [value, setValue] = useState('')
@@ -28,19 +28,25 @@ export default function ChatInput({ onSend, disabled }) {
     setValue(e.target.value)
     const el = e.target
     el.style.height = 'auto'
-    el.style.height = Math.min(el.scrollHeight, 160) + 'px'
+    el.style.height = Math.min(el.scrollHeight, 180) + 'px'
   }
 
   const canSend = !disabled && value.trim().length > 0
 
   return (
-    <div className="bg-white px-6 py-4" style={{ borderTop: '1px solid #E3E1DC' }}>
+    <div
+      className="px-6 pb-5 pt-3"
+      style={{ backgroundColor: '#F7F5F2' }}
+    >
       <div className="max-w-[860px] mx-auto">
+
+        {/* Input card — floating style */}
         <div
-          className="flex items-end gap-3 bg-white rounded-xl px-4 py-3 transition-all duration-150"
+          className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 transition-all duration-150"
           style={{
-            border: focused ? '1.5px solid #4361EE' : '1.5px solid #E3E1DC',
-            boxShadow: focused ? '0 0 0 3px rgba(67,97,238,0.10)' : 'none',
+            boxShadow: focused
+              ? '0 0 0 2px #4361EE, 0 8px 32px rgba(0,0,0,0.10)'
+              : '0 4px 20px rgba(0,0,0,0.08), 0 0 0 1.5px #E3E1DC',
           }}
         >
           <textarea
@@ -53,40 +59,57 @@ export default function ChatInput({ onSend, disabled }) {
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             disabled={disabled}
-            placeholder={disabled ? 'AskBro is thinking…' : 'Ask about your documents…'}
-            className="flex-1 resize-none bg-transparent focus:outline-none py-0.5 leading-relaxed disabled:opacity-50"
-            style={{ fontSize: '15px', color: '#111110' }}
+            placeholder={disabled ? 'AskBro is thinking…' : 'Ask anything about your documents…'}
+            className="flex-1 resize-none bg-transparent focus:outline-none py-0.5 leading-relaxed"
+            style={{
+              fontSize: '15px',
+              color: '#111110',
+              opacity: disabled ? 0.5 : 1,
+            }}
           />
 
+          {/* Send / Loading button */}
           <button
             onClick={submit}
             disabled={!canSend}
             aria-label="Send"
-            className="shrink-0 w-9 h-9 flex items-center justify-center rounded-lg text-white cursor-pointer transition-colors disabled:cursor-not-allowed"
-            style={{ backgroundColor: canSend ? '#4361EE' : '#E3E1DC' }}
+            className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl text-white cursor-pointer transition-all disabled:cursor-not-allowed"
+            style={{
+              backgroundColor: canSend ? '#4361EE' : '#E3E1DC',
+              boxShadow: canSend ? '0 4px 12px rgba(67,97,238,0.30)' : 'none',
+            }}
             onMouseEnter={(e) => { if (canSend) e.currentTarget.style.backgroundColor = '#3451D6' }}
-            onMouseLeave={(e) => { if (canSend) e.currentTarget.style.backgroundColor = canSend ? '#4361EE' : '#E3E1DC' }}
-            onMouseDown={(e) => { if (canSend) e.currentTarget.style.transform = 'scale(0.97)' }}
+            onMouseLeave={(e) => { if (canSend) e.currentTarget.style.backgroundColor = '#4361EE' }}
+            onMouseDown={(e) => { if (canSend) e.currentTarget.style.transform = 'scale(0.95)' }}
             onMouseUp={(e) => { e.currentTarget.style.transform = '' }}
           >
-            <ArrowUp className="w-4 h-4" strokeWidth={2.5} />
+            {disabled
+              ? <Loader2 className="w-4 h-4 animate-spin" style={{ color: '#AEABA6' }} strokeWidth={2.5} />
+              : <ArrowUp className="w-4 h-4" strokeWidth={2.5} />
+            }
           </button>
         </div>
 
-        <AnimatePresence>
-          {focused && (
-            <motion.p
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-              className="mt-2 text-[11px]"
-              style={{ color: '#AEABA6' }}
-            >
-              ↵ to send · ⇧↵ for new line
-            </motion.p>
-          )}
-        </AnimatePresence>
+        {/* Bottom row: shortcut hint + disclaimer */}
+        <div className="flex items-center justify-between mt-2 px-1">
+          <AnimatePresence>
+            {focused && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="text-[11px]"
+                style={{ color: '#AEABA6' }}
+              >
+                ↵ send · ⇧↵ new line
+              </motion.p>
+            )}
+          </AnimatePresence>
+          <p className="text-[11px] ml-auto" style={{ color: '#AEABA6' }}>
+            Answers grounded in your uploaded documents
+          </p>
+        </div>
       </div>
     </div>
   )

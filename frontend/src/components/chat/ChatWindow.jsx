@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BookOpen, FileSearch, GitCompare, ListChecks, ArrowUpRight, X } from 'lucide-react'
+import {
+  BookOpen, FileSearch, GitCompare, ListChecks,
+  ArrowUpRight, X, FileX,
+} from 'lucide-react'
 import { streamChat } from '@/lib/stream'
 import useChatStore from '@/store/useChatStore'
 import useDocumentStore from '@/store/useDocumentStore'
@@ -16,34 +19,53 @@ const SUGGESTIONS = [
     Icon: BookOpen,
     label: 'Summarise',
     example: 'Summarize the key points from the latest report.',
+    iconColor: '#4361EE',
+    iconBg: '#EEF1FD',
   },
   {
     Icon: FileSearch,
     label: 'Find specific info',
     example: 'What are the main risks mentioned in the SLA?',
+    iconColor: '#16A34A',
+    iconBg: '#F0FDF4',
   },
   {
     Icon: GitCompare,
     label: 'Compare documents',
     example: 'What changed between version 1 and version 2?',
+    iconColor: '#D97706',
+    iconBg: '#FFF7ED',
   },
   {
     Icon: ListChecks,
     label: 'Action items',
     example: 'List all action items from the meeting notes.',
+    iconColor: '#7C3AED',
+    iconBg: '#F5F3FF',
   },
 ]
 
 function EmptyState({ readyCount, onSuggest }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full px-6 text-center select-none">
+    <div className="flex flex-col items-center justify-center h-full px-6 text-center select-none py-10">
+
+      {/* Logo */}
+      <div className="mb-6">
+        <img
+          src="/AskBro_Logo.png"
+          alt="AskBro"
+          className="h-32 w-auto mix-blend-multiply mx-auto"
+        />
+      </div>
+
+      {/* Heading */}
       <h2
-        className="font-bold tracking-[-0.02em]"
-        style={{ fontSize: '28px', color: '#111110' }}
+        className="font-bold tracking-[-0.02em] mb-2"
+        style={{ fontSize: '30px', color: '#111110' }}
       >
         What would you like to know?
       </h2>
-      <p className="mt-2 text-[14px] leading-relaxed" style={{ color: '#AEABA6' }}>
+      <p className="text-[14px] leading-relaxed max-w-sm" style={{ color: '#7A7874' }}>
         {readyCount > 0
           ? `Your workspace has ${readyCount} document${readyCount !== 1 ? 's' : ''} indexed and ready.`
           : 'Upload documents to start asking questions.'}
@@ -52,49 +74,61 @@ function EmptyState({ readyCount, onSuggest }) {
       {readyCount === 0 && (
         <Link
           href="/upload"
-          className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-medium hover:underline"
-          style={{ color: '#4361EE' }}
+          className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl transition-colors"
+          style={{ backgroundColor: '#EEF1FD', color: '#4361EE', border: '1px solid #C7D2FE' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DDE7FC' }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#EEF1FD' }}
         >
           Upload your first document
-          <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2} />
+          <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />
         </Link>
       )}
 
       {readyCount > 0 && (
-        <>
-          <div
-            className="w-full max-w-[680px] mt-10 mb-8"
-            style={{ borderTop: '1px solid #E3E1DC' }}
-          />
-          <div className="grid grid-cols-2 gap-3 w-full max-w-[680px]">
-            {SUGGESTIONS.map(({ Icon, label, example }) => (
-              <button
-                key={label}
-                onClick={() => onSuggest(example)}
-                className="bg-white rounded-xl p-5 text-left cursor-pointer transition-colors"
-                style={{ border: '1px solid #E3E1DC' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#F7F5F2'
-                  e.currentTarget.style.borderColor = '#4361EE'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'white'
-                  e.currentTarget.style.borderColor = '#E3E1DC'
-                }}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="grid grid-cols-2 gap-3 w-full max-w-[700px] mt-10"
+        >
+          {SUGGESTIONS.map(({ Icon, label, example, iconColor, iconBg }, i) => (
+            <motion.button
+              key={label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.15 + i * 0.06 }}
+              onClick={() => onSuggest(example)}
+              className="text-left cursor-pointer rounded-2xl p-5 bg-white transition-all"
+              style={{ border: '1.5px solid #E3E1DC', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 8px 28px rgba(0,0,0,0.09)'
+                e.currentTarget.style.borderColor = iconColor
+                e.currentTarget.style.transform = 'translateY(-2px)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'
+                e.currentTarget.style.borderColor = '#E3E1DC'
+                e.currentTarget.style.transform = ''
+              }}
+            >
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
+                style={{ backgroundColor: iconBg }}
               >
-                <p
-                  className="text-[10px] font-semibold uppercase tracking-widest mb-2"
-                  style={{ color: '#AEABA6' }}
-                >
-                  {label}
-                </p>
-                <p className="text-[13px] leading-[1.6]" style={{ color: '#7A7874' }}>
-                  "{example}"
-                </p>
-              </button>
-            ))}
-          </div>
-        </>
+                <Icon className="w-5 h-5" style={{ color: iconColor }} strokeWidth={1.8} />
+              </div>
+              <p
+                className="text-[10px] font-bold uppercase tracking-widest mb-2"
+                style={{ color: '#AEABA6' }}
+              >
+                {label}
+              </p>
+              <p className="text-[13px] leading-[1.65]" style={{ color: '#4A4845' }}>
+                "{example}"
+              </p>
+            </motion.button>
+          ))}
+        </motion.div>
       )}
     </div>
   )
@@ -141,7 +175,7 @@ export default function ChatWindow() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#F7F5F2' }}>
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Chat column ─────────────────────────────────────── */}
@@ -171,71 +205,78 @@ export default function ChatWindow() {
           {activeSource && (
             <motion.div
               {...PANEL_SLIDE}
-              className="w-[320px] shrink-0 flex flex-col overflow-hidden bg-white"
-              style={{ borderLeft: '1px solid #E3E1DC' }}
+              className="w-[320px] shrink-0 flex flex-col overflow-hidden"
+              style={{ backgroundColor: '#FFFFFF', borderLeft: '1px solid #E3E1DC' }}
             >
-              <div className="px-5 py-4 shrink-0" style={{ borderBottom: '1px solid #E3E1DC' }}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-semibold truncate" style={{ color: '#111110' }}>
-                      {activeSource.fileName}
+              {/* Header */}
+              <div
+                className="px-5 py-4 shrink-0 flex items-start justify-between gap-3"
+                style={{ borderBottom: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}
+              >
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#AEABA6' }}>
+                    Source
+                  </p>
+                  <p className="text-[13px] font-semibold truncate" style={{ color: '#111110' }}>
+                    {activeSource.fileName}
+                  </p>
+                  {activeSource.pageNumber != null && (
+                    <p className="text-[11px] mt-0.5" style={{ color: '#7A7874' }}>
+                      Page {activeSource.pageNumber}
                     </p>
-                    {activeSource.pageNumber != null && (
-                      <p className="text-[11px] mt-0.5" style={{ color: '#AEABA6' }}>
-                        Page {activeSource.pageNumber}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setActiveSource(null)}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors shrink-0"
-                    style={{ color: '#AEABA6' }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#F4F3F0'
-                      e.currentTarget.style.color = '#3D3C3A'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = ''
-                      e.currentTarget.style.color = '#AEABA6'
-                    }}
-                  >
-                    <X className="w-4 h-4" strokeWidth={2.5} />
-                  </button>
+                  )}
                 </div>
+                <button
+                  onClick={() => setActiveSource(null)}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors shrink-0 mt-0.5"
+                  style={{ color: '#AEABA6' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#E3E1DC'
+                    e.currentTarget.style.color = '#3D3C3A'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = ''
+                    e.currentTarget.style.color = '#AEABA6'
+                  }}
+                >
+                  <X className="w-4 h-4" strokeWidth={2.5} />
+                </button>
               </div>
 
+              {/* Excerpt */}
               <div className="flex-1 overflow-y-auto px-5 py-5">
-                <p
-                  className="text-[10px] font-semibold uppercase tracking-widest mb-3"
-                  style={{ color: '#AEABA6' }}
-                >
+                <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#AEABA6' }}>
                   Relevant excerpt
                 </p>
                 {activeSource.chunkPreview ? (
                   <div
-                    className="rounded-lg px-4 py-4"
+                    className="rounded-xl px-4 py-4"
                     style={{ backgroundColor: '#FEFCE8', borderLeft: '3px solid #D97706' }}
                   >
-                    <p className="text-[13px] leading-[1.7]" style={{ color: '#3D3C3A' }}>
+                    <p className="text-[13px] leading-[1.75]" style={{ color: '#3D3C3A' }}>
                       {activeSource.chunkPreview}
                     </p>
                   </div>
                 ) : (
-                  <p className="text-[12px]" style={{ color: '#AEABA6' }}>No preview available.</p>
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                    <FileX className="w-8 h-8 mb-3" style={{ color: '#D9D7D2' }} strokeWidth={1.5} />
+                    <p className="text-[12px]" style={{ color: '#AEABA6' }}>No preview available.</p>
+                  </div>
                 )}
               </div>
 
+              {/* Footer */}
               <div
                 className="px-5 py-3 shrink-0 flex items-center justify-between"
-                style={{ borderTop: '1px solid #E3E1DC' }}
+                style={{ borderTop: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}
               >
-                <span className="text-[11px]" style={{ color: '#AEABA6' }}>Source document</span>
+                <span className="text-[11px] font-medium" style={{ color: '#7A7874' }}>Source document</span>
                 <Link
                   href="/upload"
-                  className="text-[12px] font-medium hover:underline"
+                  className="text-[12px] font-semibold hover:underline"
                   style={{ color: '#4361EE' }}
                 >
-                  View all docs →
+                  View all →
                 </Link>
               </div>
             </motion.div>

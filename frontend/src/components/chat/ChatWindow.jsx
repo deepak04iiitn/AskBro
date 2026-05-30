@@ -233,7 +233,7 @@ export default function ChatWindow({ chatId }) {
             {messages.length === 0 ? (
               <EmptyState readyCount={readyCount} onSuggest={handleSend} />
             ) : (
-              <div className="max-w-[860px] mx-auto px-6 space-y-8">
+              <div className="max-w-[920px] mx-auto px-6 space-y-8">
                 {messages.map((msg) => (
                   <MessageBubble
                     key={msg.id}
@@ -319,7 +319,7 @@ export default function ChatWindow({ chatId }) {
                 className="px-5 py-3 shrink-0 flex items-center justify-between"
                 style={{ borderTop: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}
               >
-                <span className="text-[11px] font-medium" style={{ color: '#7A7874' }}>Source document</span>
+                <span className="text-[11px] font-medium" style={{ color: '#7A7874' }}>Source</span>
                 <Link
                   href="/upload"
                   className="text-[12px] font-semibold hover:underline"

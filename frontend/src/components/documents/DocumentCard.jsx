@@ -212,7 +212,7 @@ function ListRow({ doc, isSelected, onToggle }) {
         checked={isSelected}
         onChange={() => onToggle(doc.document_id)}
         onClick={(e) => e.stopPropagation()}
-        className={`w-4 h-4 shrink-0 cursor-pointer transition-opacity duration-150 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+        className="w-4 h-4 shrink-0 cursor-pointer"
         style={{ accentColor: '#4361EE' }}
       />
 
@@ -248,7 +248,7 @@ function ListRow({ doc, isSelected, onToggle }) {
       <div ref={menuRef} className="w-8 shrink-0 flex justify-center relative">
         <button
           onClick={() => { setMenuOpen((v) => !v); setConfirming(false) }}
-          className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+          className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors cursor-pointer"
           style={{ color: '#AEABA6' }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = '#E3E1DC'

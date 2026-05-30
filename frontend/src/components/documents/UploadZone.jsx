@@ -2,14 +2,34 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UploadCloud, FileText, CheckCircle2, XCircle, Pencil, ArrowRight } from 'lucide-react'
+import { UploadCloud, CheckCircle2, XCircle, Check, FileText, Pencil, ArrowRight } from 'lucide-react'
 import { getDocumentStatus, uploadDocumentWithProgress } from '@/lib/api'
 import useDocumentStore from '@/store/useDocumentStore'
 
 const ACCEPTED_EXTENSIONS = ['pdf', 'docx', 'md', 'txt']
 const MAX_SIZE_MB = 50
 
-const STAGE_LABELS = ['Uploading', 'Extracting text', 'Generating embeddings', 'Indexing']
+// ── User-friendly step labels ─────────────────────────────────
+const STEPS = [
+  {
+    label: 'Uploading your file',
+    detail: 'Sending to our servers securely',
+  },
+  {
+    label: 'Reading your document',
+    detail: 'Extracting all the text and structure',
+  },
+  {
+    label: 'Understanding the content',
+    detail: 'Analysing topics, facts and context',
+  },
+  {
+    label: 'Making it searchable',
+    detail: 'Your document will be ready to answer questions',
+  },
+]
+
+// Durations for simulated stage progress animation (ms)
 const STAGE_DURATIONS = [null, 4000, 12000, 4000]
 
 const FORMAT_PILLS = [
@@ -28,34 +48,119 @@ function getExt(filename) {
   return filename.split('.').pop()?.toLowerCase() ?? ''
 }
 
-function UploadProgressCard({ upload }) {
+// ── Indeterminate shimmer bar for processing stages ───────────
+function ShimmerBar() {
+  return (
+    <div className="relative h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#DBEAFE' }}>
+      <motion.div
+        className="absolute top-0 bottom-0 rounded-full"
+        style={{ backgroundColor: '#2563EB', width: '40%' }}
+        animate={{ left: ['-40%', '100%'] }}
+        transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+      />
+    </div>
+  )
+}
+
+// ── Upload progress bar (for stage 0) ────────────────────────
+function ProgressBar({ pct }) {
+  return (
+    <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#DBEAFE' }}>
+      <motion.div
+        className="h-full rounded-full"
+        style={{ backgroundColor: '#2563EB' }}
+        animate={{ width: `${Math.max(2, pct)}%` }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+      />
+    </div>
+  )
+}
+
+// ── Single step row ───────────────────────────────────────────
+function StepRow({ step, index, isDone, isActive, isFailed, uploadPct }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.05 }}
+      className="flex flex-col gap-1.5"
+    >
+      <div className="flex items-center gap-3">
+        {/* Circle indicator */}
+        <div
+          className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold transition-all duration-300"
+          style={{
+            backgroundColor: isDone ? '#DCFCE7' : isFailed ? '#FEE2E2' : isActive ? '#DBEAFE' : '#F4F3F0',
+            color: isDone ? '#16A34A' : isFailed ? '#DC2626' : isActive ? '#2563EB' : '#AEABA6',
+          }}
+        >
+          {isDone ? <Check className="w-3 h-3" strokeWidth={3} /> : index + 1}
+        </div>
+
+        {/* Label with animated strikethrough */}
+        <div className="flex-1 min-w-0 relative">
+          <span
+            className="text-[13px] font-medium transition-all duration-300"
+            style={{
+              color: isDone ? '#AEABA6' : isFailed ? '#DC2626' : isActive ? '#1E3A8A' : '#9CA3AF',
+              textDecorationLine: isDone ? 'line-through' : 'none',
+              textDecorationColor: isDone ? '#16A34A' : 'transparent',
+            }}
+          >
+            {step.label}
+          </span>
+        </div>
+
+        {/* Right badge */}
+        {isDone && (
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: '#DCFCE7', color: '#16A34A' }}
+          >
+            Done ✓
+          </motion.span>
+        )}
+        {isActive && (
+          <span className="shrink-0 text-[11px] font-semibold" style={{ color: '#2563EB' }}>
+            In progress…
+          </span>
+        )}
+        {isFailed && (
+          <span className="shrink-0 text-[11px] font-semibold" style={{ color: '#DC2626' }}>
+            Failed
+          </span>
+        )}
+      </div>
+
+      {/* Progress bar — active step only */}
+      {isActive && (
+        <div className="ml-9">
+          {index === 0
+            ? <ProgressBar pct={uploadPct ?? 0} />
+            : <ShimmerBar />
+          }
+          <p className="text-[11px] mt-1" style={{ color: '#6B7280' }}>
+            {step.detail}
+          </p>
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+// ── Progress view for one file upload ────────────────────────
+function FileUploadProgress({ upload }) {
   const { file, uploadPct, processingStage, phase } = upload
   const isComplete = phase === 'completed'
   const isFailed   = phase === 'failed'
 
-  const overallPct = processingStage === 0
-    ? uploadPct * 0.25
-    : processingStage >= STAGE_LABELS.length
-      ? 100
-      : 25 + ((processingStage - 1) / (STAGE_LABELS.length - 1)) * 75
-
-  const stageLabel = isComplete ? 'Ready'
-    : isFailed ? 'Failed'
-    : STAGE_LABELS[Math.min(processingStage, STAGE_LABELS.length - 1)] + '…'
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -8, height: 0 }}
-      animate={{ opacity: 1, y: 0, height: 'auto' }}
-      exit={{ opacity: 0, y: -8, height: 0 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-      className="overflow-hidden rounded-2xl"
-      style={{
-        border: `1px solid ${isComplete ? '#BBF7D0' : isFailed ? '#FECACA' : '#BFDBFE'}`,
-        backgroundColor: isComplete ? '#F0FDF4' : isFailed ? '#FEF2F2' : '#EFF6FF',
-      }}
-    >
-      <div className="flex items-center gap-4 px-5 py-4">
+    <div className="space-y-5">
+      {/* File header */}
+      <div className="flex items-center gap-3">
         <div
           className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ backgroundColor: isComplete ? '#DCFCE7' : isFailed ? '#FEE2E2' : '#DBEAFE' }}
@@ -67,66 +172,214 @@ function UploadProgressCard({ upload }) {
             : <FileText className="w-5 h-5" style={{ color: '#2563EB' }} strokeWidth={1.8} />
           }
         </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-3 mb-2.5">
-            <p className="text-[13px] font-semibold truncate" style={{ color: '#1E3A8A' }}>
-              {file.name}
-            </p>
-            <span className="text-[11px] font-bold shrink-0" style={{ color: isComplete ? '#16A34A' : isFailed ? '#DC2626' : '#2563EB' }}>
-              {stageLabel}
-            </span>
-          </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: isComplete ? '#BBF7D0' : isFailed ? '#FECACA' : '#BFDBFE' }}>
-            <motion.div
-              className="h-full rounded-full"
-              style={{ backgroundColor: isComplete ? '#16A34A' : isFailed ? '#DC2626' : '#2563EB', transformOrigin: 'left' }}
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: isComplete || isFailed ? 1 : Math.max(0.02, overallPct / 100) }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-            />
-          </div>
+        <div className="min-w-0">
+          <p className="text-[14px] font-semibold truncate" style={{ color: '#1E3A8A' }}>
+            {file.name}
+          </p>
+          <p className="text-[12px]" style={{ color: '#6B7280' }}>
+            {formatBytes(file.size)}
+            {isComplete && <span className="ml-2 font-semibold" style={{ color: '#16A34A' }}>· Ready to use!</span>}
+            {isFailed && <span className="ml-2 font-semibold" style={{ color: '#DC2626' }}>· Upload failed</span>}
+          </p>
         </div>
-
-        <span className="text-[11px] font-medium shrink-0" style={{ color: '#6B7280' }}>
-          {formatBytes(file.size)}
-        </span>
       </div>
-    </motion.div>
+
+      {/* Step list */}
+      <div className="space-y-3">
+        {STEPS.map((step, i) => {
+          const isDone = isComplete || processingStage > i
+          const isActive = !isComplete && !isFailed && processingStage === i
+          const stepFailed = isFailed && processingStage === i
+          return (
+            <StepRow
+              key={i}
+              step={step}
+              index={i}
+              isDone={isDone}
+              isActive={isActive}
+              isFailed={stepFailed}
+              uploadPct={uploadPct}
+            />
+          )
+        })}
+      </div>
+
+      {/* Completion message */}
+      {isComplete && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="rounded-xl px-4 py-3 text-center"
+          style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0' }}
+        >
+          <p className="text-[13px] font-semibold" style={{ color: '#15803D' }}>
+            🎉 Your document is ready! You can now ask questions about it.
+          </p>
+        </motion.div>
+      )}
+    </div>
   )
 }
 
+// ── Short step label for multi-file compact view ─────────────
+const STEP_SHORT = ['Uploading…', 'Reading…', 'Analysing…', 'Finishing up…']
+
+// ── Multi-file overview ───────────────────────────────────────
+function MultiFileProgress({ uploads }) {
+  const total     = uploads.length
+  const doneCount = uploads.filter((u) => u.phase === 'completed').length
+  const failCount = uploads.filter((u) => u.phase === 'failed').length
+  const allDone   = doneCount + failCount === total
+  const pct       = Math.round((doneCount / total) * 100)
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Header */}
+      <div className="text-center">
+        <p className="font-bold tracking-[-0.01em] mb-1" style={{ fontSize: '18px', color: '#1E3A8A' }}>
+          {allDone
+            ? `${total} file${total > 1 ? 's' : ''} processed`
+            : `Processing ${total} files…`}
+        </p>
+        <p className="text-[13px]" style={{ color: '#6B7280' }}>
+          {doneCount} of {total} complete{failCount > 0 ? ` · ${failCount} failed` : ''}
+        </p>
+      </div>
+
+      {/* Overall progress bar */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[11px] font-semibold" style={{ color: '#2563EB' }}>
+            {pct}%
+          </span>
+          <span className="text-[11px]" style={{ color: '#9CA3AF' }}>
+            {doneCount}/{total} files
+          </span>
+        </div>
+        <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#DBEAFE' }}>
+          <motion.div
+            className="h-full rounded-full"
+            style={{ backgroundColor: '#2563EB' }}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
+          />
+        </div>
+      </div>
+
+      {/* Per-file compact rows */}
+      <div className="space-y-2">
+        {uploads.map((u) => {
+          const done    = u.phase === 'completed'
+          const failed  = u.phase === 'failed'
+          const active  = !done && !failed
+          const shortLabel = done ? 'Ready' : failed ? 'Failed' : STEP_SHORT[Math.min(u.processingStage, STEP_SHORT.length - 1)]
+          return (
+            <div
+              key={u.id}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{ backgroundColor: done ? '#F0FDF4' : failed ? '#FEF2F2' : '#EFF6FF', border: `1px solid ${done ? '#BBF7D0' : failed ? '#FECACA' : '#BFDBFE'}` }}
+            >
+              {/* Icon */}
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                style={{ backgroundColor: done ? '#DCFCE7' : failed ? '#FEE2E2' : '#DBEAFE' }}
+              >
+                {done
+                  ? <CheckCircle2 className="w-4 h-4" style={{ color: '#16A34A' }} strokeWidth={2} />
+                  : failed
+                  ? <XCircle className="w-4 h-4" style={{ color: '#DC2626' }} strokeWidth={2} />
+                  : <FileText className="w-4 h-4" style={{ color: '#2563EB' }} strokeWidth={1.8} />
+                }
+              </div>
+
+              {/* Filename */}
+              <span className="flex-1 min-w-0 text-[13px] font-medium truncate" style={{ color: '#1E3A8A' }}>
+                {u.file.name}
+              </span>
+
+              {/* Status label */}
+              <span
+                className="shrink-0 text-[11px] font-semibold"
+                style={{ color: done ? '#16A34A' : failed ? '#DC2626' : '#2563EB' }}
+              >
+                {shortLabel}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* All done banner */}
+      {allDone && doneCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="rounded-xl px-4 py-3 text-center"
+          style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0' }}
+        >
+          <p className="text-[13px] font-semibold" style={{ color: '#15803D' }}>
+            🎉 {doneCount} file{doneCount > 1 ? 's are' : ' is'} ready! You can now ask questions about {doneCount > 1 ? 'them' : 'it'}.
+          </p>
+        </motion.div>
+      )}
+    </div>
+  )
+}
+
+// ── Main UploadZone component ─────────────────────────────────
 export default function UploadZone() {
   const inputRef = useRef(null)
   const addDocument    = useDocumentStore((s) => s.addDocument)
   const updateDocument = useDocumentStore((s) => s.updateDocument)
   const startPolling   = useDocumentStore((s) => s.startPolling)
 
-  // shared state
   const [uploads, setUploads] = useState([])
-  const [error, setError]     = useState('')
+  const [dragOver, setDragOver] = useState(false)
+  const [error, setError]       = useState('')
 
-  // mode: 'file' | 'paste'
-  const [mode, setMode]           = useState('file')
-  const [dragOver, setDragOver]   = useState(false)
-
-  // paste mode state
-  const [pasteName, setPasteName]       = useState('')
+  // Paste text mode
+  const [mode, setMode]             = useState('file') // 'file' | 'paste'
+  const [pasteName, setPasteName]   = useState('')
   const [pasteContent, setPasteContent] = useState('')
-  const [pasteExt, setPasteExt]         = useState('md')
-  const [pasteError, setPasteError]     = useState('')
+  const [pasteExt, setPasteExt]     = useState('md')
+  const [pasteError, setPasteError] = useState('')
+
+  function handlePasteSubmit(e) {
+    e.preventDefault()
+    setPasteError('')
+    if (!pasteName.trim()) { setPasteError('Please enter a file name.'); return }
+    if (!pasteContent.trim()) { setPasteError('Please paste some content.'); return }
+    const safeName = pasteName.trim().replace(/\.(md|txt)$/i, '')
+    const filename = `${safeName}.${pasteExt}`
+    const blob = new Blob([pasteContent], { type: 'text/plain' })
+    const file = new File([blob], filename, { type: 'text/plain', lastModified: Date.now() })
+    startUpload(file)
+    setPasteName(''); setPasteContent(''); setPasteError('')
+    setMode('file')
+  }
+
+  // Auto-clear completed uploads after 3 s so drop zone returns
+  useEffect(() => {
+    if (uploads.length === 0) return
+    const allSettled = uploads.every((u) => u.phase === 'completed' || u.phase === 'failed')
+    if (!allSettled) return
+    const timer = setTimeout(() => setUploads([]), 3000)
+    return () => clearTimeout(timer)
+  }, [uploads])
 
   function validateFile(f) {
     const ext = getExt(f.name)
-    if (!ACCEPTED_EXTENSIONS.includes(ext)) return `File type .${ext} is not supported.`
-    if (f.size > MAX_SIZE_MB * 1024 * 1024) return `File too large. Max is ${MAX_SIZE_MB} MB.`
+    if (!ACCEPTED_EXTENSIONS.includes(ext)) return `${f.name} — file type .${ext} is not supported.`
+    if (f.size > MAX_SIZE_MB * 1024 * 1024) return `${f.name} is too large. Max is ${MAX_SIZE_MB} MB.`
     return null
   }
 
   function startFiles(fileList) {
     const files = Array.from(fileList)
-    const invalid = files.find((f) => validateFile(f))
-    if (invalid) { setError(validateFile(invalid)); return }
+    const firstInvalid = files.find((f) => validateFile(f))
+    if (firstInvalid) { setError(validateFile(firstInvalid)); return }
     setError('')
     files.forEach((f) => startUpload(f))
   }
@@ -173,7 +426,7 @@ export default function UploadZone() {
 
       const timers = []
       let elapsed = 0
-      for (let i = 1; i < STAGE_LABELS.length - 1; i++) {
+      for (let i = 1; i < STEPS.length - 1; i++) {
         elapsed += STAGE_DURATIONS[i] ?? 0
         timers.push(setTimeout(() => patchUpload(id, { processingStage: i + 1 }), elapsed))
       }
@@ -185,7 +438,7 @@ export default function UploadZone() {
             clearInterval(interval)
             timers.forEach(clearTimeout)
             updateDocument(docId, { status: 'completed', chunk_count: status.chunk_count })
-            patchUpload(id, { processingStage: STAGE_LABELS.length, phase: 'completed' })
+            patchUpload(id, { processingStage: STEPS.length, phase: 'completed' })
           } else if (status.status === 'failed') {
             clearInterval(interval)
             timers.forEach(clearTimeout)
@@ -195,144 +448,50 @@ export default function UploadZone() {
         } catch { /* keep polling */ }
       }, 3000)
     } catch (err) {
-      setError(err.message || 'Upload failed.')
+      setError(err.message || 'Upload failed. Please try again.')
       patchUpload(id, { phase: 'failed' })
     }
   }
 
-  // ── Paste text → File conversion ────────────────────────────
-  function handlePasteSubmit(e) {
-    e.preventDefault()
-    setPasteError('')
-
-    if (!pasteName.trim()) { setPasteError('Please enter a filename.'); return }
-    if (!pasteContent.trim()) { setPasteError('Please paste some content.'); return }
-
-    const safeName = pasteName.trim().replace(/\.(md|txt)$/i, '')
-    const filename = `${safeName}.${pasteExt}`
-    const blob = new Blob([pasteContent], { type: 'text/plain' })
-    const file = new File([blob], filename, { type: 'text/plain', lastModified: Date.now() })
-
-    startUpload(file)
-    setPasteName('')
-    setPasteContent('')
-    setPasteError('')
-    setMode('file')
-  }
-
-  const charCount = pasteContent.length
+  const showProgress = uploads.length > 0
 
   return (
-    <div className="space-y-3 h-full flex flex-col">
+    <div className="h-full flex flex-col gap-3">
 
-      {/* ── Mode switcher ─────────────────────────────────────── */}
-      <div
-        className="flex items-center gap-1 p-1 rounded-xl self-start"
-        style={{ backgroundColor: '#DBEAFE', border: '1px solid #BFDBFE' }}
-      >
-        {[
-          { id: 'file',  Icon: UploadCloud, label: 'Upload files' },
-          { id: 'paste', Icon: Pencil,      label: 'Paste text'   },
-        ].map(({ id, Icon, label }) => {
-          const active = mode === id
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => { setMode(id); setError(''); setPasteError('') }}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all cursor-pointer"
-              style={{
-                backgroundColor: active ? '#FFFFFF' : 'transparent',
-                color: active ? '#1E3A8A' : '#6B7280',
-                boxShadow: active ? '0 1px 4px rgba(0,0,0,0.10)' : 'none',
-              }}
-            >
-              <Icon className="w-3.5 h-3.5" strokeWidth={2} />
-              {label}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* ── File upload zone ──────────────────────────────────── */}
-      <AnimatePresence mode="wait">
-        {mode === 'file' && (
-          <motion.div
-            key="file"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="flex-1 flex flex-col"
-          >
-            <motion.div
-              onDragOver={onDragOver}
-              onDragLeave={onDragLeave}
-              onDrop={onDrop}
-              onClick={() => inputRef.current?.click()}
-              animate={{
-                borderColor: dragOver ? '#2563EB' : '#BFDBFE',
-                backgroundColor: dragOver ? '#DBEAFE' : '#FFFFFF',
-                scale: dragOver ? 1.005 : 1,
-              }}
-              transition={{ duration: 0.15 }}
-              className="flex-1 flex flex-col items-center justify-center gap-6 cursor-pointer rounded-2xl px-8 select-none"
-              style={{ minHeight: '420px', border: '2px dashed #BFDBFE', backgroundColor: '#FFFFFF' }}
-            >
-              <input
-                ref={inputRef}
-                type="file"
-                accept=".pdf,.docx,.md,.txt"
-                multiple
-                className="hidden"
-                onChange={(e) => { if (e.target.files?.length) { startFiles(e.target.files); e.target.value = '' } }}
-              />
-
-              <motion.div
-                animate={{ scale: dragOver ? 1.12 : 1 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-              >
-                <div
-                  className="w-20 h-20 rounded-2xl flex items-center justify-center"
-                  style={{ backgroundColor: dragOver ? '#BFDBFE' : '#EFF6FF' }}
-                >
-                  <UploadCloud className="w-9 h-9" style={{ color: dragOver ? '#1D4ED8' : '#3B82F6' }} strokeWidth={1.8} />
-                </div>
-              </motion.div>
-
-              <div className="text-center">
-                <p className="font-bold tracking-[-0.01em]" style={{ fontSize: '18px', color: dragOver ? '#1D4ED8' : '#1E3A8A' }}>
-                  {dragOver ? 'Release to upload' : 'Drop files here'}
-                </p>
-                <p className="text-[13px] mt-1.5" style={{ color: '#6B7280' }}>
-                  Drag & drop multiple files or click to browse · max {MAX_SIZE_MB} MB each
-                </p>
-              </div>
-
+      {/* ── Mode switcher (hidden while uploading) ─────────────── */}
+      {!showProgress && (
+        <div
+          className="flex items-center gap-1 p-1 rounded-xl self-start"
+          style={{ backgroundColor: '#DBEAFE', border: '1px solid #BFDBFE' }}
+        >
+          {[
+            { id: 'file',  Icon: UploadCloud, label: 'Upload files' },
+            { id: 'paste', Icon: Pencil,      label: 'Paste text'   },
+          ].map(({ id, Icon, label }) => {
+            const active = mode === id
+            return (
               <button
+                key={id}
                 type="button"
-                onClick={(e) => e.stopPropagation()}
-                className="h-10 px-6 text-[13px] font-semibold rounded-xl transition-colors cursor-pointer"
-                style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1D4ED8' }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563EB' }}
+                onClick={() => { setMode(id); setError(''); setPasteError('') }}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all cursor-pointer"
+                style={{
+                  backgroundColor: active ? '#FFFFFF' : 'transparent',
+                  color: active ? '#1E3A8A' : '#6B7280',
+                  boxShadow: active ? '0 1px 4px rgba(0,0,0,0.10)' : 'none',
+                }}
               >
-                Browse files
+                <Icon className="w-3.5 h-3.5" strokeWidth={2} />
+                {label}
               </button>
+            )
+          })}
+        </div>
+      )}
 
-              <div className="flex items-center gap-2">
-                {FORMAT_PILLS.map(({ label, bg, color }) => (
-                  <span key={label} className="text-[11px] font-bold px-2.5 py-1 rounded-lg" style={{ backgroundColor: bg, color }}>
-                    {label}
-                  </span>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {/* ── Paste text form ─────────────────────────────────── */}
-        {mode === 'paste' && (
+      <AnimatePresence mode="wait">
+        {!showProgress && mode === 'paste' ? (
+          /* ── Paste text form ─────────────────────────────────── */
           <motion.form
             key="paste"
             initial={{ opacity: 0, x: 20 }}
@@ -343,7 +502,7 @@ export default function UploadZone() {
             className="flex-1 flex flex-col gap-4 bg-white rounded-2xl p-6"
             style={{ border: '2px solid #BFDBFE', minHeight: '420px' }}
           >
-            {/* Filename row */}
+            {/* Filename */}
             <div>
               <label className="block text-[12px] font-semibold mb-1.5" style={{ color: '#1E3A8A' }}>
                 File name
@@ -354,19 +513,11 @@ export default function UploadZone() {
                   value={pasteName}
                   onChange={(e) => setPasteName(e.target.value)}
                   placeholder="e.g. meeting-notes"
-                  className="flex-1 h-10 rounded-xl px-3 text-[13px] transition-all focus:outline-none"
+                  className="flex-1 h-10 rounded-xl px-3 text-[13px] focus:outline-none transition-all"
                   style={{ border: '1.5px solid #BFDBFE', backgroundColor: '#EFF6FF', color: '#1E3A8A' }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#2563EB'
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.12)'
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#BFDBFE'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = '#2563EB'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.12)' }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = '#BFDBFE'; e.currentTarget.style.boxShadow = 'none' }}
                 />
-
-                {/* Extension toggle */}
                 <div
                   className="flex items-center gap-0.5 p-0.5 rounded-lg shrink-0"
                   style={{ backgroundColor: '#DBEAFE', border: '1px solid #BFDBFE' }}
@@ -387,17 +538,15 @@ export default function UploadZone() {
                     </button>
                   ))}
                 </div>
-
-                {/* Preview of full filename */}
                 {pasteName.trim() && (
-                  <span className="text-[12px] font-medium shrink-0" style={{ color: '#9CA3AF' }}>
+                  <span className="text-[12px] shrink-0" style={{ color: '#9CA3AF' }}>
                     → {pasteName.trim().replace(/\.(md|txt)$/i, '')}.{pasteExt}
                   </span>
                 )}
               </div>
             </div>
 
-            {/* Content textarea */}
+            {/* Textarea */}
             <div className="flex-1 flex flex-col">
               <label className="block text-[12px] font-semibold mb-1.5" style={{ color: '#1E3A8A' }}>
                 Content
@@ -405,53 +554,29 @@ export default function UploadZone() {
               <textarea
                 value={pasteContent}
                 onChange={(e) => setPasteContent(e.target.value)}
-                placeholder={pasteExt === 'md'
-                  ? '# Heading\n\nPaste your markdown, notes, or documentation here…'
-                  : 'Paste your plain text, logs, or any content here…'
-                }
+                placeholder={pasteExt === 'md' ? '# Heading\n\nPaste your markdown, notes, or documentation here…' : 'Paste your plain text, logs, or any content here…'}
                 className="flex-1 rounded-xl px-4 py-3 text-[13px] leading-relaxed resize-none focus:outline-none transition-all"
                 style={{
-                  border: '1.5px solid #BFDBFE',
-                  backgroundColor: '#F8FAFF',
-                  color: '#1E3A8A',
-                  minHeight: '260px',
+                  border: '1.5px solid #BFDBFE', backgroundColor: '#F8FAFF', color: '#1E3A8A',
+                  minHeight: '220px',
                   fontFamily: pasteExt === 'md' ? 'var(--font-jetbrains), monospace' : 'inherit',
                 }}
-                onFocus={(e) => {
-                  e.currentTarget.style.borderColor = '#2563EB'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.10)'
-                }}
-                onBlur={(e) => {
-                  e.currentTarget.style.borderColor = '#BFDBFE'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = '#2563EB'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.10)' }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = '#BFDBFE'; e.currentTarget.style.boxShadow = 'none' }}
               />
               <p className="text-[11px] mt-1.5 text-right" style={{ color: '#9CA3AF' }}>
-                {charCount > 0 ? `${charCount.toLocaleString()} character${charCount !== 1 ? 's' : ''}` : 'No content yet'}
+                {pasteContent.length > 0 ? `${pasteContent.length.toLocaleString()} characters` : 'No content yet'}
               </p>
             </div>
 
-            {/* Error */}
-            <AnimatePresence>
-              {pasteError && (
-                <motion.p
-                  initial={{ opacity: 0, y: -4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="text-[13px]"
-                  style={{ color: '#DC2626' }}
-                >
-                  {pasteError}
-                </motion.p>
-              )}
-            </AnimatePresence>
+            {pasteError && (
+              <p className="text-[13px]" style={{ color: '#DC2626' }}>{pasteError}</p>
+            )}
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={!pasteName.trim() || !pasteContent.trim()}
-              className="h-11 flex items-center justify-center gap-2 text-white text-[13px] font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="h-11 flex items-center justify-center gap-2 text-white text-[13px] font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-40"
               style={{ backgroundColor: '#2563EB' }}
               onMouseEnter={(e) => { if (pasteName.trim() && pasteContent.trim()) e.currentTarget.style.backgroundColor = '#1D4ED8' }}
               onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563EB' }}
@@ -460,10 +585,92 @@ export default function UploadZone() {
               <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
             </button>
           </motion.form>
+        ) : !showProgress ? (
+          /* ── Drop zone ─────────────────────────────────────── */
+          <motion.div
+            key="dropzone"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{
+              opacity: 1,
+              scale: dragOver ? 1.005 : 1,
+              borderColor: dragOver ? '#2563EB' : '#BFDBFE',
+              backgroundColor: dragOver ? '#DBEAFE' : '#FFFFFF',
+            }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+            onClick={() => inputRef.current?.click()}
+            className="flex-1 flex flex-col items-center justify-center gap-6 cursor-pointer rounded-2xl px-8 select-none"
+            style={{ minHeight: '420px', border: '2px dashed #BFDBFE' }}
+          >
+            <input
+              ref={inputRef}
+              type="file"
+              accept=".pdf,.docx,.md,.txt"
+              multiple
+              className="hidden"
+              onChange={(e) => { if (e.target.files?.length) { startFiles(e.target.files); e.target.value = '' } }}
+            />
+
+            <motion.div animate={{ scale: dragOver ? 1.1 : 1 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+              <div
+                className="w-20 h-20 rounded-2xl flex items-center justify-center"
+                style={{ backgroundColor: dragOver ? '#BFDBFE' : '#EFF6FF' }}
+              >
+                <UploadCloud className="w-9 h-9" style={{ color: dragOver ? '#1D4ED8' : '#3B82F6' }} strokeWidth={1.8} />
+              </div>
+            </motion.div>
+
+            <div className="text-center">
+              <p className="font-bold tracking-[-0.01em]" style={{ fontSize: '18px', color: dragOver ? '#1D4ED8' : '#1E3A8A' }}>
+                {dragOver ? 'Release to upload' : 'Drop files here'}
+              </p>
+              <p className="text-[13px] mt-1.5" style={{ color: '#6B7280' }}>
+                Drag & drop multiple files or click to browse · max {MAX_SIZE_MB} MB each
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); inputRef.current?.click() }}
+              className="h-10 px-6 text-[13px] font-semibold rounded-xl transition-colors cursor-pointer"
+              style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1D4ED8' }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#2563EB' }}
+            >
+              Browse files
+            </button>
+
+            <div className="flex items-center gap-2">
+              {FORMAT_PILLS.map(({ label, bg, color }) => (
+                <span key={label} className="text-[11px] font-bold px-2.5 py-1 rounded-lg" style={{ backgroundColor: bg, color }}>
+                  {label}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        ) : (
+          /* ── Progress view ────────────────────────────────── */
+          <motion.div
+            key="progress"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className="flex-1 rounded-2xl px-8 py-8 overflow-y-auto"
+            style={{ border: '2px solid #BFDBFE', backgroundColor: '#FFFFFF' }}
+          >
+            {uploads.length === 1
+              ? <FileUploadProgress upload={uploads[0]} />
+              : <MultiFileProgress uploads={uploads} />
+            }
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── File upload error ─────────────────────────────────── */}
+      {/* Error */}
       <AnimatePresence>
         {error && (
           <motion.div
@@ -477,13 +684,6 @@ export default function UploadZone() {
             <p className="text-[13px]" style={{ color: '#DC2626' }}>{error}</p>
           </motion.div>
         )}
-      </AnimatePresence>
-
-      {/* ── Upload progress cards ─────────────────────────────── */}
-      <AnimatePresence>
-        {uploads.map((u) => (
-          <UploadProgressCard key={u.id} upload={u} />
-        ))}
       </AnimatePresence>
     </div>
   )

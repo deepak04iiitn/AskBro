@@ -29,7 +29,7 @@ function TypingIndicator() {
 
 const MD_COMPONENTS = {
   p: ({ children }) => (
-    <p className="mb-4 last:mb-0 text-[15px] leading-[1.8]" style={{ color: '#3D3C3A' }}>
+    <p className="mb-4 last:mb-0 text-[15px] leading-[1.8]" style={{ color: '#111110' }}>
       {children}
     </p>
   ),
@@ -44,13 +44,13 @@ const MD_COMPONENTS = {
     </ol>
   ),
   li: ({ children }) => (
-    <li className="text-[15px] leading-[1.7] pl-1" style={{ color: '#3D3C3A' }}>{children}</li>
+    <li className="text-[15px] leading-[1.7] pl-1" style={{ color: '#111110' }}>{children}</li>
   ),
   strong: ({ children }) => (
     <strong className="font-semibold" style={{ color: '#111110' }}>{children}</strong>
   ),
   em: ({ children }) => (
-    <em className="italic" style={{ color: '#3D3C3A' }}>{children}</em>
+    <em className="italic" style={{ color: '#111110' }}>{children}</em>
   ),
   h1: ({ children }) => (
     <h1 className="text-[18px] font-bold mb-3 mt-5 first:mt-0 tracking-tight" style={{ color: '#111110' }}>{children}</h1>
@@ -70,7 +70,7 @@ const MD_COMPONENTS = {
         {children}
       </code>
     ) : (
-      <code className="block text-[13px] font-mono leading-relaxed" style={{ color: '#3D3C3A' }}>{children}</code>
+      <code className="block text-[13px] font-mono leading-relaxed" style={{ color: '#111110' }}>{children}</code>
     ),
   pre: ({ children }) => (
     <pre
@@ -83,7 +83,7 @@ const MD_COMPONENTS = {
   blockquote: ({ children }) => (
     <blockquote
       className="mb-4 last:mb-0 pl-4 py-1 text-[14px] italic"
-      style={{ borderLeft: '3px solid #E3E1DC', color: '#7A7874' }}
+      style={{ borderLeft: '3px solid #E3E1DC', color: '#4A4845' }}
     >
       {children}
     </blockquote>
@@ -161,16 +161,24 @@ export default function MessageBubble({ message, activeSourceId, onOpenSource })
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25, delay: 0.1 }}
-                  className="flex flex-wrap gap-1.5 mt-4"
+                  className="mt-4"
                 >
-                  {message.citations.map((c, i) => (
-                    <CitationCard
-                      key={i}
-                      citation={c}
-                      onOpen={onOpenSource}
-                      isActive={activeSourceId === buildSourceId(c)}
-                    />
-                  ))}
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-widest mb-2"
+                    style={{ color: '#AEABA6' }}
+                  >
+                    Sources
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {message.citations.map((c, i) => (
+                      <CitationCard
+                        key={i}
+                        citation={c}
+                        onOpen={onOpenSource}
+                        isActive={activeSourceId === buildSourceId(c)}
+                      />
+                    ))}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

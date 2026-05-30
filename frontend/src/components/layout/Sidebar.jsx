@@ -48,7 +48,9 @@ export default function Sidebar() {
   const [showMembers, setShowMembers] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [hoveredChatId, setHoveredChatId] = useState(null)
-  const [visibleCount, setVisibleCount] = useState(10)
+  const [visibleCount, setVisibleCount] = useState(5)
+  const [docsExpanded, setDocsExpanded] = useState(false)
+  const [docsCount, setDocsCount] = useState(5)
   const menuRef = useRef(null)
 
   // Load chat list on mount (once user is available)
@@ -87,7 +89,7 @@ export default function Sidebar() {
 
   const initial = user?.email?.[0]?.toUpperCase() ?? '?'
   const completedCount = documents.filter((d) => d.status === 'completed').length
-  const CHAT_PAGE = 10
+  const CHAT_PAGE = 5
   const visibleChats = chats.slice(0, visibleCount)
   const hasMore = chats.length > visibleCount
 
@@ -206,7 +208,7 @@ export default function Sidebar() {
         </div>
 
         {/* ── Scrollable body: chats + documents ───────────────── */}
-        <div className="flex-1 overflow-y-auto py-3">
+        <div className="flex-1 overflow-hidden py-3 flex flex-col">
 
           {/* ── Recent chats section ─────────────────────────────── */}
           {collapsed ? (
@@ -299,17 +301,20 @@ export default function Sidebar() {
             })}
           </div>
 
-          {/* Show more */}
+          {/* Show more chats */}
           {!collapsed && hasMore && (
-            <button
-              onClick={() => setVisibleCount((n) => n + CHAT_PAGE)}
-              className="w-full text-left px-4 py-1.5 text-[11px] font-semibold transition-colors cursor-pointer"
-              style={{ color: '#4361EE' }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#3451D6' }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#4361EE' }}
-            >
-              ↓ Show {Math.min(CHAT_PAGE, chats.length - visibleCount)} more
-            </button>
+            <div className="flex justify-center mt-1 px-2">
+              <button
+                onClick={() => setVisibleCount((n) => n + CHAT_PAGE)}
+                className="flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer"
+                style={{ color: '#4361EE' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#3451D6' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#4361EE' }}
+              >
+                <ChevronRight className="w-3 h-3 rotate-90" strokeWidth={2.5} />
+                Show {Math.min(CHAT_PAGE, chats.length - visibleCount)} more
+              </button>
+            </div>
           )}
 
           {/* Divider between chats and documents */}
@@ -319,25 +324,50 @@ export default function Sidebar() {
 
           {/* ── Documents section ────────────────────────────────── */}
           {collapsed ? (
-            <div className="flex justify-center mb-3 mt-3">
+            <button
+              onClick={() => setDocsExpanded((v) => !v)}
+              className="flex justify-center mb-3 mt-3 w-full cursor-pointer"
+              title="Toggle documents"
+            >
               <FileText className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
-            </div>
+            </button>
           ) : (
-            <div className="flex items-center justify-between px-4 mb-2 mt-3">
+            <button
+              onClick={() => setDocsExpanded((v) => !v)}
+              className="w-full flex items-center justify-between px-4 mb-1 mt-3 cursor-pointer group"
+            >
               <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#7A7874' }}>
                 Documents
               </p>
-              {completedCount > 0 && (
-                <span
-                  className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                  style={{ backgroundColor: '#EEF1FD', color: '#4361EE' }}
+              <div className="flex items-center gap-1.5">
+                {documents.length > 0 && (
+                  <span
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                    style={{ backgroundColor: '#EEF1FD', color: '#4361EE' }}
+                  >
+                    {documents.length}
+                  </span>
+                )}
+                <motion.div
+                  animate={{ rotate: docsExpanded ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  {completedCount}
-                </span>
-              )}
-            </div>
+                  <ChevronUp className="w-3.5 h-3.5" style={{ color: '#AEABA6' }} strokeWidth={2} />
+                </motion.div>
+              </div>
+            </button>
           )}
 
+          {/* Collapsible document list */}
+          <AnimatePresence initial={false}>
+          {(docsExpanded || collapsed) && (
+            <motion.div
+              key="doc-list"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+            >
           {/* Empty state */}
           {!collapsed && documents.length === 0 && (
             <p className="px-4 py-2 text-[12px]" style={{ color: '#AEABA6' }}>
@@ -345,9 +375,12 @@ export default function Sidebar() {
             </p>
           )}
 
-          {/* Document rows */}
-          <div className="space-y-0.5 px-2">
-            {documents.map((doc) => {
+          {/* Document rows — scrollable, show max docsCount */}
+          <div
+            className="space-y-0.5 px-2 overflow-y-auto"
+            style={{ maxHeight: '176px' }}
+          >
+            {documents.slice(0, docsCount).map((doc) => {
               const ext = (doc.file_type?.toUpperCase()) ?? 'FILE'
               const badge = TYPE_BADGE[ext] ?? TYPE_BADGE.TXT
               const dotColor = STATUS_COLOR[doc.status] ?? '#CBD5E1'
@@ -383,6 +416,26 @@ export default function Sidebar() {
               )
             })}
           </div>
+
+            </motion.div>
+          )}
+          </AnimatePresence>
+
+          {/* Show more docs */}
+          {!collapsed && docsExpanded && documents.length > docsCount && (
+            <div className="flex justify-center mt-1 px-2">
+              <button
+                onClick={() => setDocsCount((n) => n + 5)}
+                className="flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer"
+                style={{ color: '#4361EE' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#3451D6' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#4361EE' }}
+              >
+                <ChevronRight className="w-3 h-3 rotate-90" strokeWidth={2.5} />
+                Show {Math.min(5, documents.length - docsCount)} more
+              </button>
+            </div>
+          )}
 
           {/* Upload button */}
           <div style={{ padding: collapsed ? '12px 8px 0' : '12px 8px 0' }}>

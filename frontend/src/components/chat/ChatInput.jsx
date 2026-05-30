@@ -116,7 +116,7 @@ export default function ChatInput({ onSend, disabled }) {
 
   return (
     <div className="px-6 pb-5 pt-3" style={{ backgroundColor: '#F7F5F2' }}>
-      <div className="max-w-[860px] mx-auto relative">
+      <div className="max-w-[920px] mx-auto relative">
 
         {/* ── @mention dropdown — appears above the input ────────── */}
         <AnimatePresence>

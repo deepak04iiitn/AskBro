@@ -40,10 +40,10 @@ function CountUp({ value }) {
 }
 
 const STATS = [
-  { key: 'total',      Icon: FileText,     label: 'Total',       unit: 'documents',  color: B.blue      },
-  { key: 'ready',      Icon: CheckCircle2, label: 'Ready',       unit: 'indexed',    color: '#16A34A'   },
-  { key: 'processing', Icon: Clock,        label: 'Processing',  unit: 'in progress',color: '#D97706'   },
-  { key: 'storage',    Icon: HardDrive,    label: 'Storage',     unit: 'MB used',    color: '#7C3AED'   },
+  { key: 'total',      Icon: FileText,     label: 'Total',       unit: 'files uploaded',      color: B.blue    },
+  { key: 'ready',      Icon: CheckCircle2, label: 'Ready',       unit: 'ready to ask about',  color: '#16A34A' },
+  { key: 'processing', Icon: Clock,        label: 'Working on',  unit: 'being prepared',       color: '#D97706' },
+  { key: 'storage',    Icon: HardDrive,    label: 'Storage',     unit: 'MB used',              color: '#7C3AED' },
 ]
 
 export default function UploadPage() {

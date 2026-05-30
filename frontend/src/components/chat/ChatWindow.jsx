@@ -176,7 +176,7 @@ export default function ChatWindow({ chatId }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function handleSend(query) {
+  async function handleSend(query, docIds) {
     if (streaming) return
 
     // Resolve the chat ID — create one if this is a new chat
@@ -199,7 +199,7 @@ export default function ChatWindow({ chatId }) {
     setStreaming(true)
 
     try {
-      for await (const event of streamChat(query, activeChatId)) {
+      for await (const event of streamChat(query, activeChatId, docIds)) {
         if (event.error) appendToken('\n\n⚠ ' + event.error)
         else if (event.done && event.citations !== undefined) setCitations(event.citations)
         else if (event.token) appendToken(event.token)

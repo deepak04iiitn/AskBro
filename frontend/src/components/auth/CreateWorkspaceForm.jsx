@@ -248,7 +248,8 @@ export default function CreateWorkspaceForm() {
         password: step1.password,
       })
       setUser(access_token)
-      router.replace('/dashboard')
+      const seen = localStorage.getItem('askbro_onboarded')
+      router.replace(seen ? '/dashboard' : '/onboarding')
     } catch (err) {
       setError(err.message || 'Failed to create workspace.')
     } finally {

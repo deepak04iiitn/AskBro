@@ -31,7 +31,8 @@ export default function LoginForm() {
     try {
       const data = await login(form)
       setUser(data.access_token)
-      router.push('/dashboard')
+      const seen = localStorage.getItem('askbro_onboarded')
+      router.push(seen ? '/dashboard' : '/onboarding')
     } catch (err) {
       setError(err.message || 'Login failed. Check your credentials.')
     } finally {

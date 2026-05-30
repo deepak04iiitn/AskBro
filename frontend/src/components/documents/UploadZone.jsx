@@ -117,12 +117,19 @@ export default function UploadZone() {
     return null
   }
 
+  function startFiles(fileList) {
+    const files = Array.from(fileList)
+    const invalid = files.find((f) => validateFile(f))
+    if (invalid) { setError(validateFile(invalid)); return }
+    setError('')
+    files.forEach((f) => startUpload(f))
+  }
+
   function onDragOver(e)  { e.preventDefault(); setDragOver(true) }
   function onDragLeave()  { setDragOver(false) }
   function onDrop(e) {
     e.preventDefault(); setDragOver(false)
-    const f = e.dataTransfer.files[0]
-    if (f) startUpload(f)
+    if (e.dataTransfer.files.length) startFiles(e.dataTransfer.files)
   }
 
   function patchUpload(id, patch) {
@@ -213,8 +220,9 @@ export default function UploadZone() {
           ref={inputRef}
           type="file"
           accept=".pdf,.docx,.md,.txt"
+          multiple
           className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) startUpload(f) }}
+          onChange={(e) => { if (e.target.files?.length) { startFiles(e.target.files); e.target.value = '' } }}
         />
 
         {/* Icon */}
@@ -241,10 +249,10 @@ export default function UploadZone() {
             className="font-bold tracking-[-0.01em]"
             style={{ fontSize: '18px', color: dragOver ? '#1D4ED8' : '#1E3A8A' }}
           >
-            {dragOver ? 'Release to upload' : 'Drop your file here'}
+            {dragOver ? 'Release to upload' : 'Drop files here'}
           </p>
           <p className="text-[13px] mt-1.5" style={{ color: '#6B7280' }}>
-            Drag & drop or click to browse · max {MAX_SIZE_MB} MB
+            Drag & drop multiple files or click to browse · max {MAX_SIZE_MB} MB each
           </p>
         </div>
 

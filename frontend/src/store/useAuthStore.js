@@ -18,6 +18,7 @@ const useAuthStore = create((set) => ({
           role: payload.role,
           workspace_id: payload.workspace_id,
           workspace_code: payload.workspace_code,
+          workspace_name: payload.workspace_name,
         },
       })
     }

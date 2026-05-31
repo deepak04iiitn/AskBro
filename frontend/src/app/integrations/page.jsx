@@ -291,6 +291,15 @@ function NotionDetail({ status, onStatusChange }) {
               <p className="text-[11px] mt-1.5" style={{ color: '#AEABA6' }}>
                 notion.so/profile/integrations &rarr; your connection &rarr; Integration token &rarr; Access token
               </p>
+              <div className="flex items-center gap-1.5 mt-2">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#16A34A', flexShrink: 0 }}>
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <p className="text-[11px]" style={{ color: '#16A34A' }}>
+                  Your token is encrypted and completely secure with us.
+                </p>
+              </div>
             </div>
 
             {error && (

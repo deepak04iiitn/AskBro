@@ -6,60 +6,54 @@ def build_context(
     top_n: int = 5,
     relative_threshold: float = 0.80,
     abs_min_score: float = 0.35,
+    citation_threshold: float = 0.92,
 ) -> tuple[str, list[str]]:
     """
     Format the top-N Qdrant hits into a readable context block for the LLM.
 
-    Applies a relative score threshold so that chunks from irrelevant documents
-    don't contaminate the context when a clearly more relevant document exists.
-
-    Args:
-        hits:               Scored points from Qdrant, sorted desc by score.
-        top_n:              Maximum chunks to include in context.
-        relative_threshold: Only keep chunks whose score ≥ best_score × this value.
-                            0.80 means a chunk must score at least 80% as well as
-                            the best-matching chunk to be included.
-        abs_min_score:      Hard floor — chunks below this are always excluded,
-                            regardless of relative threshold.
-
-    Returns:
-        context:      Multi-line string ready to inject into the prompt.
-        document_ids: Deduplicated list of documentId values (for AuditLog / citations).
+    Uses two separate thresholds:
+    - relative_threshold (0.80): loose — controls which chunks enter the LLM context.
+    - citation_threshold (0.92): tight — controls which documents are shown as citations.
+      Only documents with a chunk scoring ≥ best_score × 0.92 are cited, so citations
+      reflect where the answer actually came from rather than every searched file.
     """
     if not hits:
         return "", []
 
-    # Best hit comes first (Qdrant returns descending order)
     best_score = hits[0].score
-
-    # Minimum score = higher of (relative floor, absolute floor)
     min_score = max(best_score * relative_threshold, abs_min_score)
 
-    # Filter then cap at top_n
     selected = [h for h in hits if h.score >= min_score][:top_n]
-
-    # Guarantee at least the single best hit even if it falls below abs_min
     if not selected and hits:
         selected = hits[:1]
 
+    # ── Build context blocks (all selected chunks) ────────────────
     blocks: list[str] = []
-    document_ids: list[str] = []
-    seen_doc_ids: set[str] = set()
-
     for hit in selected:
         payload = hit.payload or {}
         file_name = payload.get("fileName", "unknown")
         page = payload.get("pageNumber")
         chunk_text = payload.get("chunkText", "")
-        doc_id = payload.get("documentId", "")
-
         page_label = f"Page {page}" if page is not None else "Page N/A"
-        header = f"[Source: {file_name}, {page_label}]"
-        blocks.append(f"{header}\n{chunk_text}")
-
-        if doc_id and doc_id not in seen_doc_ids:
-            seen_doc_ids.add(doc_id)
-            document_ids.append(doc_id)
+        blocks.append(f"[Source: {file_name}, {page_label}]\n{chunk_text}")
 
     context = "\n\n".join(blocks)
-    return context, document_ids
+
+    # ── Build citation doc IDs (tighter threshold) ────────────────
+    citation_min = best_score * citation_threshold
+    citation_doc_ids: list[str] = []
+    seen: set[str] = set()
+
+    for hit in selected:
+        if hit.score >= citation_min:
+            doc_id = (hit.payload or {}).get("documentId", "")
+            if doc_id and doc_id not in seen:
+                seen.add(doc_id)
+                citation_doc_ids.append(doc_id)
+
+    # Always cite at least the best-matching document
+    best_doc_id = (selected[0].payload or {}).get("documentId", "") if selected else ""
+    if best_doc_id and best_doc_id not in seen:
+        citation_doc_ids.insert(0, best_doc_id)
+
+    return context, citation_doc_ids

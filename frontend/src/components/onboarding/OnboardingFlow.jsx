@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Bot, UploadCloud, MessageSquare,
   BadgeCheck, ArrowRight, ChevronLeft, ShieldCheck,
-  FileSearch, Users, Quote,
+  FileSearch, Users, Quote, Puzzle,
 } from 'lucide-react'
 
 const DOT_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='2' cy='2' r='1.2' fill='%23D9D7D2' opacity='0.7'/%3E%3C/svg%3E")`
@@ -38,7 +38,7 @@ const STEPS = [
     iconColor: '#D97706',
     badge: 'Ready',
     headline: "You're all set!",
-    body: 'Your workspace is live. Upload your first document and start asking questions — every answer will cite exactly where it came from.',
+    body: 'Your workspace is live. Upload a document or connect Notion to start — every answer will cite exactly where it came from.',
     visual: 'cta',
   },
 ]
@@ -71,8 +71,8 @@ const HOW_IT_WORKS = [
   {
     num: '01',
     Icon: UploadCloud,
-    title: 'Upload documents',
-    desc: 'PDF, DOCX, Markdown, TXT — up to 50 MB each',
+    title: 'Upload or import from Notion',
+    desc: 'PDF, DOCX, TXT — or pull pages straight from your Notion workspace',
     iconColor: '#4361EE',
     iconBg: '#EEF1FD',
   },
@@ -270,7 +270,7 @@ export default function OnboardingFlow() {
                 </div>
               )}
 
-              {/* Step 3 — CTA pair */}
+              {/* Step 3 — CTA trio */}
               {current.visual === 'cta' && (
                 <div className="flex flex-col gap-3 mb-8">
                   <button
@@ -282,6 +282,16 @@ export default function OnboardingFlow() {
                   >
                     Upload my first document
                     <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+                  </button>
+                  <button
+                    onClick={() => { finish(); router.replace('/integrations') }}
+                    className="w-full h-11 text-[14px] font-semibold rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-colors"
+                    style={{ backgroundColor: '#EEF1FD', border: '1.5px solid #C7D2FE', color: '#4361EE' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#4361EE'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = '#4361EE' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#EEF1FD'; e.currentTarget.style.color = '#4361EE'; e.currentTarget.style.borderColor = '#C7D2FE' }}
+                  >
+                    <Puzzle className="w-4 h-4" strokeWidth={1.8} />
+                    Connect Notion
                   </button>
                   <button
                     onClick={finish}

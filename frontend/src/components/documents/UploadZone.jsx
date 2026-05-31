@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { UploadCloud, CheckCircle2, XCircle, Check, FileText, Pencil, ArrowRight } from 'lucide-react'
+import { UploadCloud, CheckCircle2, XCircle, Check, FileText, Pencil, ArrowRight, BookOpen, AlertCircle, Loader2, Puzzle } from 'lucide-react'
 import { getDocumentStatus, uploadDocumentWithProgress } from '@/lib/api'
+import { getNotionStatus, importNotionPage } from '@/lib/integrationsApi'
 import useDocumentStore from '@/store/useDocumentStore'
+import IntegrationsPanel from '@/components/integrations/IntegrationsPanel'
 
 const ACCEPTED_EXTENSIONS = ['pdf', 'docx', 'md', 'txt']
 const MAX_SIZE_MB = 50
@@ -328,6 +330,67 @@ function MultiFileProgress({ uploads }) {
   )
 }
 
+// ── Notion steps expandable hint ─────────────────────────────
+function NotionStepsHint() {
+  const [open, setOpen] = useState(false)
+  const steps = [
+    'Open the Notion page you want to import',
+    'Click the ... (three dots) menu in the top-right',
+    'Click "Add connections"',
+    'Search for and select your AskBro integration',
+    'Paste the page URL above and click Import',
+  ]
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E3E1DC' }}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-4 py-3 cursor-pointer transition-colors"
+        style={{ backgroundColor: open ? '#F0EFEC' : '#F7F5F2' }}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F0EFEC' }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = open ? '#F0EFEC' : '#F7F5F2' }}
+      >
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-3.5 h-3.5" style={{ color: '#7A7874' }} strokeWidth={2} />
+          <span className="text-[12px] font-semibold" style={{ color: '#4A4845' }}>
+            How to share a page with your integration
+          </span>
+        </div>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="#AEABA6" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </motion.div>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}
+            style={{ overflow: 'hidden', backgroundColor: '#FFFFFF', borderTop: '1px solid #E3E1DC' }}
+          >
+            <div className="px-4 py-3 space-y-2">
+              {steps.map((s, i) => (
+                <div key={i} className="flex items-start gap-2.5">
+                  <span
+                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5"
+                    style={{ backgroundColor: '#EEF1FD', color: '#4361EE' }}
+                  >
+                    {i + 1}
+                  </span>
+                  <p className="text-[12px] leading-[1.55]" style={{ color: '#4A4845' }}>{s}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 // ── Main UploadZone component ─────────────────────────────────
 export default function UploadZone() {
   const inputRef = useRef(null)
@@ -340,11 +403,47 @@ export default function UploadZone() {
   const [error, setError]       = useState('')
 
   // Paste text mode
-  const [mode, setMode]             = useState('file') // 'file' | 'paste'
+  const [mode, setMode]             = useState('file') // 'file' | 'paste' | 'notion'
   const [pasteName, setPasteName]   = useState('')
   const [pasteContent, setPasteContent] = useState('')
   const [pasteExt, setPasteExt]     = useState('md')
   const [pasteError, setPasteError] = useState('')
+
+  // Notion mode
+  const [notionConnected, setNotionConnected]   = useState(null) // null = loading
+  const [notionUrl, setNotionUrl]               = useState('')
+  const [notionFileName, setNotionFileName]     = useState('')
+  const [notionImporting, setNotionImporting]   = useState(false)
+  const [notionError, setNotionError]           = useState('')
+  const [showIntegrationsPanel, setShowIntegrationsPanel] = useState(false)
+
+  // Check Notion status when Notion tab is first opened
+  useEffect(() => {
+    if (mode !== 'notion' || notionConnected !== null) return
+    getNotionStatus()
+      .then((s) => setNotionConnected(s.connected))
+      .catch(() => setNotionConnected(false))
+  }, [mode, notionConnected])
+
+  async function handleNotionImport(e) {
+    e.preventDefault()
+    setNotionError('')
+    if (!notionUrl.trim()) { setNotionError('Please enter a Notion page URL.'); return }
+    setNotionImporting(true)
+    try {
+      const safeName = notionFileName.trim() || 'notion-page'
+      const result = await importNotionPage(notionUrl.trim(), safeName)
+      const blob = new Blob([result.content], { type: 'text/plain' })
+      const file = new File([blob], result.file_name, { type: 'text/plain', lastModified: Date.now() })
+      startUpload(file)
+      setNotionUrl(''); setNotionFileName(''); setNotionError('')
+      setMode('file')
+    } catch (err) {
+      setNotionError(err.message)
+    } finally {
+      setNotionImporting(false)
+    }
+  }
 
   function handlePasteSubmit(e) {
     e.preventDefault()
@@ -465,15 +564,16 @@ export default function UploadZone() {
           style={{ backgroundColor: '#DBEAFE', border: '1px solid #BFDBFE' }}
         >
           {[
-            { id: 'file',  Icon: UploadCloud, label: 'Upload files' },
-            { id: 'paste', Icon: Pencil,      label: 'Paste text'   },
+            { id: 'file',   Icon: UploadCloud, label: 'Upload files' },
+            { id: 'paste',  Icon: Pencil,       label: 'Paste text'   },
+            { id: 'notion', Icon: BookOpen,     label: 'Notion'        },
           ].map(({ id, Icon, label }) => {
             const active = mode === id
             return (
               <button
                 key={id}
                 type="button"
-                onClick={() => { setMode(id); setError(''); setPasteError('') }}
+                onClick={() => { setMode(id); setError(''); setPasteError(''); setNotionError('') }}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all cursor-pointer"
                 style={{
                   backgroundColor: active ? '#FFFFFF' : 'transparent',
@@ -490,7 +590,131 @@ export default function UploadZone() {
       )}
 
       <AnimatePresence mode="wait">
-        {!showProgress && mode === 'paste' ? (
+        {!showProgress && mode === 'notion' ? (
+          /* ── Notion import form ──────────────────────────────── */
+          <motion.div
+            key="notion"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="flex flex-col bg-white rounded-2xl p-6"
+            style={{ border: '2px solid #E3E1DC' }}
+          >
+            {notionConnected === null ? (
+              /* Loading */
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="w-7 h-7 animate-spin" style={{ color: '#D9D7D2' }} strokeWidth={2} />
+              </div>
+            ) : !notionConnected ? (
+              /* Not connected */
+              <div className="flex-1 flex flex-col items-center justify-center gap-5 text-center px-4">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: '#F4F3F0' }}
+                >
+                  <Puzzle className="w-8 h-8" style={{ color: '#AEABA6' }} strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="font-bold text-[16px] mb-2" style={{ color: '#111110' }}>
+                    Connect Notion first
+                  </p>
+                  <p className="text-[13px] leading-relaxed" style={{ color: '#7A7874' }}>
+                    Connect your Notion workspace to import pages directly as documents.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowIntegrationsPanel(true)}
+                  className="flex items-center gap-2 h-11 px-6 text-[13px] font-semibold rounded-xl cursor-pointer transition-colors"
+                  style={{ backgroundColor: '#4361EE', color: '#FFFFFF' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3451D6' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4361EE' }}
+                >
+                  <Puzzle className="w-4 h-4" strokeWidth={2} />
+                  Connect Notion
+                </button>
+                {/* Integrations panel overlay */}
+                <AnimatePresence>
+                  {showIntegrationsPanel && (
+                    <IntegrationsPanel
+                      onClose={() => setShowIntegrationsPanel(false)}
+                      onNotionStatusChange={(connected) => {
+                        if (connected) { setNotionConnected(true); setShowIntegrationsPanel(false) }
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              /* Connected — show import form */
+              <form onSubmit={handleNotionImport} className="flex-1 flex flex-col gap-4">
+                <div>
+                  <label className="block text-[12px] font-semibold mb-1.5" style={{ color: '#3D3C3A' }}>
+                    Notion Page URL
+                  </label>
+                  <input
+                    type="url"
+                    value={notionUrl}
+                    onChange={(e) => { setNotionUrl(e.target.value); setNotionError('') }}
+                    placeholder="https://www.notion.so/My-Page-abc123def456"
+                    className="w-full h-11 rounded-xl px-3 text-[13px] focus:outline-none transition-all"
+                    style={{ border: '1.5px solid #E3E1DC', backgroundColor: '#F7F5F2', color: '#111110', boxSizing: 'border-box' }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = '#4361EE'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(67,97,238,0.10)' }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = '#E3E1DC'; e.currentTarget.style.boxShadow = 'none' }}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-semibold mb-1.5" style={{ color: '#3D3C3A' }}>
+                    File name
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={notionFileName}
+                      onChange={(e) => setNotionFileName(e.target.value)}
+                      placeholder="e.g. my-notion-page"
+                      required
+                      className="flex-1 h-11 rounded-xl px-3 text-[13px] focus:outline-none transition-all"
+                      style={{ border: '1.5px solid #E3E1DC', backgroundColor: '#F7F5F2', color: '#111110' }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = '#4361EE'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(67,97,238,0.10)' }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = '#E3E1DC'; e.currentTarget.style.boxShadow = 'none' }}
+                    />
+                    <span className="text-[13px] font-semibold shrink-0" style={{ color: '#7A7874' }}>.md</span>
+                  </div>
+                </div>
+
+                {notionError && (
+                  <div
+                    className="flex items-start gap-2 rounded-xl px-4 py-3"
+                    style={{ backgroundColor: '#FEF2F2', borderLeft: '3px solid #DC2626' }}
+                  >
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#DC2626' }} strokeWidth={2} />
+                    <p className="text-[13px]" style={{ color: '#DC2626' }}>{notionError}</p>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={notionImporting || !notionUrl.trim() || !notionFileName.trim()}
+                  className="h-11 flex items-center justify-center gap-2 text-white text-[13px] font-semibold rounded-xl transition-colors cursor-pointer disabled:opacity-40"
+                  style={{ backgroundColor: '#4361EE' }}
+                  onMouseEnter={(e) => { if (!notionImporting && notionUrl.trim()) e.currentTarget.style.backgroundColor = '#3451D6' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4361EE' }}
+                >
+                  {notionImporting
+                    ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> Importing...</>
+                    : <>Import from Notion <ArrowRight className="w-4 h-4" strokeWidth={2.5} /></>
+                  }
+                </button>
+
+                {/* Steps toggle */}
+                <NotionStepsHint />
+              </form>
+            )}
+          </motion.div>
+        ) : !showProgress && mode === 'paste' ? (
           /* ── Paste text form ─────────────────────────────────── */
           <motion.form
             key="paste"

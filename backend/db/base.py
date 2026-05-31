@@ -9,6 +9,7 @@ from models.chat import Chat
 from models.chunk import Chunk
 from models.document import UploadedDocument
 from models.message import Message
+from models.notion_integration import NotionIntegration
 from models.user import User
 from models.workspace import Workspace
 
@@ -20,4 +21,5 @@ DOCUMENT_MODELS = [
     AuditLog,
     Chat,
     Message,
+    NotionIntegration,
 ]

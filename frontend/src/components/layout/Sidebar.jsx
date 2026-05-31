@@ -7,14 +7,16 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   Plus, Upload, ChevronUp, Users, LogOut,
   ChevronLeft, ChevronRight, FileText, MessageSquare, Trash2,
-  DoorOpen, AlertTriangle,
+  DoorOpen, AlertTriangle, Puzzle,
 } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import useChatStore from '@/store/useChatStore'
 import useChatsStore from '@/store/useChatsStore'
 import MembersPanel from '@/components/workspace/MembersPanel'
+
 import { leaveWorkspace } from '@/lib/api'
+import { getNotionStatus } from '@/lib/integrationsApi'
 import { SCALE_IN } from '@/lib/animations'
 
 const STATUS_COLOR = {
@@ -48,6 +50,8 @@ export default function Sidebar() {
 
   const [collapsed, setCollapsed] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
+  const [showIntegrations, setShowIntegrations] = useState(false)
+  const [notionConnected, setNotionConnected] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaveLoading, setLeaveLoading] = useState(false)
@@ -61,6 +65,14 @@ export default function Sidebar() {
   // Load chat list on mount (once user is available)
   useEffect(() => {
     if (user) fetchChats()
+  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Check Notion connection status on mount
+  useEffect(() => {
+    if (!user) return
+    getNotionStatus()
+      .then((s) => setNotionConnected(s.connected))
+      .catch(() => {})
   }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -116,6 +128,7 @@ export default function Sidebar() {
       <AnimatePresence>
         {showMembers && <MembersPanel onClose={() => setShowMembers(false)} />}
       </AnimatePresence>
+
 
       <motion.aside
         animate={{ width: collapsed ? 72 : 300 }}
@@ -341,6 +354,40 @@ export default function Sidebar() {
           {!collapsed && (
             <div style={{ margin: '8px 16px 0', borderTop: '1px solid #E3E1DC' }} />
           )}
+
+          {/* ── Integrations link ────────────────────────────────── */}
+          <div style={{ padding: collapsed ? '8px 8px 0' : '8px 8px 0' }}>
+            <Link
+              href="/integrations"
+              className="flex items-center gap-2.5 rounded-xl transition-all w-full relative"
+              style={{
+                color: pathname === '/integrations' ? '#4361EE' : '#4A4845',
+                padding: collapsed ? '10px' : '9px 14px',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                fontSize: '13px',
+                fontWeight: 500,
+                backgroundColor: pathname === '/integrations' ? '#EEF1FD' : 'transparent',
+              }}
+              onMouseEnter={(e) => { if (pathname !== '/integrations') { e.currentTarget.style.backgroundColor = '#EEECEA'; e.currentTarget.style.color = '#111110' } }}
+              onMouseLeave={(e) => { if (pathname !== '/integrations') { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#4A4845' } }}
+              title={collapsed ? 'Integrations' : undefined}
+            >
+              <div className="relative shrink-0">
+                <Puzzle className="w-4 h-4" strokeWidth={1.8} />
+                {notionConnected && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                    style={{ backgroundColor: '#16A34A', border: '1.5px solid #F7F5F2' }}
+                  />
+                )}
+              </div>
+              {!collapsed && (
+                <motion.span animate={{ opacity: collapsed ? 0 : 1 }} transition={LABEL_TRANSITION}>
+                  Integrations
+                </motion.span>
+              )}
+            </Link>
+          </div>
 
           {/* ── Documents section ────────────────────────────────── */}
           {collapsed ? (

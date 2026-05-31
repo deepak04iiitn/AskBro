@@ -83,25 +83,27 @@ async def login(req: LoginRequest) -> TokenResponse:
 # ── Member management (owner only) ────────────────────────────────────────────
 
 async def add_member(req: AddMemberRequest, current_user: CurrentUser) -> dict:
+    from beanie import PydanticObjectId
+    ws_id = PydanticObjectId(current_user.workspace_id)
     existing = await User.find_one(
-        User.workspace_id == current_user.workspace_id,
+        User.workspace_id == ws_id,
         User.email == req.email,
     )
     if existing:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="User is already a member.")
 
-    from beanie import PydanticObjectId
     await User(
         email=req.email,
-        workspace_id=PydanticObjectId(current_user.workspace_id),
+        workspace_id=ws_id,
         role="member",
     ).insert()
     return {"message": f"{req.email} added to workspace."}
 
 
 async def remove_member(req: RemoveMemberRequest, current_user: CurrentUser) -> dict:
+    from beanie import PydanticObjectId
     user = await User.find_one(
-        User.workspace_id == current_user.workspace_id,
+        User.workspace_id == PydanticObjectId(current_user.workspace_id),
         User.email == req.email,
     )
     if not user:

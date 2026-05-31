@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useMetrics } from '../layout'
+import { useMetrics } from '../AdminDashboardShell'
 import {
   AreaChart, Area, LineChart, Line,
   XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine,
@@ -203,4 +203,5 @@ export default function ActivityPage() {
     </div>
   )
 }
+
 

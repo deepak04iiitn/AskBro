@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useMemo, useState } from 'react'
-import { useMetrics } from '../layout'
+import { useMetrics } from '../AdminDashboardShell'
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList, ReferenceLine } from 'recharts'
 import { Building2, Users, FileText } from 'lucide-react'
 
@@ -210,4 +210,5 @@ export default function WorkspacesPage() {
     </div>
   )
 }
+
 

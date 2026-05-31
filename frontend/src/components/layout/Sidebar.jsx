@@ -135,11 +135,13 @@ export default function Sidebar() {
           {/* Logo row */}
           {!collapsed && (
             <div className="flex items-center justify-between mb-4">
-              <img
-                src="/AskBro_Logo.png"
-                alt="AskBro"
-                className="h-11 w-auto mix-blend-multiply"
-              />
+              <Link href="/dashboard">
+                <img
+                  src="/AskBro_Logo.png"
+                  alt="AskBro"
+                  className="h-11 w-auto mix-blend-multiply cursor-pointer"
+                />
+              </Link>
               <button
                 onClick={() => setCollapsed(true)}
                 className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors cursor-pointer"

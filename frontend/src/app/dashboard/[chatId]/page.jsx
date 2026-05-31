@@ -1,9 +1,11 @@
-'use client'
+import ChatPageClient from './ChatPageClient'
 
-import { useParams } from 'next/navigation'
-import ChatWindow from '@/components/chat/ChatWindow'
+export const metadata = {
+  title: 'Chat',
+  description: 'Continue your conversation with AskBro — AI-powered answers from your team\'s documents.',
+  robots: { index: false, follow: false },
+}
 
 export default function ChatPage() {
-  const { chatId } = useParams()
-  return <ChatWindow chatId={chatId} />
+  return <ChatPageClient />
 }

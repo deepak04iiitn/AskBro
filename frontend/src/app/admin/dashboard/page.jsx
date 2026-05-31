@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { useMetrics } from './layout'
+import { useMetrics } from './AdminDashboardShell'
 import {
   LineChart, Line, BarChart, Bar, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -10,7 +10,7 @@ import {
   HardDrive, Zap, TrendingUp,
 } from 'lucide-react'
 
-// ── Helpers ───────────────────────────────────────────────────
+// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function formatBytes(bytes) {
   if (!bytes) return '0 B'
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -38,7 +38,7 @@ const TOOLTIP_STYLE = {
   cursor: { stroke: '#E3E1DC', strokeWidth: 1 },
 }
 
-// ── Skeleton ──────────────────────────────────────────────────
+// â”€â”€ Skeleton â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function Skeleton() {
   return (
     <div className="bg-white rounded-2xl p-6 animate-pulse" style={{ border: '1px solid #E3E1DC' }}>
@@ -49,7 +49,7 @@ function Skeleton() {
   )
 }
 
-// ── Metric card ───────────────────────────────────────────────
+// â”€â”€ Metric card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function MetricCard({ label, value, Icon, iconBg, iconColor, sub, pulse }) {
   return (
     <div
@@ -82,7 +82,7 @@ function MetricCard({ label, value, Icon, iconBg, iconColor, sub, pulse }) {
   )
 }
 
-// ── Section heading ───────────────────────────────────────────
+// â”€â”€ Section heading â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function SectionHeading({ title, sub }) {
   return (
     <div className="mb-5">
@@ -92,7 +92,7 @@ function SectionHeading({ title, sub }) {
   )
 }
 
-// ── Chart card ────────────────────────────────────────────────
+// â”€â”€ Chart card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ChartCard({ title, children }) {
   return (
     <div
@@ -105,7 +105,7 @@ function ChartCard({ title, children }) {
   )
 }
 
-// ── Main page ─────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function AdminOverviewPage() {
   const { metrics, loading } = useMetrics()
 
@@ -300,3 +300,4 @@ export default function AdminOverviewPage() {
     </div>
   )
 }
+

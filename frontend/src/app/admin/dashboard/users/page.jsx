@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useState, useMemo } from 'react'
-import { useMetrics } from '../layout'
+import { useMetrics } from '../AdminDashboardShell'
 import {
   BarChart, Bar, Cell, PieChart, Pie,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LabelList,
@@ -248,4 +248,5 @@ export default function UsersPage() {
     </div>
   )
 }
+
 

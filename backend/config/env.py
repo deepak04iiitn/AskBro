@@ -57,7 +57,10 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = "mongodb://localhost:27017/celery_results"
 
     # ── Rate limiting ─────────────────────────────────────────────────────────
-    RATE_LIMIT_REQUESTS_PER_MINUTE: int = 30
+    RATE_LIMIT_REQUESTS_PER_MINUTE: int = 30  # legacy — kept for compatibility
+    RATE_LIMIT_AUTH: str = "30/minute"         # login, create workspace, forgot-code
+    RATE_LIMIT_ADMIN: str = "15/minute"        # admin login + OTP verify
+    RATE_LIMIT_API: str = "120/minute"         # authenticated API reads
 
     # ── File upload ───────────────────────────────────────────────────────────
     MAX_UPLOAD_SIZE_MB: int = 50

@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
+from middleware.rate_limit import limiter, AUTH_LIMIT
 
 from controllers.workspace_controller import (
     add_member,
@@ -28,12 +29,14 @@ router = APIRouter(prefix="/workspaces")
 
 
 @router.post("/create", response_model=WorkspaceCreateResponse, status_code=201)
-async def create_workspace_route(req: WorkspaceCreateRequest):
+@limiter.limit(AUTH_LIMIT)
+async def create_workspace_route(request: Request, req: WorkspaceCreateRequest):
     return await create_workspace(req)
 
 
 @router.post("/auth/login", response_model=TokenResponse)
-async def login_route(req: LoginRequest):
+@limiter.limit(AUTH_LIMIT)
+async def login_route(request: Request, req: LoginRequest):
     return await login(req)
 
 
@@ -68,5 +71,6 @@ async def change_password_route(
 
 
 @router.post("/forgot-code", response_model=dict)
-async def forgot_code_route(req: ForgotCodeRequest):
+@limiter.limit(AUTH_LIMIT)
+async def forgot_code_route(request: Request, req: ForgotCodeRequest):
     return await forgot_workspace_code(req)

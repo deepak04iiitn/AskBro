@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     # ── JWT ───────────────────────────────────────────────────────────────────
     SECRET_KEY: str = Field(..., min_length=32, description="Long random string for JWT signing")
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 525600  # 1 year
 
     # ── Celery ────────────────────────────────────────────────────────────────
     # kombu 5.3+ supports mongodb+srv:// — append the target db name to the path

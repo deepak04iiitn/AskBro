@@ -21,6 +21,10 @@ const useAuthStore = create((set) => ({
           workspace_name: payload.workspace_name,
         },
       })
+    } else {
+      // Clear any stale/expired token from storage
+      clearToken()
+      set({ user: null })
     }
   },
 

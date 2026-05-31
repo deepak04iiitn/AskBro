@@ -76,6 +76,10 @@ class Settings(BaseSettings):
     ADMIN_JWT_SECRET: str = Field(..., min_length=32, description="Separate secret for admin JWTs")
     RESEND_API_KEY: str = Field(..., description="Resend API key for OTP emails")
 
+    # ── Notion encryption ─────────────────────────────────────────
+    # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+    NOTION_ENCRYPTION_KEY: str = Field(..., description="Fernet key used to encrypt Notion tokens at rest")
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors(cls, v: str | list[str]) -> list[str]:

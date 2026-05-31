@@ -7,14 +7,16 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   Plus, Upload, ChevronUp, Users, LogOut,
   ChevronLeft, ChevronRight, FileText, MessageSquare, Trash2,
-  DoorOpen, AlertTriangle,
+  DoorOpen, AlertTriangle, Puzzle,
 } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import useChatStore from '@/store/useChatStore'
 import useChatsStore from '@/store/useChatsStore'
 import MembersPanel from '@/components/workspace/MembersPanel'
+
 import { leaveWorkspace } from '@/lib/api'
+import { getNotionStatus } from '@/lib/integrationsApi'
 import { SCALE_IN } from '@/lib/animations'
 
 const STATUS_COLOR = {
@@ -48,6 +50,8 @@ export default function Sidebar() {
 
   const [collapsed, setCollapsed] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
+  const [showIntegrations, setShowIntegrations] = useState(false)
+  const [notionConnected, setNotionConnected] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaveLoading, setLeaveLoading] = useState(false)
@@ -61,6 +65,14 @@ export default function Sidebar() {
   // Load chat list on mount (once user is available)
   useEffect(() => {
     if (user) fetchChats()
+  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Check Notion connection status on mount
+  useEffect(() => {
+    if (!user) return
+    getNotionStatus()
+      .then((s) => setNotionConnected(s.connected))
+      .catch(() => {})
   }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -116,6 +128,7 @@ export default function Sidebar() {
       <AnimatePresence>
         {showMembers && <MembersPanel onClose={() => setShowMembers(false)} />}
       </AnimatePresence>
+
 
       <motion.aside
         animate={{ width: collapsed ? 72 : 300 }}
@@ -186,16 +199,22 @@ export default function Sidebar() {
           {/* Workspace badge */}
           {!collapsed && (
             <div
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-3"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-3"
               style={{ backgroundColor: '#EEECEA', border: '1px solid #E3E1DC' }}
             >
-              <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: '#4361EE' }} />
-              <div className="min-w-0">
-                <p className="text-[13px] font-bold truncate" style={{ color: '#111110' }}>
-                  {user?.workspace_code ?? '—'}
+              {/* Avatar */}
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[13px] font-bold text-white"
+                style={{ backgroundColor: '#4361EE' }}
+              >
+                {(user?.workspace_name || user?.workspace_code || '?')[0].toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-bold truncate leading-tight" style={{ color: '#111110' }}>
+                  {user?.workspace_name || user?.workspace_code || '—'}
                 </p>
-                <p className="text-[10px] font-medium uppercase tracking-wide" style={{ color: '#AEABA6' }}>
-                  Workspace
+                <p className="text-[11px] font-mono truncate mt-0.5" style={{ color: '#AEABA6' }}>
+                  {user?.workspace_code ?? '—'}
                 </p>
               </div>
             </div>
@@ -458,7 +477,7 @@ export default function Sidebar() {
           )}
 
           {/* Upload button */}
-          <div style={{ padding: collapsed ? '12px 8px 0' : '12px 8px 0' }}>
+          <div style={{ padding: collapsed ? '12px 8px 0' : '16px 8px 0' }}>
             <Link
               href="/upload"
               className="flex items-center gap-2.5 rounded-xl transition-all"
@@ -488,6 +507,58 @@ export default function Sidebar() {
               {!collapsed && (
                 <motion.span animate={{ opacity: collapsed ? 0 : 1 }} transition={LABEL_TRANSITION}>
                   Upload a document
+                </motion.span>
+              )}
+            </Link>
+          </div>
+
+          {/* ── Integrations link ────────────────────────────────── */}
+          {!collapsed && <div style={{ margin: '16px 16px 0', borderTop: '1px solid #E3E1DC' }} />}
+          <div style={{ padding: '12px 8px 16px' }}>
+            <Link
+              href="/integrations"
+              className="flex items-center gap-2.5 rounded-xl transition-all relative"
+              style={{
+                color: pathname === '/integrations' ? 'white' : '#4361EE',
+                padding: collapsed ? '10px' : '10px 14px',
+                justifyContent: 'center',
+                fontSize: '13px',
+                fontWeight: 600,
+                border: '1.5px solid #C7D2FE',
+                backgroundColor: pathname === '/integrations' ? '#4361EE' : '#EEF1FD',
+                width: '100%',
+                boxShadow: pathname === '/integrations' ? '0 2px 8px rgba(67,97,238,0.22)' : 'none',
+              }}
+              onMouseEnter={(e) => {
+                if (pathname !== '/integrations') {
+                  e.currentTarget.style.backgroundColor = '#4361EE'
+                  e.currentTarget.style.color = 'white'
+                  e.currentTarget.style.borderColor = '#4361EE'
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(67,97,238,0.22)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (pathname !== '/integrations') {
+                  e.currentTarget.style.backgroundColor = '#EEF1FD'
+                  e.currentTarget.style.color = '#4361EE'
+                  e.currentTarget.style.borderColor = '#C7D2FE'
+                  e.currentTarget.style.boxShadow = 'none'
+                }
+              }}
+              title={collapsed ? 'Integrations' : undefined}
+            >
+              <div className="relative shrink-0">
+                <Puzzle className="w-4 h-4" strokeWidth={1.8} />
+                {notionConnected && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                    style={{ backgroundColor: '#16A34A', border: '1.5px solid white' }}
+                  />
+                )}
+              </div>
+              {!collapsed && (
+                <motion.span animate={{ opacity: collapsed ? 0 : 1 }} transition={LABEL_TRANSITION}>
+                  Integrations
                 </motion.span>
               )}
             </Link>

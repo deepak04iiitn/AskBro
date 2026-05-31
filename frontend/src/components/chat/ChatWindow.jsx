@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   BookOpen, FileSearch, GitCompare, ListChecks,
-  ArrowUpRight, X, FileX,
+  ArrowUpRight, X, FileX, Puzzle,
 } from 'lucide-react'
 import { streamChat } from '@/lib/stream'
 import { getChatMessages } from '@/lib/api'
@@ -33,9 +33,9 @@ const SUGGESTIONS = [
     iconBg: '#F0FDF4',
   },
   {
-    Icon: GitCompare,
-    label: 'Compare documents',
-    example: 'What changed between version 1 and version 2?',
+    Icon: Puzzle,
+    label: 'From Notion',
+    example: 'What does my Notion roadmap say about upcoming features?',
     iconColor: '#D97706',
     iconBg: '#FFF7ED',
   },
@@ -50,14 +50,14 @@ const SUGGESTIONS = [
 
 function EmptyState({ readyCount, onSuggest }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full px-6 text-center select-none py-10">
+    <div className="flex flex-col items-center justify-center min-h-full px-6 text-center select-none py-6">
 
       {/* Logo */}
-      <div className="mb-6">
+      <div className="mb-1 -mt-4">
         <img
           src="/AskBro_Logo.png"
           alt="AskBro"
-          className="h-32 w-auto mix-blend-multiply mx-auto"
+          className="h-28 w-auto mix-blend-multiply mx-auto"
         />
       </div>
 
@@ -68,23 +68,35 @@ function EmptyState({ readyCount, onSuggest }) {
       >
         What would you like to know?
       </h2>
-      <p className="text-[14px] leading-relaxed max-w-sm" style={{ color: '#7A7874' }}>
-        {readyCount > 0
-          ? `Your workspace has ${readyCount} document${readyCount !== 1 ? 's' : ''} indexed and ready.`
-          : 'Upload documents to start asking questions.'}
-      </p>
+      {readyCount === 0 && (
+        <p className="text-[14px] leading-relaxed max-w-sm" style={{ color: '#7A7874' }}>
+          Upload a document or connect Notion to start asking questions.
+        </p>
+      )}
 
       {readyCount === 0 && (
-        <Link
-          href="/upload"
-          className="mt-5 inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl transition-colors"
-          style={{ backgroundColor: '#EEF1FD', color: '#4361EE', border: '1px solid #C7D2FE' }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DDE7FC' }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#EEF1FD' }}
-        >
-          Upload your first document
-          <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />
-        </Link>
+        <div className="flex items-center gap-2 mt-5">
+          <Link
+            href="/upload"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl transition-colors"
+            style={{ backgroundColor: '#EEF1FD', color: '#4361EE', border: '1px solid #C7D2FE' }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DDE7FC' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#EEF1FD' }}
+          >
+            Upload a document
+            <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />
+          </Link>
+          <Link
+            href="/integrations"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl transition-colors"
+            style={{ backgroundColor: 'white', color: '#4A4845', border: '1px solid #E3E1DC' }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white' }}
+          >
+            <Puzzle className="w-3.5 h-3.5" strokeWidth={2} />
+            Connect Notion
+          </Link>
+        </div>
       )}
 
       {readyCount > 0 && (
@@ -92,7 +104,7 @@ function EmptyState({ readyCount, onSuggest }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="grid grid-cols-2 gap-3 w-full max-w-[700px] mt-10"
+          className="grid grid-cols-2 gap-3 w-full max-w-[700px] mt-6"
         >
           {SUGGESTIONS.map(({ Icon, label, example, iconColor, iconBg }, i) => (
             <motion.button

@@ -75,6 +75,7 @@ async def login(req: LoginRequest) -> TokenResponse:
         "email": user.email,
         "workspace_id": str(workspace.id),
         "workspace_code": workspace.workspace_code,
+        "workspace_name": workspace.name,
         "role": user.role,
     })
     return TokenResponse(access_token=token)

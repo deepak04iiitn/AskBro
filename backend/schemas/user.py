@@ -8,4 +8,5 @@ class CurrentUser(BaseModel):
     email: str
     workspace_id: str
     workspace_code: str
+    workspace_name: str | None = None
     role: str

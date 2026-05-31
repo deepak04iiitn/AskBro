@@ -32,6 +32,10 @@ class Settings(BaseSettings):
     QDRANT_API_KEY: str | None = None
     QDRANT_COLLECTION_NAME: str = "knowledge_base"
 
+    # ── HuggingFace Inference API (set on Render to avoid loading models locally)
+    # Leave empty locally — local model loading is used as fallback
+    HF_TOKEN: str | None = None
+
     # ── Embeddings ────────────────────────────────────────────────────────────
     BGE_MODEL_NAME: str = "BAAI/bge-large-en-v1.5"
     BGE_RERANKER_MODEL: str = "BAAI/bge-reranker-large"

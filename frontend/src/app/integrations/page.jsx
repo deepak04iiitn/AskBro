@@ -411,7 +411,7 @@ export default function IntegrationsPage() {
         <Sidebar />
       </div>
 
-      <main className="flex-1 overflow-y-auto bg-white">
+      <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#F0F4FF' }}>
 
         {/* ── Top bar ─────────────────────────────────────────── */}
         <div
@@ -478,7 +478,7 @@ export default function IntegrationsPage() {
                 {/* Section header */}
                 <div
                   className="flex items-center gap-3 px-5 py-4 rounded-2xl mb-1"
-                  style={{ backgroundColor: '#F7F5F2', border: '1px solid #E3E1DC' }}
+                  style={{ backgroundColor: 'white', border: '1px solid #E3E1DC', boxShadow: '0 1px 4px rgba(67,97,238,0.06)' }}
                 >
                   <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#111110', color: 'white' }}>
                     <NotionLogo size={16} />

@@ -63,6 +63,12 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 50
     ALLOWED_EXTENSIONS: list[str] = ["pdf", "docx", "md", "txt"]
 
+    # ── Admin ─────────────────────────────────────────────────────────────────
+    ADMIN_EMAIL: str = Field(..., description="Admin email address")
+    ADMIN_PASSWORD: str = Field(..., description="Admin password (plain, checked directly)")
+    ADMIN_JWT_SECRET: str = Field(..., min_length=32, description="Separate secret for admin JWTs")
+    RESEND_API_KEY: str = Field(..., description="Resend API key for OTP emails")
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors(cls, v: str | list[str]) -> list[str]:

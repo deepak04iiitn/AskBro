@@ -213,6 +213,22 @@ export default function LoginForm() {
             Create a workspace
             <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} />
           </Link>
+
+          {/* Admin login — separated by a divider */}
+          <div className="mt-5 flex items-center gap-3">
+            <div className="flex-1 h-px" style={{ backgroundColor: '#E3E1DC' }} />
+            <span className="text-[12px]" style={{ color: '#AEABA6' }}>admin</span>
+            <div className="flex-1 h-px" style={{ backgroundColor: '#E3E1DC' }} />
+          </div>
+          <Link
+            href="/admin/login"
+            className="block mt-4 text-[13px] font-semibold text-center transition-colors"
+            style={{ color: '#4361EE' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#3451D6' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#4361EE' }}
+          >
+            Admin Login →
+          </Link>
         </div>
       </div>
     </div>

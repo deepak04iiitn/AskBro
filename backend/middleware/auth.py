@@ -5,6 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 
 from config.env import settings
+from middleware.admin_auth import record_user_activity
 from schemas.user import CurrentUser
 
 _bearer = HTTPBearer()
@@ -52,6 +53,7 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
+    record_user_activity(user_id, email)
     return CurrentUser(
         id=user_id,
         email=email,

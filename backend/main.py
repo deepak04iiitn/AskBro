@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config.env import settings
 from config.qdrant import ensure_collection_exists
 from db.session import close_db, init_db
+from routes import admin as admin_router
 from routes import chat, documents, health, workspaces
 from utils.logger import get_logger, setup_logging
 
@@ -57,3 +58,4 @@ app.include_router(health.router, tags=["health"])
 app.include_router(documents.router, prefix="/api/v1", tags=["documents"])
 app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
 app.include_router(workspaces.router, prefix="/api/v1", tags=["workspaces"])
+app.include_router(admin_router.router, prefix="/api/v1", tags=["admin"])

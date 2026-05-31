@@ -7,12 +7,14 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   Plus, Upload, ChevronUp, Users, LogOut,
   ChevronLeft, ChevronRight, FileText, MessageSquare, Trash2,
+  DoorOpen, AlertTriangle,
 } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import useChatStore from '@/store/useChatStore'
 import useChatsStore from '@/store/useChatsStore'
 import MembersPanel from '@/components/workspace/MembersPanel'
+import { leaveWorkspace } from '@/lib/api'
 import { SCALE_IN } from '@/lib/animations'
 
 const STATUS_COLOR = {
@@ -47,6 +49,9 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [showMembers, setShowMembers] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const [showLeaveModal, setShowLeaveModal] = useState(false)
+  const [leaveLoading, setLeaveLoading] = useState(false)
+  const [leaveError, setLeaveError] = useState('')
   const [hoveredChatId, setHoveredChatId] = useState(null)
   const [visibleCount, setVisibleCount] = useState(5)
   const [docsExpanded, setDocsExpanded] = useState(false)
@@ -66,6 +71,19 @@ export default function Sidebar() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [showMenu])
+
+  async function handleLeaveConfirm() {
+    setLeaveLoading(true)
+    setLeaveError('')
+    try {
+      await leaveWorkspace()
+      logout()
+      localStorage.removeItem('askbro_onboarded')
+    } catch (err) {
+      setLeaveError(err.message)
+      setLeaveLoading(false)
+    }
+  }
 
   function handleNewChat() {
     clearMessages()
@@ -504,6 +522,20 @@ export default function Sidebar() {
                   <Users className="w-4 h-4 shrink-0" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
                   {user?.role === 'owner' ? 'Manage members' : 'View members'}
                 </button>
+
+                {/* Leave / Delete account */}
+                <div style={{ borderTop: '1px solid #E3E1DC' }} />
+                <button
+                  onClick={() => { setShowLeaveModal(true); setShowMenu(false); setLeaveError('') }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-[13px] cursor-pointer transition-colors text-left"
+                  style={{ color: '#D97706' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FFFBEB' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
+                >
+                  <DoorOpen className="w-4 h-4 shrink-0" strokeWidth={1.8} />
+                  {user?.role === 'owner' ? 'Delete account' : 'Leave workspace'}
+                </button>
+
                 <div style={{ borderTop: '1px solid #E3E1DC' }} />
                 <button
                   onClick={() => { logout(); setShowMenu(false) }}
@@ -562,6 +594,87 @@ export default function Sidebar() {
           </button>
         </div>
       </motion.aside>
+
+      {/* ── Centered leave / delete confirmation modal ───────── */}
+      <AnimatePresence>
+        {showLeaveModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{ backgroundColor: 'rgba(10,10,12,0.65)', backdropFilter: 'blur(6px)' }}
+            onClick={(e) => { if (e.target === e.currentTarget && !leaveLoading) { setShowLeaveModal(false); setLeaveError('') } }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white rounded-3xl overflow-hidden w-full max-w-[440px]"
+              style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06)' }}
+            >
+              {/* Icon header */}
+              <div className="flex justify-center pt-8 pb-5">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: user?.role === 'owner' ? '#FEF2F2' : '#FFF7ED' }}
+                >
+                  {user?.role === 'owner'
+                    ? <AlertTriangle className="w-8 h-8" style={{ color: '#DC2626' }} strokeWidth={1.8} />
+                    : <DoorOpen className="w-8 h-8" style={{ color: '#D97706' }} strokeWidth={1.8} />
+                  }
+                </div>
+              </div>
+
+              {/* Text */}
+              <div className="px-8 pb-6 text-center">
+                <h3 className="text-[18px] font-bold tracking-[-0.01em] mb-2" style={{ color: '#111110' }}>
+                  {user?.role === 'owner' ? 'Delete account & workspace?' : 'Leave this workspace?'}
+                </h3>
+                <p className="text-[14px] leading-[1.65]" style={{ color: '#7A7874' }}>
+                  {user?.role === 'owner'
+                    ? 'This will permanently delete your workspace, all uploaded documents, chats, and every member\'s access. This cannot be undone.'
+                    : 'You will immediately lose access to this workspace and all its documents. You can rejoin later if the owner invites you again.'
+                  }
+                </p>
+                {leaveError && (
+                  <div className="mt-4 rounded-xl px-4 py-3 text-left" style={{ backgroundColor: '#FEF2F2', borderLeft: '3px solid #DC2626' }}>
+                    <p className="text-[13px]" style={{ color: '#DC2626' }}>{leaveError}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="px-8 pb-8 flex flex-col gap-3">
+                <button
+                  onClick={handleLeaveConfirm}
+                  disabled={leaveLoading}
+                  className="w-full h-12 text-white text-[14px] font-semibold rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                  style={{ backgroundColor: user?.role === 'owner' ? '#DC2626' : '#D97706' }}
+                  onMouseEnter={(e) => { if (!leaveLoading) e.currentTarget.style.backgroundColor = user?.role === 'owner' ? '#B91C1C' : '#B45309' }}
+                  onMouseLeave={(e) => { if (!leaveLoading) e.currentTarget.style.backgroundColor = user?.role === 'owner' ? '#DC2626' : '#D97706' }}
+                >
+                  {leaveLoading ? (
+                    <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Processing…</>
+                  ) : user?.role === 'owner' ? 'Yes, delete everything' : 'Yes, leave workspace'}
+                </button>
+                <button
+                  onClick={() => { setShowLeaveModal(false); setLeaveError('') }}
+                  disabled={leaveLoading}
+                  className="w-full h-11 text-[14px] font-medium rounded-xl cursor-pointer transition-colors"
+                  style={{ border: '1.5px solid #E3E1DC', color: '#4A4845', backgroundColor: 'transparent' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+                >
+                  Cancel, keep my account
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

@@ -6,6 +6,7 @@ from controllers.workspace_controller import (
     change_password,
     create_workspace,
     forgot_workspace_code,
+    leave_workspace,
     list_members,
     login,
     remove_member,
@@ -74,3 +75,8 @@ async def change_password_route(
 @limiter.limit(AUTH_LIMIT)
 async def forgot_code_route(request: Request, req: ForgotCodeRequest):
     return await forgot_workspace_code(req)
+
+
+@router.delete("/leave", response_model=dict)
+async def leave_workspace_route(current_user: CurrentUser = Depends(get_current_user)):
+    return await leave_workspace(current_user)

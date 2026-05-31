@@ -196,3 +196,76 @@ async def forgot_workspace_code(req: ForgotCodeRequest) -> dict:
             "They will contact you shortly with your workspace code."
         )
     }
+
+
+# ── Leave / delete account ────────────────────────────────────────────────────
+
+async def leave_workspace(current_user: CurrentUser) -> dict:
+    """
+    Members  → removes only their user record.
+    Owners   → allowed only if they are the sole member; triggers full workspace deletion.
+    """
+    from beanie import PydanticObjectId
+    from models.chat import Chat
+    from models.chunk import Chunk
+    from models.document import UploadedDocument
+    from models.message import Message
+    from services.vectorstore.qdrant_client import get_qdrant_client
+    from config.env import settings
+    from utils.logger import get_logger
+
+    logger = get_logger(__name__)
+
+    workspace_id = PydanticObjectId(current_user.workspace_id)
+    user = await User.get(PydanticObjectId(current_user.id))
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    if user.role == "owner":
+        other_count = await User.find(
+            User.workspace_id == workspace_id,
+            User.id != user.id,
+        ).count()
+
+        if other_count > 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    f"You are the workspace owner and there are still {other_count} "
+                    "other member(s). Remove all members before deleting your account, "
+                    "or ask a member to take over."
+                ),
+            )
+
+        # ── Owner is the last person — cascade delete everything ──────────
+        workspace = await Workspace.get(workspace_id)
+
+        # 1. Collect Qdrant point IDs before deleting chunks
+        try:
+            chunks = await Chunk.find(Chunk.workspace_id == workspace_id).to_list()
+            point_ids = [c.qdrant_point_id for c in chunks if c.qdrant_point_id]
+            if point_ids:
+                qdrant = get_qdrant_client()
+                qdrant.delete(
+                    collection_name=settings.QDRANT_COLLECTION_NAME,
+                    points_selector=point_ids,
+                )
+        except Exception as exc:
+            logger.warning("Qdrant cleanup failed during workspace deletion", error=str(exc))
+
+        # 2. MongoDB cascade
+        await Message.find(Message.workspace_id == workspace_id).delete()
+        await Chat.find(Chat.workspace_id == workspace_id).delete()
+        await Chunk.find(Chunk.workspace_id == workspace_id).delete()
+        await UploadedDocument.find(UploadedDocument.workspace_id == workspace_id).delete()
+        await user.delete()
+        if workspace:
+            await workspace.delete()
+
+        logger.info("Workspace deleted by owner", workspace_id=str(workspace_id))
+        return {"message": "Your account and workspace have been permanently deleted.", "action": "workspace_deleted"}
+
+    else:
+        # ── Member leaves ─────────────────────────────────────────────────
+        await user.delete()
+        return {"message": "You have successfully left the workspace.", "action": "left"}

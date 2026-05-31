@@ -184,6 +184,15 @@ export async function removeMember(email) {
   return res.json()
 }
 
+export async function leaveWorkspace() {
+  const res = await request('/workspaces/leave', { method: 'DELETE' })
+  if (!res.ok) {
+    const data = await res.json()
+    throw new Error(data.detail || 'Failed to leave workspace.')
+  }
+  return res.json() // { message, action: 'left' | 'workspace_deleted' }
+}
+
 export async function forgotWorkspaceCode(email, password) {
   const res = await request('/workspaces/forgot-code', {
     method: 'POST',

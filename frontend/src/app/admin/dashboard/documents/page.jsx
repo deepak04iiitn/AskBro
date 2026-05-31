@@ -96,7 +96,7 @@ export default function DocumentsPage() {
     <div className="p-8 max-w-7xl mx-auto space-y-6">
       <div>
         <h1 className="font-bold tracking-[-0.02em]" style={{ fontSize: '24px', color: '#111110' }}>Documents</h1>
-        <p className="text-[13px] mt-1" style={{ color: '#7A7874' }}>{metrics.total_documents.toLocaleString()} documents Â· {formatBytes(metrics.total_storage_bytes)} total storage</p>
+        <p className="text-[13px] mt-1" style={{ color: '#7A7874' }}>{metrics.total_documents.toLocaleString()} documents &nbsp;·&nbsp; {formatBytes(metrics.total_storage_bytes)} total storage</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

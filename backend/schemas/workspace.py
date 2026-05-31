@@ -16,7 +16,6 @@ class WorkspaceCreateResponse(BaseModel):
 class LoginRequest(BaseModel):
     workspace_code: str = Field(..., pattern=r"^WSP-[A-Z0-9]{4}$")
     email: EmailStr
-    password: str
 
 
 class TokenResponse(BaseModel):
@@ -39,3 +38,8 @@ class ChangePasswordRequest(BaseModel):
 class WorkspaceMemberResponse(BaseModel):
     email: str
     role: str
+
+
+class ForgotCodeRequest(BaseModel):
+    email: EmailStr
+    password: str

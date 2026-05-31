@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useMetrics } from '../layout'
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList, ReferenceLine } from 'recharts'
 import { Building2, Users, FileText } from 'lucide-react'
@@ -73,8 +73,26 @@ export default function WorkspacesPage() {
     return +(metrics.workspaces.reduce((s, w) => s + w.document_count, 0) / metrics.workspaces.length).toFixed(1)
   }, [metrics])
 
+  const [search, setSearch] = useState('')
+  const [page, setPage]     = useState(1)
+  const PAGE_SZ = 10
+
   const docsChart    = useMemo(() => metrics?.workspaces.map((w) => ({ name: w.name, docs: w.document_count })) ?? [], [metrics])
   const membersChart = useMemo(() => metrics?.workspaces.map((w) => ({ name: w.name, members: w.member_count })) ?? [], [metrics])
+
+  const filteredWs = useMemo(() => {
+    if (!metrics) return []
+    const q = search.toLowerCase()
+    if (!q) return metrics.workspaces
+    return metrics.workspaces.filter((w) =>
+      w.name.toLowerCase().includes(q) ||
+      w.code.toLowerCase().includes(q) ||
+      w.owner_email.toLowerCase().includes(q)
+    )
+  }, [metrics, search])
+
+  const totalPages  = Math.max(1, Math.ceil(filteredWs.length / PAGE_SZ))
+  const paginated   = filteredWs.slice((page - 1) * PAGE_SZ, page * PAGE_SZ)
 
   if (loading || !metrics) return (
     <div className="p-8 space-y-5">
@@ -136,6 +154,15 @@ export default function WorkspacesPage() {
         </ResponsiveContainer>
       </ChartCard>
 
+      {/* Search */}
+      <input
+        value={search}
+        onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+        placeholder="Search by name, code or owner…"
+        className="auth-input"
+        style={{ maxWidth: 340, height: 40, fontSize: 13 }}
+      />
+
       {/* Table */}
       <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
         <div className="overflow-x-auto">
@@ -148,8 +175,10 @@ export default function WorkspacesPage() {
               </tr>
             </thead>
             <tbody>
-              {metrics.workspaces.map((w, i) => (
-                <tr key={w.id} style={{ borderBottom: i < metrics.workspaces.length - 1 ? '1px solid #F4F3F0' : 'none' }}
+              {paginated.length === 0 ? (
+                <tr><td colSpan={8} className="px-5 py-10 text-center text-[13px]" style={{ color: '#AEABA6' }}>No workspaces match your search.</td></tr>
+              ) : paginated.map((w, i) => (
+                <tr key={w.id} style={{ borderBottom: i < paginated.length - 1 ? '1px solid #F4F3F0' : 'none' }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}>
                   <td className="px-5 py-3.5 font-semibold" style={{ color: '#111110' }}>{w.name}</td>
@@ -164,6 +193,18 @@ export default function WorkspacesPage() {
               ))}
             </tbody>
           </table>
+        </div>
+        {/* Pagination */}
+        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}>
+          <span className="text-[12px]" style={{ color: '#AEABA6' }}>{filteredWs.length.toLocaleString()} results · Page {page} of {totalPages}</span>
+          <div className="flex gap-2">
+            {['Previous','Next'].map((label, idx) => (
+              <button key={label} onClick={() => setPage((p) => idx === 0 ? Math.max(1,p-1) : Math.min(totalPages,p+1))}
+                disabled={idx === 0 ? page === 1 : page === totalPages}
+                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors disabled:opacity-30 cursor-pointer"
+                style={{ border: '1px solid #E3E1DC', color: '#4361EE', backgroundColor: 'white' }}>{label}</button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

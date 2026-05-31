@@ -8,6 +8,7 @@ from schemas.user import CurrentUser
 from schemas.workspace import (
     AddMemberRequest,
     ChangePasswordRequest,
+    ForgotCodeRequest,
     LoginRequest,
     RemoveMemberRequest,
     WorkspaceCreateRequest,
@@ -58,13 +59,9 @@ async def login(req: LoginRequest) -> TokenResponse:
     # 1. Find workspace by its public code
     workspace = await Workspace.find_one(Workspace.workspace_code == req.workspace_code)
     if not workspace:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid workspace code or password.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Workspace code not found.")
 
-    # 2. Verify password
-    if not _verify_password(req.password, workspace.hashed_password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid workspace code or password.")
-
-    # 3. Verify email belongs to this workspace
+    # 2. Verify email belongs to this workspace
     user = await User.find_one(
         User.workspace_id == workspace.id,
         User.email == req.email,
@@ -135,3 +132,65 @@ async def change_password(req: ChangePasswordRequest, current_user: CurrentUser)
     workspace.hashed_password = _hash_password(req.new_password)
     await workspace.save()
     return {"message": "Password updated successfully."}
+
+
+# ── Forgot workspace code ─────────────────────────────────────────────────────
+
+async def forgot_workspace_code(req: ForgotCodeRequest) -> dict:
+    from services.email.resend_client import send_forgot_code_email
+
+    # Find all users with this email (one per workspace they belong to)
+    users = await User.find(User.email == req.email.lower()).to_list()
+
+    if not users:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No account found with that email address.",
+        )
+
+    # Try to find a workspace where the password matches
+    matched_user = None
+    matched_workspace = None
+    for user in users:
+        workspace = await Workspace.get(user.workspace_id)
+        if workspace and _verify_password(req.password, workspace.hashed_password):
+            matched_user = user
+            matched_workspace = workspace
+            break
+
+    if not matched_user or not matched_workspace:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password.",
+        )
+
+    # Check role
+    if matched_user.role != "owner":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "You are a member of this workspace, not the owner. "
+                "Only the workspace owner can retrieve the workspace code. "
+                "Please contact your workspace owner directly."
+            ),
+        )
+
+    # Send notification email to admin
+    sent = await send_forgot_code_email(
+        requester_email=req.email,
+        workspace_name=matched_workspace.name,
+        workspace_code=matched_workspace.workspace_code,
+    )
+
+    if not sent:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not send notification. Please try again later.",
+        )
+
+    return {
+        "message": (
+            "Your request has been sent to our admin. "
+            "They will contact you shortly with your workspace code."
+        )
+    }

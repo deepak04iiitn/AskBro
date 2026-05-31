@@ -44,10 +44,10 @@ export async function createWorkspace({ name, owner_email, password, member_emai
   return res.json()
 }
 
-export async function login({ workspace_code, email, password }) {
+export async function login({ workspace_code, email }) {
   const res = await request('/workspaces/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ workspace_code, email, password }),
+    body: JSON.stringify({ workspace_code, email }),
   })
   if (!res.ok) {
     const data = await res.json()
@@ -180,6 +180,18 @@ export async function removeMember(email) {
   if (!res.ok) {
     const data = await res.json()
     throw new Error(data.detail || 'Failed to remove member')
+  }
+  return res.json()
+}
+
+export async function forgotWorkspaceCode(email, password) {
+  const res = await request('/workspaces/forgot-code', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  })
+  if (!res.ok) {
+    const data = await res.json()
+    throw new Error(data.detail || 'Request failed.')
   }
   return res.json()
 }

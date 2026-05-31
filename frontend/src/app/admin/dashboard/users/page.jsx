@@ -6,9 +6,11 @@ import {
   BarChart, Bar, Cell, PieChart, Pie,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LabelList,
 } from 'recharts'
-import { Users, Crown, UserCheck } from 'lucide-react'
+import { Users, Crown, UserCheck, ChevronUp, ChevronDown } from 'lucide-react'
 
 const BAR_PALETTE = ['#4361EE','#7C3AED','#16A34A','#D97706','#DC2626','#0EA5E9','#EC4899','#0D9488']
+const SortAsc  = () => <ChevronUp   style={{ width:12, height:12, display:'inline', marginLeft:4 }} strokeWidth={2.5} />
+const SortDesc = () => <ChevronDown style={{ width:12, height:12, display:'inline', marginLeft:4 }} strokeWidth={2.5} />
 const PAGE_SZ = 10
 
 // â”€â”€ Beautiful custom tooltip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -206,7 +208,7 @@ export default function UsersPage() {
                 {[['email','Email'],['role','Role'],['workspace_name','Workspace'],['workspace_code','Code'],['created_at','Joined']].map(([k,l]) => (
                   <th key={k} className="text-left px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest cursor-pointer"
                     style={{ color: '#7A7874' }} onClick={() => { if (sortKey === k) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortKey(k); setSortDir('asc') } }}>
-                    {l} {sortKey === k ? (sortDir === 'asc' ? 'â†‘' : 'â†“') : ''}
+                    {l}{sortKey === k && (sortDir.length === 3 ? <SortAsc /> : <SortDesc />)}
                   </th>
                 ))}
               </tr>
@@ -232,7 +234,7 @@ export default function UsersPage() {
           </table>
         </div>
         <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}>
-          <span className="text-[12px]" style={{ color: '#AEABA6' }}>{filtered.length.toLocaleString()} results Â· Page {page} of {totalPages}</span>
+          <span className="text-[12px]" style={{ color: '#AEABA6' }}>{filtered.length.toLocaleString()} results &nbsp;·&nbsp; Page {page} of {totalPages}</span>
           <div className="flex gap-2">
             {['Previous','Next'].map((label, idx) => (
               <button key={label} onClick={() => setPage((p) => idx === 0 ? Math.max(1,p-1) : Math.min(totalPages,p+1))}

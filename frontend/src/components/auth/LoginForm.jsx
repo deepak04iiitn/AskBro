@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Eye, EyeOff, Mail, Lock, Hash, ArrowRight } from 'lucide-react'
-import { login } from '@/lib/api'
+import { Mail, Hash, ArrowRight, HelpCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react'
+import { login, forgotWorkspaceCode } from '@/lib/api'
 import { isAuthenticated } from '@/lib/auth'
 import useAuthStore from '@/store/useAuthStore'
 
@@ -15,10 +15,33 @@ const DOT_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg
 export default function LoginForm() {
   const router = useRouter()
   const setUser = useAuthStore((s) => s.setUser)
-  const [form, setForm] = useState({ workspace_code: '', email: '', password: '' })
-  const [showPassword, setShowPassword] = useState(false)
+  const [form, setForm] = useState({ workspace_code: '', email: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Forgot code state
+  const [showForgot, setShowForgot]           = useState(false)
+  const [forgotEmail, setForgotEmail]         = useState('')
+  const [forgotPassword, setForgotPassword]   = useState('')
+  const [showForgotPw, setShowForgotPw]       = useState(false)
+  const [forgotError, setForgotError]         = useState('')
+  const [forgotSuccess, setForgotSuccess]     = useState('')
+  const [forgotLoading, setForgotLoading]     = useState(false)
+
+  async function handleForgot(e) {
+    e.preventDefault()
+    setForgotError('')
+    setForgotSuccess('')
+    setForgotLoading(true)
+    try {
+      const data = await forgotWorkspaceCode(forgotEmail, forgotPassword)
+      setForgotSuccess(data.message)
+    } catch (err) {
+      setForgotError(err.message)
+    } finally {
+      setForgotLoading(false)
+    }
+  }
 
   // Redirect already-authenticated users away from the login page
   useEffect(() => {
@@ -84,18 +107,34 @@ export default function LoginForm() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <IconField label="Workspace code" Icon={Hash}>
-              <input
-                name="workspace_code"
-                value={form.workspace_code}
-                onChange={handleChange}
-                placeholder="WSP-XXXX"
-                required
+            {/* Workspace code with "Forgot?" link */}
+            <div>
+              <div className="flex items-baseline justify-between mb-1.5">
+                <label className="block text-[13px] font-semibold" style={{ color: '#111110' }}>Workspace code</label>
+                <button type="button" onClick={() => { setShowForgot((v) => !v); setForgotError(''); setForgotSuccess('') }}
+                  className="flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer" style={{ color: '#AEABA6' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#4361EE' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = '#AEABA6' }}>
+                  <HelpCircle className="w-3 h-3" strokeWidth={2} />
+                  Forgot your code?
+                </button>
+              </div>
+              <div className="relative">
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <Hash className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
+                </div>
+                <input
+                  name="workspace_code"
+                  value={form.workspace_code}
+                  onChange={handleChange}
+                  placeholder="WSP-XXXX"
+                  required
                 autoComplete="off"
                 className="auth-input"
-                style={{ paddingLeft: '42px' }}
-              />
-            </IconField>
+                  style={{ paddingLeft: '42px' }}
+                />
+              </div>
+            </div>
 
             <IconField label="Email" Icon={Mail}>
               <input
@@ -111,40 +150,6 @@ export default function LoginForm() {
               />
             </IconField>
 
-            <div>
-              <label className="block text-[13px] font-semibold mb-1.5" style={{ color: '#111110' }}>
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Lock className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
-                </div>
-                <input
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={form.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  required
-                  autoComplete="current-password"
-                  className="auth-input"
-                  style={{ paddingLeft: '42px', paddingRight: '48px' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer transition-colors"
-                  style={{ color: '#AEABA6' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = '#4A4845' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = '#AEABA6' }}
-                >
-                  {showPassword
-                    ? <EyeOff className="w-4 h-4" strokeWidth={1.8} />
-                    : <Eye className="w-4 h-4" strokeWidth={1.8} />
-                  }
-                </button>
-              </div>
-            </div>
 
             <AnimatePresence>
               {error && (
@@ -188,6 +193,73 @@ export default function LoginForm() {
               )}
             </button>
           </form>
+
+          {/* Forgot workspace code panel */}
+          <AnimatePresence>
+            {showForgot && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.22, ease: 'easeInOut' }}
+                className="overflow-hidden mt-5"
+              >
+                <div className="rounded-2xl p-5" style={{ backgroundColor: '#F7F5F2', border: '1.5px solid #E3E1DC' }}>
+                  <p className="text-[13px] font-semibold mb-1" style={{ color: '#111110' }}>Retrieve workspace code</p>
+                  <p className="text-[12px] mb-4" style={{ color: '#7A7874' }}>
+                    Enter your owner email and workspace password. If verified, our admin will contact you shortly with your code.
+                  </p>
+
+                  {forgotSuccess ? (
+                    <div className="flex items-start gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+                      <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0" style={{ color: '#16A34A' }} strokeWidth={2} />
+                      <p className="text-[13px] font-medium" style={{ color: '#15803D' }}>{forgotSuccess}</p>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleForgot} className="space-y-3">
+                      <input type="email" value={forgotEmail} onChange={(e) => { setForgotEmail(e.target.value); setForgotError('') }}
+                        placeholder="Owner email" required className="auth-input" />
+                      <div className="relative">
+                        <input
+                          type={showForgotPw ? 'text' : 'password'}
+                          value={forgotPassword}
+                          onChange={(e) => { setForgotPassword(e.target.value); setForgotError('') }}
+                          placeholder="Workspace password"
+                          required
+                          className="auth-input pr-12"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowForgotPw((v) => !v)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer transition-colors"
+                          style={{ color: '#AEABA6' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.color = '#4A4845' }}
+                          onMouseLeave={(e) => { e.currentTarget.style.color = '#AEABA6' }}
+                        >
+                          {showForgotPw
+                            ? <EyeOff className="w-4 h-4" strokeWidth={1.8} />
+                            : <Eye className="w-4 h-4" strokeWidth={1.8} />
+                          }
+                        </button>
+                      </div>
+                      {forgotError && (
+                        <div className="rounded-r-lg px-3 py-2.5" style={{ backgroundColor: '#FEF2F2', borderLeft: '3px solid #DC2626' }}>
+                          <p className="text-[12px]" style={{ color: '#DC2626' }}>{forgotError}</p>
+                        </div>
+                      )}
+                      <button type="submit" disabled={forgotLoading}
+                        className="w-full h-10 text-white text-[13px] font-semibold rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-colors disabled:opacity-40"
+                        style={{ backgroundColor: '#4361EE' }}
+                        onMouseEnter={(e) => { if (!forgotLoading) e.currentTarget.style.backgroundColor = '#3451D6' }}
+                        onMouseLeave={(e) => { if (!forgotLoading) e.currentTarget.style.backgroundColor = '#4361EE' }}>
+                        {forgotLoading ? 'Sending…' : <>Notify admin <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.5} /></>}
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Divider */}
           <div className="my-6 flex items-center gap-3">

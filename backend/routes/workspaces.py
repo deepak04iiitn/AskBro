@@ -4,6 +4,7 @@ from controllers.workspace_controller import (
     add_member,
     change_password,
     create_workspace,
+    forgot_workspace_code,
     list_members,
     login,
     remove_member,
@@ -14,6 +15,7 @@ from schemas.user import CurrentUser
 from schemas.workspace import (
     AddMemberRequest,
     ChangePasswordRequest,
+    ForgotCodeRequest,
     LoginRequest,
     RemoveMemberRequest,
     TokenResponse,
@@ -63,3 +65,8 @@ async def change_password_route(
     current_user: CurrentUser = Depends(require_owner),
 ):
     return await change_password(req, current_user)
+
+
+@router.post("/forgot-code", response_model=dict)
+async def forgot_code_route(req: ForgotCodeRequest):
+    return await forgot_workspace_code(req)

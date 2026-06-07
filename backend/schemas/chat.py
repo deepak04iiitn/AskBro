@@ -11,6 +11,8 @@ class ChatRequest(BaseModel):
 class CitationSchema(BaseModel):
     documentId: str
     fileName: str | None = None
+    pageNumber: int | None = None
+    chunkPreview: str | None = None
 
 
 class ChatDoneEvent(BaseModel):

@@ -61,14 +61,18 @@ async def run_rag_chain(
         yield json.dumps({"token": token, "done": False}), None
 
     # ── 8. Final event with citations ─────────────────────────────────────────
-    citations = [
-        {
+    # hits are sorted by score descending, so the first match per doc is the best chunk.
+    citations = []
+    for doc_id in retrieved_doc_ids:
+        best_hit = next(
+            (h for h in hits if h.payload and h.payload.get("documentId") == doc_id),
+            None,
+        )
+        payload = best_hit.payload if best_hit else {}
+        citations.append({
             "documentId": doc_id,
-            "fileName": next(
-                (h.payload.get("fileName") for h in hits if h.payload and h.payload.get("documentId") == doc_id),
-                None,
-            ),
-        }
-        for doc_id in retrieved_doc_ids
-    ]
+            "fileName": payload.get("fileName"),
+            "pageNumber": payload.get("pageNumber"),
+            "chunkPreview": (payload.get("chunkText") or "")[:500],
+        })
     yield json.dumps({"citations": citations, "done": True}), retrieved_doc_ids

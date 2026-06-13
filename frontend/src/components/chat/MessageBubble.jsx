@@ -1,7 +1,41 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import CitationCard from './CitationCard'
+
+// Warm neutral theme matching the app palette
+const CODE_THEME = {
+  'code[class*="language-"]': { color: '#2D2B29', background: 'none', fontFamily: 'inherit', fontSize: '13px', lineHeight: '1.7' },
+  'pre[class*="language-"]': { color: '#2D2B29', background: '#EDEAE4', fontFamily: 'inherit', fontSize: '13px', lineHeight: '1.7', margin: 0, padding: '16px', overflow: 'auto' },
+  comment: { color: '#9A9590', fontStyle: 'italic' },
+  prolog: { color: '#9A9590' },
+  doctype: { color: '#9A9590' },
+  cdata: { color: '#9A9590' },
+  punctuation: { color: '#6B6966' },
+  property: { color: '#7B3F00' },
+  tag: { color: '#CC0000' },
+  boolean: { color: '#B5460F' },
+  number: { color: '#B5460F' },
+  constant: { color: '#B5460F' },
+  symbol: { color: '#B5460F' },
+  selector: { color: '#2C6E49' },
+  'attr-name': { color: '#7B3F00' },
+  string: { color: '#2C6E49' },
+  char: { color: '#2C6E49' },
+  builtin: { color: '#7B3F00' },
+  operator: { color: '#6B6966' },
+  entity: { color: '#7B3F00', cursor: 'help' },
+  url: { color: '#2C6E49' },
+  keyword: { color: '#CC0000', fontWeight: '600' },
+  atrule: { color: '#CC0000' },
+  'attr-value': { color: '#2C6E49' },
+  function: { color: '#1A4F8A' },
+  'class-name': { color: '#1A4F8A' },
+  regex: { color: '#2C6E49' },
+  important: { color: '#CC0000', fontWeight: 'bold' },
+  variable: { color: '#7B3F00' },
+}
 
 const AVATAR_SIZE = 40
 
@@ -58,25 +92,46 @@ const MD_COMPONENTS = {
   h3: ({ children }) => (
     <h3 className="np-sans text-[15px] font-bold mb-2 mt-3 first:mt-0" style={{ color: '#111111' }}>{children}</h3>
   ),
-  code: ({ inline, children }) =>
-    inline ? (
+  code: ({ children, className }) => {
+    const language = (className?.match(/language-(\w+)/) || [])[1]
+    // Block code: has a language class OR multiline content (fenced/indented blocks)
+    const isBlock = language || (typeof children === 'string' && children.includes('\n'))
+    if (isBlock) {
+      return (
+        <div className="mb-4 last:mb-0 overflow-hidden np-mono" style={{ border: '1px solid #E3E1DC', borderRadius: '4px' }}>
+          {language && (
+            <div
+              className="flex items-center justify-between px-4 py-1.5"
+              style={{ backgroundColor: '#E3E1DC', borderBottom: '1px solid #D5D2CC' }}
+            >
+              <span className="np-mono text-[10px] font-bold uppercase tracking-widest" style={{ color: '#6B6966' }}>
+                {language}
+              </span>
+            </div>
+          )}
+          <SyntaxHighlighter
+            language={language || 'text'}
+            style={CODE_THEME}
+            customStyle={{ margin: 0, borderRadius: 0, backgroundColor: '#F7F5F2', padding: '16px' }}
+            PreTag="div"
+            wrapLongLines={false}
+          >
+            {String(children).replace(/\n$/, '')}
+          </SyntaxHighlighter>
+        </div>
+      )
+    }
+    // Inline code
+    return (
       <code
-        className="np-mono text-[13px] px-1.5 py-0.5"
-        style={{ backgroundColor: '#F5F0E8', color: '#111111', border: '1px solid #E5E5E0' }}
+        className="np-mono text-[12.5px] px-1.5 py-0.5"
+        style={{ backgroundColor: '#EDEAE4', color: '#B5460F', border: '1px solid #E3E1DC', borderRadius: '3px' }}
       >
         {children}
       </code>
-    ) : (
-      <code className="block np-mono text-[13px] leading-relaxed" style={{ color: '#111111' }}>{children}</code>
-    ),
-  pre: ({ children }) => (
-    <pre
-      className="mb-4 last:mb-0 px-4 py-4 overflow-x-auto np-mono text-[13px] leading-relaxed"
-      style={{ backgroundColor: '#F5F0E8', borderLeft: '3px solid #111111', color: '#111111' }}
-    >
-      {children}
-    </pre>
-  ),
+    )
+  },
+  pre: ({ children }) => <>{children}</>,
   blockquote: ({ children }) => (
     <blockquote
       className="mb-4 last:mb-0 pl-4 py-1 np-body text-[14px] italic"

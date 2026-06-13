@@ -6,6 +6,8 @@ class ChatRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=2000, description="User question")
     chat_id: str = Field(..., description="Chat session ID — create via POST /chats first")
     document_ids: list[str] | None = Field(default=None)
+    repo_ids: list[str] | None = Field(default=None)
+    source: str = Field(default="all")  # "all" | "documents" | "github"
 
 
 class CitationSchema(BaseModel):

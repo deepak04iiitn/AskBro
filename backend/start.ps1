@@ -82,7 +82,21 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", $celeryCmd
 Start-Sleep -Seconds 1
 Log-Ok "Celery worker window opened"
 
-# --- 5. FastAPI ----------------------------------------------------------
+# --- 5. Qdrant payload indexes (idempotent) ------------------------------
+Log-Step "Ensuring Qdrant payload indexes..."
+
+$indexScript = @"
+import asyncio
+from config.qdrant import ensure_payload_indexes
+asyncio.run(ensure_payload_indexes())
+print('  Indexes OK')
+"@
+
+$indexResult = $indexScript | uv run python - 2>&1
+Write-Host "  $indexResult" -ForegroundColor DarkGray
+Log-Ok "Qdrant indexes verified"
+
+# --- 6. FastAPI ----------------------------------------------------------
 Log-Step "Starting FastAPI..."
 Write-Host ""
 Write-Host "  Swagger UI : http://localhost:8000/docs" -ForegroundColor DarkGray

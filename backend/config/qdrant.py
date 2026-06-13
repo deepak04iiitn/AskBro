@@ -24,6 +24,9 @@ def get_async_qdrant_client() -> AsyncQdrantClient:
     )
 
 
+_PAYLOAD_INDEXES = ("workspaceId", "documentId", "repoId", "source", "tags")
+
+
 async def ensure_collection_exists() -> None:
     """Create the knowledge_base collection if it doesn't already exist."""
     client = get_async_qdrant_client()
@@ -42,10 +45,23 @@ async def ensure_collection_exists() -> None:
             ),
         )
 
-        # Payload indexes for fast filtering
-        for field in ("workspaceId", "documentId", "tags"):
+    # Always ensure all payload indexes exist (idempotent — safe to call on startup)
+    await ensure_payload_indexes()
+
+
+async def ensure_payload_indexes() -> None:
+    """Create missing payload indexes on an existing collection. Safe to call repeatedly."""
+    from qdrant_client.http.exceptions import UnexpectedResponse
+
+    client = get_async_qdrant_client()
+    for field in _PAYLOAD_INDEXES:
+        try:
             await client.create_payload_index(
                 collection_name=settings.QDRANT_COLLECTION_NAME,
                 field_name=field,
                 field_schema="keyword",
             )
+        except UnexpectedResponse as e:
+            # 409 Conflict = index already exists — that's fine
+            if "409" not in str(e) and "already exists" not in str(e).lower():
+                raise

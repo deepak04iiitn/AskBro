@@ -24,7 +24,7 @@ export default function ChatInput({ onSend, disabled }) {
   const [mentionQuery, setMentionQuery] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
   const [dropdownIndex, setDropdownIndex] = useState(0)
-  const [source, setSource]             = useState('documents')
+  const [source, setSource]             = useState('all')
   const [showSourceMenu, setShowSourceMenu] = useState(false)
 
   const textareaRef  = useRef(null)

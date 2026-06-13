@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  BookOpen, FileSearch, GitCompare, ListChecks,
+  BookOpen, FileSearch, ListChecks,
   ArrowUpRight, X, FileX, Puzzle,
 } from 'lucide-react'
 import { streamChat } from '@/lib/stream'
@@ -203,7 +203,7 @@ export default function ChatWindow({ chatId }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function handleSend(query, docIds) {
+  async function handleSend(query, docIds, source, repoIds) {
     if (streaming) return
 
     let activeChatId = chatId || storeChatId
@@ -224,7 +224,7 @@ export default function ChatWindow({ chatId }) {
     setStreaming(true)
 
     try {
-      for await (const event of streamChat(query, activeChatId, docIds)) {
+      for await (const event of streamChat(query, activeChatId, docIds, source, repoIds)) {
         if (event.error) appendToken('\n\n⚠ ' + event.error)
         else if (event.done && event.citations !== undefined) setCitations(event.citations)
         else if (event.token) appendToken(event.token)

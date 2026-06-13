@@ -46,7 +46,7 @@ from services.github.converter import (
     pr_to_document,
 )
 from services.github.tree_walker import filter_tree
-from services.vectorstore.upsert import build_point, upsert_chunks
+from services.vectorstore.upsert import build_point, delete_repo_chunks, upsert_chunks
 from utils.crypto import decrypt_github_token
 from utils.logger import get_logger
 
@@ -114,8 +114,12 @@ async def _ingest(task: Task, repo_id: str) -> dict:
         await _set({"progress_step": step})
 
     try:
-        # ── Determine what changed ────────────────────────────────────────────
+        # ── Wipe stale vectors so re-index starts clean ───────────────────────
         await _progress("Connecting to GitHub…")
+        delete_repo_chunks(str(repo.id))
+        await Chunk.find(Chunk.document_id == repo.id).delete()
+
+        # ── Determine what changed ────────────────────────────────────────────
         current_sha = await get_latest_commit_sha(token, owner, repo_name, branch)
         is_incremental = bool(repo.last_commit_sha and repo.last_commit_sha != current_sha)
 
@@ -402,7 +406,7 @@ async def _embed_and_upsert(
             "issueNumber": meta.get("issueNumber"),
             "prNumber": meta.get("prNumber"),
             "chunkIndex": idx,
-            "chunkText": chunk.page_content[:200],
+            "chunkText": chunk.page_content[:8000],
             "createdAt": now_iso,
         }
 

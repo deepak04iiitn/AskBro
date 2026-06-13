@@ -242,5 +242,6 @@ export default function MessageBubble({ message, activeSourceId, onOpenSource })
 }
 
 export function buildSourceId(citation) {
+  if (citation.isGitHub) return `gh::${citation.repoId}::${citation.filePath ?? citation.sourceType}`
   return `${citation.fileName}::${citation.pageNumber}`
 }

@@ -139,13 +139,15 @@ function RepoRow({ repo }) {
   const [syncing, setSyncing]       = useState(false)
   const [showRemove, setShowRemove] = useState(false)
   const [removing, setRemoving]     = useState(false)
+  const [showSync, setShowSync]     = useState(false)
 
   const cfg    = STATUS[repo.status] ?? STATUS.pending
   const isActive = ['ingesting', 'syncing', 'pending'].includes(repo.status)
 
   async function handleSync() {
     setSyncing(true)
-    try { await syncRepo(repo.repo_id) } finally { setSyncing(false) }
+    setShowSync(false)
+    try { await syncRepo(repo.repo_id, true) } finally { setSyncing(false) }
   }
 
   async function handleRemove() {
@@ -216,13 +218,13 @@ function RepoRow({ repo }) {
               <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
             </a>
             <button
-              onClick={handleSync}
+              onClick={() => setShowSync(true)}
               disabled={syncing || isActive}
               className="w-8 h-8 flex items-center justify-center cursor-pointer transition-colors disabled:opacity-30"
               style={{ color: '#AEABA6' }}
               onMouseEnter={(e) => { e.currentTarget.style.color = '#111111' }}
               onMouseLeave={(e) => { e.currentTarget.style.color = '#AEABA6' }}
-              title="Sync now"
+              title="Re-sync repository"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing || isActive ? 'animate-spin' : ''}`} strokeWidth={2} />
             </button>
@@ -301,6 +303,56 @@ function RepoRow({ repo }) {
           ))}
         </div>
       </motion.div>
+
+      {/* Re-sync confirm modal */}
+      <AnimatePresence>
+        {showSync && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            style={{ backgroundColor: 'rgba(10,10,12,0.65)', backdropFilter: 'blur(6px)' }}
+            onClick={() => setShowSync(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              className="w-full max-w-[420px] overflow-hidden"
+              style={{ background: '#F9F9F7', border: '1px solid #111111', boxShadow: '6px 6px 0px 0px #111111' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-center pt-8 pb-4">
+                <div className="w-16 h-16 flex items-center justify-center" style={{ backgroundColor: '#EFF6FF', border: '1px solid #E5E5E0' }}>
+                  <RefreshCw className="w-8 h-8" style={{ color: '#2563EB' }} strokeWidth={1.8} />
+                </div>
+              </div>
+              <div className="px-8 pb-6 text-center">
+                <h3 className="np-serif text-[18px] font-black mb-2" style={{ color: '#111111' }}>Re-sync {repo.repo_name}?</h3>
+                <p className="np-body text-[14px] leading-[1.65]" style={{ color: '#737373' }}>
+                  This will re-read all files, commits, issues and PRs from scratch and rebuild the knowledge base. It takes a few minutes.
+                </p>
+              </div>
+              <div className="px-8 pb-8 flex flex-col gap-3">
+                <button
+                  onClick={handleSync}
+                  className="w-full h-12 np-sans text-[13px] font-bold uppercase tracking-widest cursor-pointer flex items-center justify-center gap-2"
+                  style={{ backgroundColor: '#111111', color: '#F9F9F7' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#2563EB' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#111111' }}
+                >
+                  <RefreshCw className="w-4 h-4" strokeWidth={2} />
+                  Yes, re-sync now
+                </button>
+                <button
+                  onClick={() => setShowSync(false)}
+                  className="btn-outline-ink w-full h-11 cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Remove confirm modal */}
       <AnimatePresence>

@@ -1,6 +1,6 @@
 import uuid
 
-from qdrant_client.models import PointStruct
+from qdrant_client.models import FieldCondition, Filter, MatchValue, PointStruct
 
 from config.env import settings
 from services.vectorstore.qdrant_client import get_qdrant_client
@@ -29,4 +29,16 @@ def upsert_chunks(points: list[PointStruct]) -> None:
         collection_name=settings.QDRANT_COLLECTION_NAME,
         points=points,
         wait=True,  # block until the upsert is confirmed
+    )
+
+
+def delete_repo_chunks(repo_id: str) -> None:
+    """Delete all Qdrant vectors for a given repo. Called before re-indexing to avoid stale chunks."""
+    client = get_qdrant_client()
+    client.delete(
+        collection_name=settings.QDRANT_COLLECTION_NAME,
+        points_selector=Filter(must=[
+            FieldCondition(key="repoId", match=MatchValue(value=repo_id)),
+        ]),
+        wait=True,
     )

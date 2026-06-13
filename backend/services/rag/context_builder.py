@@ -1,9 +1,67 @@
+from pathlib import PurePosixPath
+
 from qdrant_client.models import ScoredPoint
+
+_EXT_LANG: dict[str, str] = {
+    ".py": "python", ".ts": "typescript", ".tsx": "typescript",
+    ".js": "javascript", ".jsx": "javascript", ".go": "go",
+    ".rs": "rust", ".java": "java", ".rb": "ruby", ".sh": "bash",
+    ".yml": "yaml", ".yaml": "yaml", ".toml": "toml",
+    ".json": "json", ".sql": "sql", ".graphql": "graphql",
+    ".html": "html", ".css": "css", ".scss": "scss",
+}
+
+
+def _code_lang(path: str) -> str:
+    return _EXT_LANG.get(PurePosixPath(path).suffix.lower(), "")
+
+
+def _format_block(payload: dict) -> str:
+    chunk_text = payload.get("chunkText", "")
+    is_github = payload.get("source") == "github"
+
+    if not is_github:
+        file_name = payload.get("fileName", "unknown")
+        page = payload.get("pageNumber")
+        page_label = f"Page {page}" if page is not None else "Page N/A"
+        return f"[Source: {file_name}, {page_label}]\n{chunk_text}"
+
+    source_type = payload.get("sourceType", "file")
+    repo = payload.get("repoFullName", "")
+
+    if source_type == "file":
+        file_path = payload.get("filePath", "unknown")
+        lang = _code_lang(file_path)
+        header = f"[Source: {repo}/{file_path}]"
+        if lang:
+            return f"{header}\n```{lang}\n{chunk_text}\n```"
+        return f"{header}\n{chunk_text}"
+
+    if source_type == "commit":
+        sha = payload.get("commitSha", "")[:8]
+        author = payload.get("authorName", "")
+        msg = payload.get("commitMessage", "")
+        header = f"[Source: {repo} · commit {sha} by {author}: {msg}]"
+        return f"{header}\n{chunk_text}"
+
+    if source_type == "issue":
+        num = payload.get("issueNumber", "")
+        title = payload.get("issueTitle", "")
+        header = f"[Source: {repo} · Issue #{num}: {title}]"
+        return f"{header}\n{chunk_text}"
+
+    if source_type == "pull_request":
+        num = payload.get("prNumber", "")
+        title = payload.get("prTitle", "")
+        header = f"[Source: {repo} · PR #{num}: {title}]"
+        return f"{header}\n{chunk_text}"
+
+    return f"[Source: {repo}]\n{chunk_text}"
 
 
 def build_context(
     hits: list[ScoredPoint],
-    top_n: int = 5,
+    top_n: int = 8,
     relative_threshold: float = 0.80,
     abs_min_score: float = 0.35,
     citation_threshold: float = 0.92,
@@ -27,17 +85,7 @@ def build_context(
     if not selected and hits:
         selected = hits[:1]
 
-    # ── Build context blocks (all selected chunks) ────────────────
-    blocks: list[str] = []
-    for hit in selected:
-        payload = hit.payload or {}
-        file_name = payload.get("fileName", "unknown")
-        page = payload.get("pageNumber")
-        chunk_text = payload.get("chunkText", "")
-        page_label = f"Page {page}" if page is not None else "Page N/A"
-        blocks.append(f"[Source: {file_name}, {page_label}]\n{chunk_text}")
-
-    context = "\n\n".join(blocks)
+    context = "\n\n".join(_format_block(h.payload or {}) for h in selected)
 
     # ── Build citation doc IDs (tighter threshold) ────────────────
     citation_min = best_score * citation_threshold

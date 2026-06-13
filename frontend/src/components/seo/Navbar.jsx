@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Menu, X, ChevronDown, LayoutDashboard } from 'lucide-react'
+import { Menu, X, ChevronDown, LayoutDashboard, LogOut } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
+
 
 const NAV_LINKS = [
   {
@@ -96,7 +97,17 @@ function DropdownMenu({ label, children }) {
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobileSection, setMobileSection] = useState(null)
-  const user = useAuthStore((s) => s.user)
+  const [mounted, setMounted] = useState(false)
+
+  const user    = useAuthStore((s) => s.user)
+  const hydrate = useAuthStore((s) => s.hydrate)
+  const logout  = useAuthStore((s) => s.logout)
+
+  // Hydrate auth from localStorage after first client paint
+  useEffect(() => {
+    hydrate()
+    setMounted(true)
+  }, [hydrate])
 
   const today = new Date()
   const edition = today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -149,15 +160,26 @@ export default function Navbar() {
           </nav>
 
           {/* Desktop CTA — right */}
-          <div className="hidden md:flex items-center gap-2 shrink-0">
-            {user ? (
-              <Link
-                href="/dashboard"
-                className="btn-ink px-5 py-2.5 inline-flex items-center gap-2 min-h-[36px]"
-              >
-                <LayoutDashboard className="w-3.5 h-3.5" strokeWidth={2} />
-                Dashboard
-              </Link>
+          <div className="hidden md:flex items-center gap-2 shrink-0" style={{ minWidth: 160 }}>
+            {!mounted ? null : user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="btn-ink px-5 py-2.5 inline-flex items-center gap-2 min-h-[36px]"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" strokeWidth={2} />
+                  Dashboard
+                </Link>
+                <button
+                  onClick={logout}
+                  className="np-sans text-[11px] font-semibold uppercase tracking-widest px-3 py-2 inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-[#CC0000] cursor-pointer"
+                  style={{ color: '#737373' }}
+                  title="Sign out"
+                >
+                  <LogOut className="w-3.5 h-3.5" strokeWidth={2} />
+                  Sign out
+                </button>
+              </>
             ) : (
               <>
                 <Link
@@ -242,15 +264,25 @@ export default function Navbar() {
               </div>
             ))}
             <div className="pt-4 flex flex-col gap-2">
-              {user ? (
-                <Link
-                  href="/dashboard"
-                  onClick={() => setMobileOpen(false)}
-                  className="btn-ink w-full text-center py-3 flex items-center justify-center gap-2"
-                >
-                  <LayoutDashboard className="w-4 h-4" strokeWidth={2} />
-                  Dashboard
-                </Link>
+              {!mounted ? null : user ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileOpen(false)}
+                    className="btn-ink w-full text-center py-3 flex items-center justify-center gap-2"
+                  >
+                    <LayoutDashboard className="w-4 h-4" strokeWidth={2} />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => { setMobileOpen(false); logout() }}
+                    className="btn-outline-ink w-full py-3 flex items-center justify-center gap-2 cursor-pointer"
+                    style={{ color: '#737373', borderColor: '#E5E5E0' }}
+                  >
+                    <LogOut className="w-4 h-4" strokeWidth={2} />
+                    Sign out
+                  </button>
+                </>
               ) : (
                 <>
                   <Link

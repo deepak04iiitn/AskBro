@@ -6,14 +6,13 @@ import { ArrowLeft, Clock, Copy, ArrowRight } from 'lucide-react'
 import PublicLayout from '@/components/seo/PublicLayout'
 import JsonLd from '@/components/seo/JsonLd'
 import BlogTocSidebar from '@/components/seo/BlogTocSidebar'
-import { getPostBySlug, getAllPostSlugs, posts as allPosts } from '@/lib/blog'
+import { fetchAllSlugs, fetchPostBySlug, fetchPublishedPosts } from '@/lib/blogApi'
 
-export async function generateStaticParams() {
-  return getAllPostSlugs()
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }) {
-  const post = getPostBySlug(params.slug)
+  const { slug } = await params
+  const post = await fetchPostBySlug(slug)
   if (!post) return {}
   return {
     title: `${post.title} | AskBro Journal`,
@@ -103,19 +102,26 @@ const mdComponents = {
   ),
 }
 
-export default function BlogPostPage({ params }) {
-  const post = getPostBySlug(params.slug)
+export default async function BlogPostPage({ params }) {
+  const { slug } = await params
+  const post = await fetchPostBySlug(slug)
   if (!post) notFound()
+
+  const readingTime = post.reading_time ?? post.readingTime
 
   const articleJsonLd = {
     '@context': 'https://schema.org', '@type': 'Article',
     headline: post.title, description: post.description, datePublished: post.date,
-    author: { '@type': 'Organization', name: 'AskBro', url: 'https://askbro.app' },
+    author: { '@type': 'Organization', name: post.author ?? 'AskBro', url: 'https://askbro.app' },
     publisher: { '@type': 'Organization', name: 'AskBro', url: 'https://askbro.app', logo: { '@type': 'ImageObject', url: 'https://askbro.app/AskBro_Logo.png' } },
     mainEntityOfPage: { '@type': 'WebPage', '@id': `https://askbro.app/blog/${post.slug}` },
   }
 
-  const related = allPosts.filter((p) => p.slug !== post.slug && p.tags?.some((t) => post.tags?.includes(t))).slice(0, 3)
+  // Related: other published posts sharing at least one tag
+  const allPosts = await fetchPublishedPosts()
+  const related  = allPosts
+    .filter((p) => p.slug !== post.slug && p.tags?.some((t) => post.tags?.includes(t)))
+    .slice(0, 3)
 
   return (
     <PublicLayout>
@@ -165,12 +171,17 @@ export default function BlogPostPage({ params }) {
             <div data-animate="fade" data-delay="280" className="flex flex-wrap items-center gap-5 pt-5 border-t" style={{ borderColor: '#E5E5E0' }}>
               <div className="flex items-center gap-1.5 np-mono text-[10px] uppercase tracking-widest" style={{ color: '#A3A3A3' }}>
                 <Clock className="w-3.5 h-3.5" strokeWidth={1.5} />
-                {post.readingTime}
+                {readingTime}
               </div>
               {post.date && (
                 <time className="np-mono text-[10px] uppercase tracking-widest" style={{ color: '#A3A3A3' }}>
                   {new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                 </time>
+              )}
+              {post.author && (
+                <span className="np-mono text-[10px] uppercase tracking-widest" style={{ color: '#A3A3A3' }}>
+                  By {post.author}
+                </span>
               )}
               <a
                 href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.title)}&url=${encodeURIComponent(`https://askbro.app/blog/${post.slug}`)}`}

@@ -52,3 +52,47 @@ export async function fetchAdminMetrics() {
   if (!res.ok) throw new Error('Failed to fetch metrics')
   return res.json()
 }
+
+// ── Blog admin ────────────────────────────────────────────────────────────────
+
+export async function adminFetchPosts() {
+  const res = await adminRequest('/blog/admin/posts')
+  if (!res.ok) throw new Error('Failed to fetch posts')
+  return res.json()
+}
+
+export async function adminFetchPost(id) {
+  const res = await adminRequest(`/blog/admin/posts/${id}`)
+  if (!res.ok) throw new Error('Failed to fetch post')
+  return res.json()
+}
+
+export async function adminCreatePost(data) {
+  const res = await adminRequest('/blog/admin/posts', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const err = await res.json()
+    throw new Error(err.detail || 'Failed to create post')
+  }
+  return res.json()
+}
+
+export async function adminUpdatePost(id, data) {
+  const res = await adminRequest(`/blog/admin/posts/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const err = await res.json()
+    throw new Error(err.detail || 'Failed to update post')
+  }
+  return res.json()
+}
+
+export async function adminDeletePost(id) {
+  const res = await adminRequest(`/blog/admin/posts/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Failed to delete post')
+  return res.json()
+}

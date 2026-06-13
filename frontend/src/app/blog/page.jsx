@@ -2,7 +2,9 @@ import Link from 'next/link'
 import { Clock, ArrowRight } from 'lucide-react'
 import PublicLayout from '@/components/seo/PublicLayout'
 import BlogTagFilter from '@/components/seo/BlogTagFilter'
-import { posts as blogPosts } from '@/lib/blog'
+import { fetchPublishedPosts } from '@/lib/blogApi'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata = {
   title: 'The AskBro Journal — AI, Study Tips & Developer Guides',
@@ -10,10 +12,15 @@ export const metadata = {
   alternates: { canonical: 'https://askbro.app/blog' },
 }
 
-export default function BlogIndexPage() {
+export default async function BlogIndexPage() {
+  const blogPosts = await fetchPublishedPosts()
+
   const featuredPost = blogPosts[0]
   const secondPost   = blogPosts[1]
   const restPosts    = blogPosts.slice(2)
+
+  // Normalise reading_time → readingTime for child components
+  const normalise = (p) => ({ ...p, readingTime: p.reading_time ?? p.readingTime })
 
   return (
     <PublicLayout>
@@ -75,7 +82,7 @@ export default function BlogIndexPage() {
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="flex items-center gap-1.5 np-mono text-[9px] uppercase" style={{ letterSpacing: '0.12em', color: '#A3A3A3' }}>
                     <Clock className="w-3 h-3" strokeWidth={1.5} />
-                    {featuredPost.readingTime}
+                    {featuredPost.reading_time ?? featuredPost.readingTime}
                   </div>
                   <span className="np-sans text-[10px] font-bold uppercase flex items-center gap-1.5 group-hover:text-[#CC0000] transition-colors duration-200" style={{ letterSpacing: '0.1em', color: '#111111' }}>
                     Read Full Article <ArrowRight className="w-3.5 h-3.5" strokeWidth={2} />
@@ -107,7 +114,7 @@ export default function BlogIndexPage() {
                 </p>
                 <div className="flex items-center gap-1.5 np-mono text-[9px] uppercase" style={{ letterSpacing: '0.1em', color: '#A3A3A3' }}>
                   <Clock className="w-3 h-3" strokeWidth={1.5} />
-                  {secondPost.readingTime}
+                  {secondPost.reading_time ?? secondPost.readingTime}
                 </div>
               </Link>
             )}
@@ -128,7 +135,7 @@ export default function BlogIndexPage() {
                 <h2 className="np-serif font-black" style={{ fontSize: 'clamp(1.4rem, 2.5vw, 2rem)', color: '#111111' }}>All Articles</h2>
                 <div className="flex-1 h-px bg-[#E5E5E0] hidden md:block" />
               </div>
-              <BlogTagFilter posts={restPosts} />
+              <BlogTagFilter posts={restPosts.map(normalise)} />
             </div>
           )}
         </div>

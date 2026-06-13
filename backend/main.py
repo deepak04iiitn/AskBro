@@ -11,7 +11,7 @@ from middleware.rate_limit import limiter
 from config.qdrant import ensure_collection_exists
 from db.session import close_db, init_db
 from routes import admin as admin_router
-from routes import chat, documents, health, integrations, workspaces
+from routes import blog, chat, documents, health, integrations, workspaces
 from utils.logger import get_logger, setup_logging
 
 logger = get_logger(__name__)
@@ -69,3 +69,4 @@ app.include_router(chat.router, prefix="/api/v1", tags=["chat"])
 app.include_router(workspaces.router, prefix="/api/v1", tags=["workspaces"])
 app.include_router(admin_router.router, prefix="/api/v1", tags=["admin"])
 app.include_router(integrations.router, prefix="/api/v1", tags=["integrations"])
+app.include_router(blog.router, prefix="/api/v1", tags=["blog"])

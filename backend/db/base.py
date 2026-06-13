@@ -5,6 +5,7 @@ collection and its indexes are registered in one place.
 """
 
 from models.audit_log import AuditLog
+from models.blog_post import BlogPost
 from models.chat import Chat
 from models.chunk import Chunk
 from models.document import UploadedDocument
@@ -22,4 +23,5 @@ DOCUMENT_MODELS = [
     Chat,
     Message,
     NotionIntegration,
+    BlogPost,
 ]

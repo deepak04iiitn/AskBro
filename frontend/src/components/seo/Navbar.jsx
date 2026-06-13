@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Menu, X, ChevronDown, LayoutDashboard, LogOut } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 
@@ -99,9 +100,15 @@ export default function Navbar() {
   const [mobileSection, setMobileSection] = useState(null)
   const [mounted, setMounted] = useState(false)
 
+  const router  = useRouter()
   const user    = useAuthStore((s) => s.user)
   const hydrate = useAuthStore((s) => s.hydrate)
   const logout  = useAuthStore((s) => s.logout)
+
+  function handleLogout() {
+    logout()
+    router.push('/login')
+  }
 
   // Hydrate auth from localStorage after first client paint
   useEffect(() => {
@@ -171,7 +178,7 @@ export default function Navbar() {
                   Dashboard
                 </Link>
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="np-sans text-[11px] font-semibold uppercase tracking-widest px-3 py-2 inline-flex items-center gap-1.5 transition-colors duration-150 hover:text-[#CC0000] cursor-pointer"
                   style={{ color: '#737373' }}
                   title="Sign out"
@@ -275,7 +282,7 @@ export default function Navbar() {
                     Dashboard
                   </Link>
                   <button
-                    onClick={() => { setMobileOpen(false); logout() }}
+                    onClick={() => { setMobileOpen(false); handleLogout() }}
                     className="btn-outline-ink w-full py-3 flex items-center justify-center gap-2 cursor-pointer"
                     style={{ color: '#737373', borderColor: '#E5E5E0' }}
                   >

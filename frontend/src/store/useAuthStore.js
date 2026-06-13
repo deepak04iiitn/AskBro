@@ -44,9 +44,7 @@ const useAuthStore = create((set) => ({
   logout() {
     clearToken()
     set({ user: null })
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login'
-    }
+    // Navigation is handled by the caller (DashboardShell useEffect or Navbar)
   },
 }))
 

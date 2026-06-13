@@ -24,15 +24,17 @@ export default function DashboardShell({ children }) {
     if (!user) { router.replace('/login'); return }
     fetchDocuments()
 
-    // Show the workspace code modal once per workspace (keyed by workspace_id)
-    const seenKey = `${CODE_SEEN_KEY}_${user.workspace_id}`
+    // Show the workspace code modal once per user (keyed by user id)
+    const seenKey = `${CODE_SEEN_KEY}_${user.id}`
     if (!localStorage.getItem(seenKey)) {
       setShowCodeModal(true)
     }
   }, [hydrated, user, router, fetchDocuments])
 
   function handleCloseCodeModal() {
-    localStorage.setItem(`${CODE_SEEN_KEY}_${user.workspace_id}`, '1')
+    if (user?.id) {
+      localStorage.setItem(`${CODE_SEEN_KEY}_${user.id}`, '1')
+    }
     setShowCodeModal(false)
   }
 
@@ -49,7 +51,7 @@ export default function DashboardShell({ children }) {
 
       {showCodeModal && (
         <WorkspaceCodeModal
-          code={user.workspace_code}
+          user={user}
           onClose={handleCloseCodeModal}
         />
       )}

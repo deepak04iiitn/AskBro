@@ -83,8 +83,9 @@ export default function Sidebar() {
     setLeaveError('')
     try {
       await leaveWorkspace()
-      logout()
       localStorage.removeItem('askbro_onboarded')
+      logout()
+      router.replace('/login')
     } catch (err) {
       setLeaveError(err.message)
       setLeaveLoading(false)
@@ -624,7 +625,7 @@ export default function Sidebar() {
 
                 <div style={{ borderTop: '1px solid #E5E5E0' }} />
                 <button
-                  onClick={() => { logout(); setShowMenu(false) }}
+                  onClick={() => { setShowMenu(false); logout(); router.replace('/login') }}
                   className="w-full flex items-center gap-3 px-4 py-3 np-sans text-[13px] cursor-pointer transition-colors text-left"
                   style={{ color: '#CC0000' }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FEF2F2' }}

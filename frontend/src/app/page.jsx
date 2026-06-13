@@ -4,7 +4,6 @@ import {
   ArrowRight, Upload, Cpu, MessageSquare,
   Shield, Zap, Users, BookOpen,
 } from 'lucide-react'
-import AuthRedirect from '@/components/seo/AuthRedirect'
 import JsonLd from '@/components/seo/JsonLd'
 import PublicLayout from '@/components/seo/PublicLayout'
 import PersonaTabs from '@/components/seo/PersonaTabs'
@@ -55,7 +54,6 @@ const stats = [
 export default function HomePage() {
   return (
     <PublicLayout>
-      <AuthRedirect />
       <JsonLd data={homepageJsonLd} />
 
       {/* ── Breaking News Ticker ──────────────────────────────── */}

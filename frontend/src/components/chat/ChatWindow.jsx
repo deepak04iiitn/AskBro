@@ -17,6 +17,45 @@ import MessageBubble, { buildSourceId } from './MessageBubble'
 import ChatInput from './ChatInput'
 import { PANEL_SLIDE } from '@/lib/animations'
 
+// Cleans raw PDF-extracted chunk text for readable display
+function cleanExcerpt(raw, maxChars = 480) {
+  if (!raw) return ''
+  let text = raw
+    // Strip PDF glyph/icon artifacts (symbols that replace icons in extracted text)
+    .replace(/[♂♀⌢⌣→←↑↓·•◦▪▫▸▹►◄◀★☆○●◆◇■□▲△▼▽⊕⊗]/g, ' ')
+    // Strip icon label tokens merged into contact info (phone, envelope, globe, github, linkedin…)
+    .replace(/\b(phone|envel|gl\w{0,4}be|github|linkedin|twitter|instagram)\b/gi, ' ')
+    // Remove URL path fragments like /deepak/github or /portfolio/deepak
+    .replace(/\/[a-z0-9_%-]+(\/[a-z0-9_%-]+)*/gi, ' ')
+    // Fix PDF split capital: "T echnology" → "Technology"
+    .replace(/\b([A-Z])\s+(?=[a-z]{2,})/g, '$1')
+    // Insert space at merged word boundaries ("NagpurNov" → "Nagpur Nov")
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    // Collapse tabs and multiple spaces
+    .replace(/[ \t]+/g, ' ')
+    // Normalize line endings
+    .replace(/\r\n/g, '\n')
+    // Collapse 3+ newlines into paragraph break
+    .replace(/\n{3,}/g, '\n\n')
+    // Mid-sentence PDF line-wrap: lowercase–newline–lowercase → space
+    .replace(/([a-z,;:])\n([a-z])/g, '$1 $2')
+    // Clean up leftover stray punctuation runs
+    .replace(/\s+([.,;:])/g, '$1')
+    .replace(/([/\\])\s+/g, ' ')
+    .trim()
+
+  if (text.length <= maxChars) return text
+
+  const truncated = text.slice(0, maxChars)
+  const lastStop = Math.max(
+    truncated.lastIndexOf('. '),
+    truncated.lastIndexOf('.\n'),
+    truncated.lastIndexOf('! '),
+    truncated.lastIndexOf('? '),
+  )
+  return (lastStop > maxChars * 0.55 ? truncated.slice(0, lastStop + 1) : truncated) + '…'
+}
+
 const SUGGESTIONS = [
   {
     Icon: BookOpen,
@@ -237,59 +276,66 @@ export default function ChatWindow({ chatId }) {
           {activeSource && (
             <motion.div
               {...PANEL_SLIDE}
-              className="w-[320px] shrink-0 flex flex-col overflow-hidden"
-              style={{ backgroundColor: '#F9F9F7', borderLeft: '1px solid #111111' }}
+              className="w-[340px] shrink-0 flex flex-col overflow-hidden"
+              style={{ backgroundColor: '#F9F9F7', borderLeft: '2px solid #111111' }}
             >
               {/* Header */}
               <div
-                className="px-5 py-4 shrink-0 flex items-start justify-between gap-3"
-                style={{ borderBottom: '1px solid #E5E5E0', backgroundColor: '#F0EDE6' }}
+                className="px-6 pt-5 pb-4 shrink-0"
+                style={{ borderBottom: '1px solid #E5E5E0' }}
               >
-                <div className="min-w-0">
-                  <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] mb-1" style={{ color: '#CC0000' }}>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <span
+                    className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-1"
+                    style={{ backgroundColor: '#CC0000', color: '#F9F9F7' }}
+                  >
                     ★ Source
-                  </p>
-                  <p className="np-sans text-[13px] font-semibold truncate" style={{ color: '#111111' }}>
-                    {activeSource.fileName}
-                  </p>
-                  {activeSource.pageNumber != null && (
-                    <p className="np-mono text-[11px] mt-0.5" style={{ color: '#7A7874' }}>
-                      Page {activeSource.pageNumber}
-                    </p>
-                  )}
+                  </span>
+                  <button
+                    onClick={() => setActiveSource(null)}
+                    className="w-7 h-7 flex items-center justify-center cursor-pointer transition-colors shrink-0"
+                    style={{ color: '#AEABA6' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#E5E5E0'; e.currentTarget.style.color = '#111111' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ''; e.currentTarget.style.color = '#AEABA6' }}
+                  >
+                    <X className="w-4 h-4" strokeWidth={2.5} />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setActiveSource(null)}
-                  className="w-7 h-7 flex items-center justify-center cursor-pointer transition-colors shrink-0 mt-0.5"
-                  style={{ color: '#AEABA6' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#E5E5E0'
-                    e.currentTarget.style.color = '#111111'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = ''
-                    e.currentTarget.style.color = '#AEABA6'
-                  }}
-                >
-                  <X className="w-4 h-4" strokeWidth={2.5} />
-                </button>
+                <p className="np-sans text-[14px] font-bold leading-snug" style={{ color: '#111111' }}>
+                  {activeSource.fileName}
+                </p>
+                {activeSource.pageNumber != null && (
+                  <p className="np-mono text-[10px] mt-1.5 uppercase tracking-widest" style={{ color: '#AEABA6' }}>
+                    Page {activeSource.pageNumber}
+                  </p>
+                )}
               </div>
 
               {/* Excerpt */}
-              <div className="flex-1 overflow-y-auto px-5 py-5">
-                <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: '#AEABA6' }}>
+              <div
+                className="flex-1 px-6 py-5"
+                style={{ overflowY: 'auto', overflowX: 'hidden' }}
+              >
+                <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: '#AEABA6' }}>
                   Relevant excerpt
                 </p>
-                {activeSource.chunkPreview ? (
-                  <div
-                    className="px-4 py-4"
-                    style={{ backgroundColor: '#FEF9F0', borderLeft: '3px solid #CC0000' }}
-                  >
-                    <p className="np-body text-[13px] leading-[1.75]" style={{ color: '#3D3C3A' }}>
-                      {activeSource.chunkPreview}
-                    </p>
-                  </div>
-                ) : (
+
+                {activeSource.chunkPreview ? (() => {
+                  const paras = cleanExcerpt(activeSource.chunkPreview).split('\n\n').filter(Boolean)
+                  return (
+                    <div className="space-y-4" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                      {paras.map((para, i) => (
+                        <p
+                          key={i}
+                          className="np-body text-[13.5px] leading-[1.8]"
+                          style={{ color: '#3D3C3A' }}
+                        >
+                          {para.trim()}
+                        </p>
+                      ))}
+                    </div>
+                  )
+                })() : (
                   <div className="flex flex-col items-center justify-center py-10 text-center">
                     <FileX className="w-8 h-8 mb-3" style={{ color: '#D9D7D2' }} strokeWidth={1.5} />
                     <p className="np-mono text-[12px]" style={{ color: '#AEABA6' }}>No preview available.</p>
@@ -299,17 +345,12 @@ export default function ChatWindow({ chatId }) {
 
               {/* Footer */}
               <div
-                className="px-5 py-3 shrink-0 flex items-center justify-between"
-                style={{ borderTop: '1px solid #E5E5E0', backgroundColor: '#F0EDE6' }}
+                className="px-6 py-3 shrink-0"
+                style={{ borderTop: '1px solid #E5E5E0' }}
               >
-                <span className="np-mono text-[10px] uppercase tracking-widest font-semibold" style={{ color: '#7A7874' }}>Source</span>
-                <Link
-                  href="/upload"
-                  className="np-mono text-[11px] font-bold uppercase tracking-widest transition-colors hover:text-[#AA0000]"
-                  style={{ color: '#CC0000' }}
-                >
-                  View all →
-                </Link>
+                <span className="np-mono text-[10px] uppercase tracking-widest" style={{ color: '#AEABA6' }}>
+                  {activeSource.pageNumber != null ? `p. ${activeSource.pageNumber}` : 'excerpt'}
+                </span>
               </div>
             </motion.div>
           )}

@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { Menu, X, ChevronDown } from 'lucide-react'
+import { Menu, X, ChevronDown, LayoutDashboard } from 'lucide-react'
+import useAuthStore from '@/store/useAuthStore'
 
 const NAV_LINKS = [
   {
@@ -95,6 +96,7 @@ function DropdownMenu({ label, children }) {
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [mobileSection, setMobileSection] = useState(null)
+  const user = useAuthStore((s) => s.user)
 
   const today = new Date()
   const edition = today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
@@ -148,16 +150,28 @@ export default function Navbar() {
 
           {/* Desktop CTA — right */}
           <div className="hidden md:flex items-center gap-2 shrink-0">
-            <Link
-              href="/login"
-              className="np-sans text-[11px] font-semibold uppercase tracking-widest px-4 py-2 transition-colors duration-150 hover:text-[#CC0000]"
-              style={{ color: '#111111' }}
-            >
-              Sign In
-            </Link>
-            <Link href="/create" className="btn-ink px-5 py-2.5 inline-flex items-center min-h-[36px]">
-              Start Free →
-            </Link>
+            {user ? (
+              <Link
+                href="/dashboard"
+                className="btn-ink px-5 py-2.5 inline-flex items-center gap-2 min-h-[36px]"
+              >
+                <LayoutDashboard className="w-3.5 h-3.5" strokeWidth={2} />
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="np-sans text-[11px] font-semibold uppercase tracking-widest px-4 py-2 transition-colors duration-150 hover:text-[#CC0000]"
+                  style={{ color: '#111111' }}
+                >
+                  Sign In
+                </Link>
+                <Link href="/create" className="btn-ink px-5 py-2.5 inline-flex items-center min-h-[36px]">
+                  Start Free →
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -228,21 +242,34 @@ export default function Navbar() {
               </div>
             ))}
             <div className="pt-4 flex flex-col gap-2">
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="btn-outline-ink w-full text-center py-3"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/create"
-                onClick={() => setMobileOpen(false)}
-                className="btn-ink w-full text-center py-3"
-                style={{ background: '#CC0000', borderColor: '#CC0000' }}
-              >
-                Start Free →
-              </Link>
+              {user ? (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className="btn-ink w-full text-center py-3 flex items-center justify-center gap-2"
+                >
+                  <LayoutDashboard className="w-4 h-4" strokeWidth={2} />
+                  Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="btn-outline-ink w-full text-center py-3"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/create"
+                    onClick={() => setMobileOpen(false)}
+                    className="btn-ink w-full text-center py-3"
+                    style={{ background: '#CC0000', borderColor: '#CC0000' }}
+                  >
+                    Start Free →
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

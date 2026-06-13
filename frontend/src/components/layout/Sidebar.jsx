@@ -7,14 +7,12 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   Plus, Upload, ChevronUp, Users, LogOut,
   ChevronLeft, ChevronRight, FileText, MessageSquare, Trash2,
-  DoorOpen, AlertTriangle, Puzzle,
+  DoorOpen, AlertTriangle, Puzzle, Home,
 } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import useChatStore from '@/store/useChatStore'
 import useChatsStore from '@/store/useChatsStore'
-import MembersPanel from '@/components/workspace/MembersPanel'
-
 import { leaveWorkspace } from '@/lib/api'
 import { getNotionStatus } from '@/lib/integrationsApi'
 import { SCALE_IN } from '@/lib/animations'
@@ -31,7 +29,7 @@ const TYPE_BADGE = {
   DOC:  { bg: '#EFF6FF', color: '#2563EB' },
   DOCX: { bg: '#EFF6FF', color: '#2563EB' },
   MD:   { bg: '#F5F3FF', color: '#7C3AED' },
-  TXT:  { bg: '#F8FAFC', color: '#64748B' },
+  TXT:  { bg: '#F5F0E8', color: '#6B6B6B' },
 }
 
 const LABEL_TRANSITION = { duration: 0.12 }
@@ -49,8 +47,6 @@ export default function Sidebar() {
   const deleteChat = useChatsStore((s) => s.deleteChat)
 
   const [collapsed, setCollapsed] = useState(false)
-  const [showMembers, setShowMembers] = useState(false)
-  const [showIntegrations, setShowIntegrations] = useState(false)
   const [notionConnected, setNotionConnected] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
@@ -62,12 +58,10 @@ export default function Sidebar() {
   const [docsCount, setDocsCount] = useState(5)
   const menuRef = useRef(null)
 
-  // Load chat list on mount (once user is available)
   useEffect(() => {
     if (user) fetchChats()
   }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Check Notion connection status on mount
   useEffect(() => {
     if (!user) return
     getNotionStatus()
@@ -107,7 +101,6 @@ export default function Sidebar() {
     e.stopPropagation()
     try {
       await deleteChat(chatId)
-      // If we deleted the currently active chat, go back to /dashboard
       if (pathname === `/dashboard/${chatId}`) {
         clearMessages()
         router.push('/dashboard')
@@ -118,23 +111,17 @@ export default function Sidebar() {
   }
 
   const initial = user?.email?.[0]?.toUpperCase() ?? '?'
-  const completedCount = documents.filter((d) => d.status === 'completed').length
   const CHAT_PAGE = 5
   const visibleChats = chats.slice(0, visibleCount)
   const hasMore = chats.length > visibleCount
 
   return (
     <>
-      <AnimatePresence>
-        {showMembers && <MembersPanel onClose={() => setShowMembers(false)} />}
-      </AnimatePresence>
-
-
       <motion.aside
         animate={{ width: collapsed ? 72 : 300 }}
         transition={{ type: 'spring', stiffness: 280, damping: 30 }}
         className="shrink-0 flex flex-col h-full relative"
-        style={{ backgroundColor: '#F7F5F2', borderRight: '1px solid #E3E1DC' }}
+        style={{ backgroundColor: '#F9F9F7', borderRight: '1px solid #E5E5E0' }}
       >
 
         {/* ── Logo + workspace header ─────────────────────────── */}
@@ -142,7 +129,7 @@ export default function Sidebar() {
           className="shrink-0"
           style={{
             padding: collapsed ? '16px 12px' : '18px 16px 14px',
-            borderBottom: '1px solid #E3E1DC',
+            borderBottom: '1px solid #E5E5E0',
           }}
         >
           {/* Logo row */}
@@ -155,35 +142,53 @@ export default function Sidebar() {
                   className="h-11 w-auto mix-blend-multiply cursor-pointer"
                 />
               </Link>
-              <button
-                onClick={() => setCollapsed(true)}
-                className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors cursor-pointer"
-                style={{ color: '#AEABA6' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#E3E1DC'
-                  e.currentTarget.style.color = '#3D3C3A'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent'
-                  e.currentTarget.style.color = '#AEABA6'
-                }}
-                title="Collapse sidebar"
-              >
-                <ChevronLeft className="w-4 h-4" strokeWidth={2} />
-              </button>
+              <div className="flex items-center gap-1">
+                <Link
+                  href="/"
+                  className="w-7 h-7 flex items-center justify-center transition-all border"
+                  style={{ color: '#CC0000', borderColor: '#CC0000', backgroundColor: 'transparent' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#CC0000'
+                    e.currentTarget.style.color = '#F9F9F7'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                    e.currentTarget.style.color = '#CC0000'
+                  }}
+                  title="Go to home page"
+                >
+                  <Home className="w-3.5 h-3.5" strokeWidth={2.5} />
+                </Link>
+                <button
+                  onClick={() => setCollapsed(true)}
+                  className="w-7 h-7 flex items-center justify-center transition-colors cursor-pointer"
+                  style={{ color: '#AEABA6' }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#E5E5E0'
+                    e.currentTarget.style.color = '#111111'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'transparent'
+                    e.currentTarget.style.color = '#AEABA6'
+                  }}
+                  title="Collapse sidebar"
+                >
+                  <ChevronLeft className="w-4 h-4" strokeWidth={2} />
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Collapsed: expand button */}
+          {/* Collapsed: expand + home buttons */}
           {collapsed && (
-            <div className="flex justify-center mb-3">
+            <div className="flex flex-col items-center gap-1 mb-3">
               <button
                 onClick={() => setCollapsed(false)}
-                className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors cursor-pointer"
+                className="w-9 h-9 flex items-center justify-center transition-colors cursor-pointer"
                 style={{ color: '#AEABA6' }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#E3E1DC'
-                  e.currentTarget.style.color = '#3D3C3A'
+                  e.currentTarget.style.backgroundColor = '#E5E5E0'
+                  e.currentTarget.style.color = '#111111'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = 'transparent'
@@ -193,48 +198,58 @@ export default function Sidebar() {
               >
                 <ChevronRight className="w-4 h-4" strokeWidth={2} />
               </button>
+              <Link
+                href="/"
+                className="w-9 h-9 flex items-center justify-center transition-all border"
+                style={{ color: '#CC0000', borderColor: '#CC0000', backgroundColor: 'transparent' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#CC0000'
+                  e.currentTarget.style.color = '#F9F9F7'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = '#CC0000'
+                }}
+                title="Go to home page"
+              >
+                <Home className="w-4 h-4" strokeWidth={2.5} />
+              </Link>
             </div>
           )}
 
           {/* Workspace badge */}
           {!collapsed && (
             <div
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-3"
-              style={{ backgroundColor: '#EEECEA', border: '1px solid #E3E1DC' }}
+              className="flex items-center gap-3 px-3 py-2.5 mb-3"
+              style={{ backgroundColor: '#F0EDE6', border: '1px solid #E5E5E0' }}
             >
               {/* Avatar */}
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[13px] font-bold text-white"
-                style={{ backgroundColor: '#4361EE' }}
+                className="w-8 h-8 flex items-center justify-center shrink-0 text-[13px] font-bold text-white"
+                style={{ backgroundColor: '#CC0000' }}
               >
                 {(user?.workspace_name || user?.workspace_code || '?')[0].toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-bold truncate leading-tight" style={{ color: '#111110' }}>
+                <p className="np-sans text-[13px] font-bold truncate leading-tight" style={{ color: '#111111' }}>
                   {user?.workspace_name || user?.workspace_code || '—'}
                 </p>
-                <p className="text-[11px] font-mono truncate mt-0.5" style={{ color: '#AEABA6' }}>
+                <p className="np-mono text-[11px] truncate mt-0.5" style={{ color: '#AEABA6' }}>
                   {user?.workspace_code ?? '—'}
                 </p>
               </div>
             </div>
           )}
 
-          {/* New chat button */}
+          {/* New chat button — btn-ink style */}
           <button
             onClick={handleNewChat}
-            className="flex items-center justify-center gap-2 text-white rounded-xl cursor-pointer transition-colors font-semibold"
+            className="btn-ink flex items-center justify-center gap-2 cursor-pointer"
             style={{
-              backgroundColor: '#4361EE',
               height: collapsed ? '40px' : '42px',
               width: collapsed ? '48px' : '100%',
               margin: collapsed ? '0 auto' : '0',
-              fontSize: '13px',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3451D6' }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4361EE' }}
-            onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.98)' }}
-            onMouseUp={(e) => { e.currentTarget.style.transform = '' }}
             title={collapsed ? 'New chat' : undefined}
           >
             <Plus className="w-4 h-4 shrink-0" strokeWidth={2.5} />
@@ -246,29 +261,29 @@ export default function Sidebar() {
           </button>
         </div>
 
-        {/* ── Scrollable body: chats + documents ───────────────── */}
+        {/* ── Scrollable body ───────────────────────────────────── */}
         <div className="flex-1 overflow-hidden py-3 flex flex-col">
 
-          {/* ── Recent chats section ─────────────────────────────── */}
+          {/* Recent chats label */}
           {collapsed ? (
             <div className="flex justify-center mb-3 mt-1">
               <MessageSquare className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
             </div>
           ) : (
             <div className="flex items-center justify-between px-4 mb-2 mt-1">
-              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#7A7874' }}>
+              <p className="np-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: '#7A7874' }}>
                 Recent chats
               </p>
             </div>
           )}
 
           {!collapsed && visibleChats.length === 0 && (
-            <p className="px-4 py-2 text-[12px]" style={{ color: '#AEABA6' }}>
+            <p className="np-body px-4 py-2 text-[12px]" style={{ color: '#AEABA6' }}>
               No chats yet.
             </p>
           )}
 
-          {/* Chat rows — scrollable, max 4 rows visible (~176px) */}
+          {/* Chat rows */}
           <div
             className="space-y-0.5 px-2 overflow-y-auto"
             style={{ maxHeight: '176px' }}
@@ -284,13 +299,14 @@ export default function Sidebar() {
                 >
                   <Link
                     href={`/dashboard/${chat.id}`}
-                    className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl transition-colors"
+                    className="flex items-center gap-2.5 px-2.5 py-2.5 transition-colors"
                     style={{
                       justifyContent: collapsed ? 'center' : 'flex-start',
-                      backgroundColor: isActive ? '#E3E1DC' : 'transparent',
+                      backgroundColor: isActive ? '#F0EDE6' : 'transparent',
+                      borderLeft: isActive ? '2px solid #CC0000' : '2px solid transparent',
                     }}
                     onMouseEnter={(e) => {
-                      if (!isActive) e.currentTarget.style.backgroundColor = '#EEECEA'
+                      if (!isActive) e.currentTarget.style.backgroundColor = '#F5F2EB'
                     }}
                     onMouseLeave={(e) => {
                       if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'
@@ -299,14 +315,14 @@ export default function Sidebar() {
                   >
                     <MessageSquare
                       className="w-3.5 h-3.5 shrink-0"
-                      style={{ color: isActive ? '#4361EE' : '#AEABA6' }}
+                      style={{ color: isActive ? '#CC0000' : '#AEABA6' }}
                       strokeWidth={1.8}
                     />
                     {!collapsed && (
                       <span
-                        className="flex-1 min-w-0 text-[13px] truncate"
+                        className="flex-1 min-w-0 np-sans text-[13px] truncate"
                         style={{
-                          color: isActive ? '#111110' : '#4A4845',
+                          color: isActive ? '#111111' : '#4A4845',
                           fontWeight: isActive ? 600 : 400,
                           paddingRight: hoveredChatId === chat.id ? '20px' : '0',
                         }}
@@ -316,11 +332,11 @@ export default function Sidebar() {
                     )}
                   </Link>
 
-                  {/* Delete button — shown on hover, expanded only */}
+                  {/* Delete button */}
                   {!collapsed && hoveredChatId === chat.id && (
                     <button
                       onClick={(e) => handleDeleteChat(e, chat.id)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-lg transition-colors cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center transition-colors cursor-pointer"
                       style={{ color: '#AEABA6' }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = '#FEE2E2'
@@ -345,10 +361,10 @@ export default function Sidebar() {
             <div className="flex justify-center mt-1 px-2">
               <button
                 onClick={() => setVisibleCount((n) => n + CHAT_PAGE)}
-                className="flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer"
-                style={{ color: '#4361EE' }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#3451D6' }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = '#4361EE' }}
+                className="np-mono flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer"
+                style={{ color: '#CC0000' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#AA0000' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#CC0000' }}
               >
                 <ChevronRight className="w-3 h-3 rotate-90" strokeWidth={2.5} />
                 Show {Math.min(CHAT_PAGE, chats.length - visibleCount)} more
@@ -356,12 +372,12 @@ export default function Sidebar() {
             </div>
           )}
 
-          {/* Divider between chats and documents */}
+          {/* Divider */}
           {!collapsed && (
-            <div style={{ margin: '8px 16px 0', borderTop: '1px solid #E3E1DC' }} />
+            <div style={{ margin: '8px 16px 0', borderTop: '1px solid #E5E5E0' }} />
           )}
 
-          {/* ── Documents section ────────────────────────────────── */}
+          {/* ── Documents section ─────────────────────────────── */}
           {collapsed ? (
             <button
               onClick={() => setDocsExpanded((v) => !v)}
@@ -375,14 +391,14 @@ export default function Sidebar() {
               onClick={() => setDocsExpanded((v) => !v)}
               className="w-full flex items-center justify-between px-4 mb-1 mt-3 cursor-pointer group"
             >
-              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#7A7874' }}>
+              <p className="np-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: '#7A7874' }}>
                 Documents
               </p>
               <div className="flex items-center gap-1.5">
                 {documents.length > 0 && (
                   <span
-                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                    style={{ backgroundColor: '#EEF1FD', color: '#4361EE' }}
+                    className="np-mono text-[10px] font-bold px-1.5 py-0.5"
+                    style={{ backgroundColor: '#111111', color: '#F9F9F7' }}
                   >
                     {documents.length}
                   </span>
@@ -397,7 +413,7 @@ export default function Sidebar() {
             </button>
           )}
 
-          {/* Collapsible document list */}
+          {/* Document list */}
           <AnimatePresence initial={false}>
           {(docsExpanded || collapsed) && (
             <motion.div
@@ -407,14 +423,12 @@ export default function Sidebar() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
             >
-          {/* Empty state */}
           {!collapsed && documents.length === 0 && (
-            <p className="px-4 py-2 text-[12px]" style={{ color: '#AEABA6' }}>
+            <p className="np-body px-4 py-2 text-[12px]" style={{ color: '#AEABA6' }}>
               No documents yet.
             </p>
           )}
 
-          {/* Document rows — scrollable, show max docsCount */}
           <div
             className="space-y-0.5 px-2 overflow-y-auto"
             style={{ maxHeight: '176px' }}
@@ -426,15 +440,14 @@ export default function Sidebar() {
               return (
                 <div
                   key={doc.document_id}
-                  className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl cursor-default transition-colors"
+                  className="flex items-center gap-2.5 px-2.5 py-2.5 cursor-default transition-colors"
                   style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EEECEA' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F5F2EB' }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
                   title={collapsed ? doc.original_filename : undefined}
                 >
-                  {/* Type badge */}
                   <span
-                    className="shrink-0 text-[9px] font-bold rounded-md px-1.5 py-0.5 leading-none"
+                    className="shrink-0 np-mono text-[9px] font-bold px-1.5 py-0.5 leading-none"
                     style={{ backgroundColor: badge.bg, color: badge.color }}
                   >
                     {ext}
@@ -442,7 +455,7 @@ export default function Sidebar() {
 
                   {!collapsed && (
                     <>
-                      <span className="flex-1 min-w-0 text-[13px] font-medium truncate" style={{ color: '#111110' }}>
+                      <span className="flex-1 min-w-0 np-sans text-[13px] font-medium truncate" style={{ color: '#111111' }}>
                         {doc.original_filename}
                       </span>
                       <span
@@ -455,7 +468,6 @@ export default function Sidebar() {
               )
             })}
           </div>
-
             </motion.div>
           )}
           </AnimatePresence>
@@ -465,10 +477,10 @@ export default function Sidebar() {
             <div className="flex justify-center mt-1 px-2">
               <button
                 onClick={() => setDocsCount((n) => n + 5)}
-                className="flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer"
-                style={{ color: '#4361EE' }}
-                onMouseEnter={(e) => { e.currentTarget.style.color = '#3451D6' }}
-                onMouseLeave={(e) => { e.currentTarget.style.color = '#4361EE' }}
+                className="np-mono flex items-center gap-1 text-[11px] font-semibold transition-colors cursor-pointer"
+                style={{ color: '#CC0000' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#AA0000' }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#CC0000' }}
               >
                 <ChevronRight className="w-3 h-3 rotate-90" strokeWidth={2.5} />
                 Show {Math.min(5, documents.length - docsCount)} more
@@ -480,26 +492,20 @@ export default function Sidebar() {
           <div style={{ padding: collapsed ? '12px 8px 0' : '16px 8px 0' }}>
             <Link
               href="/upload"
-              className="flex items-center gap-2.5 rounded-xl transition-all"
+              className="btn-outline-ink flex items-center gap-2.5 transition-all"
               style={{
-                color: '#4A4845',
                 padding: collapsed ? '10px' : '10px 14px',
                 justifyContent: 'center',
-                fontSize: '13px',
-                fontWeight: 500,
-                border: '1.5px dashed #D9D7D2',
-                backgroundColor: 'white',
                 width: '100%',
+                borderStyle: 'dashed',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = '#4361EE'
-                e.currentTarget.style.backgroundColor = '#EEF1FD'
-                e.currentTarget.style.color = '#4361EE'
+                e.currentTarget.style.borderColor = '#CC0000'
+                e.currentTarget.style.color = '#CC0000'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = '#D9D7D2'
-                e.currentTarget.style.backgroundColor = 'white'
-                e.currentTarget.style.color = '#4A4845'
+                e.currentTarget.style.borderColor = '#111111'
+                e.currentTarget.style.color = '#111111'
               }}
               title={collapsed ? 'Upload document' : undefined}
             >
@@ -512,56 +518,62 @@ export default function Sidebar() {
             </Link>
           </div>
 
-          {/* ── Integrations link ────────────────────────────────── */}
-          {!collapsed && <div style={{ margin: '16px 16px 0', borderTop: '1px solid #E3E1DC' }} />}
+          {/* Integrations link */}
+          {!collapsed && <div style={{ margin: '16px 16px 0', borderTop: '1px solid #E5E5E0' }} />}
           <div style={{ padding: '12px 8px 16px' }}>
-            <Link
-              href="/integrations"
-              className="flex items-center gap-2.5 rounded-xl transition-all relative"
-              style={{
-                color: pathname === '/integrations' ? 'white' : '#4361EE',
-                padding: collapsed ? '10px' : '10px 14px',
-                justifyContent: 'center',
-                fontSize: '13px',
-                fontWeight: 600,
-                border: '1.5px solid #C7D2FE',
-                backgroundColor: pathname === '/integrations' ? '#4361EE' : '#EEF1FD',
-                width: '100%',
-                boxShadow: pathname === '/integrations' ? '0 2px 8px rgba(67,97,238,0.22)' : 'none',
-              }}
-              onMouseEnter={(e) => {
-                if (pathname !== '/integrations') {
-                  e.currentTarget.style.backgroundColor = '#4361EE'
-                  e.currentTarget.style.color = 'white'
-                  e.currentTarget.style.borderColor = '#4361EE'
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(67,97,238,0.22)'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (pathname !== '/integrations') {
-                  e.currentTarget.style.backgroundColor = '#EEF1FD'
-                  e.currentTarget.style.color = '#4361EE'
-                  e.currentTarget.style.borderColor = '#C7D2FE'
-                  e.currentTarget.style.boxShadow = 'none'
-                }
-              }}
-              title={collapsed ? 'Integrations' : undefined}
-            >
-              <div className="relative shrink-0">
-                <Puzzle className="w-4 h-4" strokeWidth={1.8} />
-                {notionConnected && (
-                  <span
-                    className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                    style={{ backgroundColor: '#16A34A', border: '1.5px solid white' }}
-                  />
+            {pathname === '/integrations' ? (
+              <Link
+                href="/integrations"
+                className="btn-ink flex items-center gap-2.5 relative"
+                style={{
+                  padding: collapsed ? '10px' : '10px 14px',
+                  justifyContent: 'center',
+                  width: '100%',
+                }}
+                title={collapsed ? 'Integrations' : undefined}
+              >
+                <div className="relative shrink-0">
+                  <Puzzle className="w-4 h-4" strokeWidth={1.8} />
+                  {notionConnected && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                      style={{ backgroundColor: '#16A34A', border: '1.5px solid #111111' }}
+                    />
+                  )}
+                </div>
+                {!collapsed && (
+                  <motion.span animate={{ opacity: collapsed ? 0 : 1 }} transition={LABEL_TRANSITION}>
+                    Integrations
+                  </motion.span>
                 )}
-              </div>
-              {!collapsed && (
-                <motion.span animate={{ opacity: collapsed ? 0 : 1 }} transition={LABEL_TRANSITION}>
-                  Integrations
-                </motion.span>
-              )}
-            </Link>
+              </Link>
+            ) : (
+              <Link
+                href="/integrations"
+                className="btn-outline-ink flex items-center gap-2.5 relative transition-all"
+                style={{
+                  padding: collapsed ? '10px' : '10px 14px',
+                  justifyContent: 'center',
+                  width: '100%',
+                }}
+                title={collapsed ? 'Integrations' : undefined}
+              >
+                <div className="relative shrink-0">
+                  <Puzzle className="w-4 h-4" strokeWidth={1.8} />
+                  {notionConnected && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                      style={{ backgroundColor: '#16A34A', border: '1.5px solid #F9F9F7' }}
+                    />
+                  )}
+                </div>
+                {!collapsed && (
+                  <motion.span animate={{ opacity: collapsed ? 0 : 1 }} transition={LABEL_TRANSITION}>
+                    Integrations
+                  </motion.span>
+                )}
+              </Link>
+            )}
           </div>
         </div>
 
@@ -569,38 +581,39 @@ export default function Sidebar() {
         <div
           ref={menuRef}
           className="shrink-0 relative"
-          style={{ borderTop: '1px solid #E3E1DC' }}
+          style={{ borderTop: '1px solid #E5E5E0' }}
         >
           <AnimatePresence>
             {showMenu && (
               <motion.div
                 {...SCALE_IN}
-                className="absolute bg-white rounded-xl overflow-hidden z-30"
+                className="absolute overflow-hidden z-30"
                 style={{
-                  border: '1px solid #E3E1DC',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+                  background: '#F9F9F7',
+                  border: '1px solid #111111',
+                  boxShadow: '4px 4px 0px 0px #111111',
                   ...(collapsed
                     ? { left: '100%', marginLeft: '8px', bottom: '0', width: '190px' }
                     : { bottom: '100%', left: '8px', right: '8px', marginBottom: '6px' }
                   ),
                 }}
               >
-                <button
-                  onClick={() => { setShowMembers(true); setShowMenu(false) }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-[13px] cursor-pointer transition-colors text-left"
-                  style={{ color: '#3D3C3A' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
+                <Link
+                  href="/members"
+                  onClick={() => setShowMenu(false)}
+                  className="w-full flex items-center gap-3 px-4 py-3 np-sans text-[13px] cursor-pointer transition-colors text-left"
+                  style={{ color: '#111111' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F0EDE6' }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
                 >
                   <Users className="w-4 h-4 shrink-0" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
                   {user?.role === 'owner' ? 'Manage members' : 'View members'}
-                </button>
+                </Link>
 
-                {/* Leave / Delete account */}
-                <div style={{ borderTop: '1px solid #E3E1DC' }} />
+                <div style={{ borderTop: '1px solid #E5E5E0' }} />
                 <button
                   onClick={() => { setShowLeaveModal(true); setShowMenu(false); setLeaveError('') }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-[13px] cursor-pointer transition-colors text-left"
+                  className="w-full flex items-center gap-3 px-4 py-3 np-sans text-[13px] cursor-pointer transition-colors text-left"
                   style={{ color: '#D97706' }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FFFBEB' }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
@@ -609,11 +622,11 @@ export default function Sidebar() {
                   {user?.role === 'owner' ? 'Delete account' : 'Leave workspace'}
                 </button>
 
-                <div style={{ borderTop: '1px solid #E3E1DC' }} />
+                <div style={{ borderTop: '1px solid #E5E5E0' }} />
                 <button
                   onClick={() => { logout(); setShowMenu(false) }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-[13px] cursor-pointer transition-colors text-left"
-                  style={{ color: '#DC2626' }}
+                  className="w-full flex items-center gap-3 px-4 py-3 np-sans text-[13px] cursor-pointer transition-colors text-left"
+                  style={{ color: '#CC0000' }}
                   onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FEF2F2' }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
                 >
@@ -633,14 +646,13 @@ export default function Sidebar() {
               justifyContent: collapsed ? 'center' : 'flex-start',
               gap: collapsed ? 0 : '12px',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EEECEA' }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F0EDE6' }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
             title={collapsed ? user?.email : undefined}
           >
-            {/* Avatar with accent bg */}
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[13px] font-bold"
-              style={{ backgroundColor: '#EEF1FD', color: '#4361EE' }}
+              className="w-9 h-9 flex items-center justify-center shrink-0 np-mono text-[13px] font-bold"
+              style={{ backgroundColor: '#F5F0E8', color: '#CC0000', border: '1px solid #E5E5E0' }}
             >
               {initial}
             </div>
@@ -652,10 +664,10 @@ export default function Sidebar() {
                   transition={LABEL_TRANSITION}
                   className="flex-1 min-w-0 text-left"
                 >
-                  <p className="text-[13px] font-semibold truncate" style={{ color: '#111110' }}>
+                  <p className="np-sans text-[13px] font-semibold truncate" style={{ color: '#111111' }}>
                     {user?.email}
                   </p>
-                  <p className="text-[11px]" style={{ color: '#7A7874' }}>
+                  <p className="np-mono text-[11px]" style={{ color: '#7A7874' }}>
                     {user?.role === 'owner' ? 'Owner' : 'Member'}
                   </p>
                 </motion.div>
@@ -668,7 +680,7 @@ export default function Sidebar() {
         </div>
       </motion.aside>
 
-      {/* ── Centered leave / delete confirmation modal ───────── */}
+      {/* ── Leave / delete confirmation modal ───────────────── */}
       <AnimatePresence>
         {showLeaveModal && (
           <motion.div
@@ -685,14 +697,14 @@ export default function Sidebar() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white rounded-3xl overflow-hidden w-full max-w-[440px]"
-              style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06)' }}
+              className="overflow-hidden w-full max-w-[440px]"
+              style={{ background: '#F9F9F7', border: '1px solid #111111', boxShadow: '6px 6px 0px 0px #111111' }}
             >
               {/* Icon header */}
               <div className="flex justify-center pt-8 pb-5">
                 <div
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                  style={{ backgroundColor: user?.role === 'owner' ? '#FEF2F2' : '#FFF7ED' }}
+                  className="w-16 h-16 flex items-center justify-center"
+                  style={{ backgroundColor: user?.role === 'owner' ? '#FEF2F2' : '#FFF7ED', border: '1px solid #E5E5E0' }}
                 >
                   {user?.role === 'owner'
                     ? <AlertTriangle className="w-8 h-8" style={{ color: '#DC2626' }} strokeWidth={1.8} />
@@ -701,30 +713,28 @@ export default function Sidebar() {
                 </div>
               </div>
 
-              {/* Text */}
               <div className="px-8 pb-6 text-center">
-                <h3 className="text-[18px] font-bold tracking-[-0.01em] mb-2" style={{ color: '#111110' }}>
+                <h3 className="np-serif text-[18px] font-black mb-2" style={{ color: '#111111' }}>
                   {user?.role === 'owner' ? 'Delete account & workspace?' : 'Leave this workspace?'}
                 </h3>
-                <p className="text-[14px] leading-[1.65]" style={{ color: '#7A7874' }}>
+                <p className="np-body text-[14px] leading-[1.65]" style={{ color: '#737373' }}>
                   {user?.role === 'owner'
                     ? 'This will permanently delete your workspace, all uploaded documents, chats, and every member\'s access. This cannot be undone.'
                     : 'You will immediately lose access to this workspace and all its documents. You can rejoin later if the owner invites you again.'
                   }
                 </p>
                 {leaveError && (
-                  <div className="mt-4 rounded-xl px-4 py-3 text-left" style={{ backgroundColor: '#FEF2F2', borderLeft: '3px solid #DC2626' }}>
-                    <p className="text-[13px]" style={{ color: '#DC2626' }}>{leaveError}</p>
+                  <div className="mt-4 px-4 py-3 text-left" style={{ borderLeft: '3px solid #CC0000' }}>
+                    <p className="np-mono text-[12px] uppercase tracking-wide" style={{ color: '#CC0000' }}>{leaveError}</p>
                   </div>
                 )}
               </div>
 
-              {/* Actions */}
               <div className="px-8 pb-8 flex flex-col gap-3">
                 <button
                   onClick={handleLeaveConfirm}
                   disabled={leaveLoading}
-                  className="w-full h-12 text-white text-[14px] font-semibold rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                  className="w-full h-12 text-white np-sans text-[13px] font-bold uppercase tracking-widest cursor-pointer flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                   style={{ backgroundColor: user?.role === 'owner' ? '#DC2626' : '#D97706' }}
                   onMouseEnter={(e) => { if (!leaveLoading) e.currentTarget.style.backgroundColor = user?.role === 'owner' ? '#B91C1C' : '#B45309' }}
                   onMouseLeave={(e) => { if (!leaveLoading) e.currentTarget.style.backgroundColor = user?.role === 'owner' ? '#DC2626' : '#D97706' }}
@@ -736,10 +746,7 @@ export default function Sidebar() {
                 <button
                   onClick={() => { setShowLeaveModal(false); setLeaveError('') }}
                   disabled={leaveLoading}
-                  className="w-full h-11 text-[14px] font-medium rounded-xl cursor-pointer transition-colors"
-                  style={{ border: '1.5px solid #E3E1DC', color: '#4A4845', backgroundColor: 'transparent' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+                  className="btn-outline-ink w-full h-11 cursor-pointer"
                 >
                   Cancel, keep my account
                 </button>

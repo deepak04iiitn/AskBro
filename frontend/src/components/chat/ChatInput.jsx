@@ -17,7 +17,6 @@ export default function ChatInput({ onSend, disabled }) {
 
   const textareaRef = useRef(null)
 
-  // ── Document suggestions ──────────────────────────────────────
   const suggestions = documents
     .filter((d) => d.status === 'completed')
     .filter((d) => !taggedDocs.some((t) => t.document_id === d.document_id))
@@ -27,7 +26,6 @@ export default function ChatInput({ onSend, disabled }) {
     )
     .slice(0, 6)
 
-  // ── @mention detection ────────────────────────────────────────
   function detectMention(text, cursorPos) {
     const before = text.slice(0, cursorPos)
     const match = before.match(/@([^\s@]*)$/)
@@ -115,10 +113,10 @@ export default function ChatInput({ onSend, disabled }) {
   const canSend = !disabled && value.trim().length > 0
 
   return (
-    <div className="px-6 pb-5 pt-3" style={{ backgroundColor: '#F7F5F2' }}>
+    <div className="px-6 pb-5 pt-3" style={{ backgroundColor: '#F9F9F7' }}>
       <div className="max-w-[920px] mx-auto relative">
 
-        {/* ── @mention dropdown — appears above the input ────────── */}
+        {/* ── @mention dropdown ─────────────────────────────────── */}
         <AnimatePresence>
           {showDropdown && suggestions.length > 0 && (
             <motion.div
@@ -126,13 +124,13 @@ export default function ChatInput({ onSend, disabled }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 6 }}
               transition={{ duration: 0.15 }}
-              className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-2xl overflow-hidden z-50"
-              style={{ border: '1.5px solid #E3E1DC', boxShadow: '0 8px 28px rgba(0,0,0,0.12)' }}
+              className="absolute bottom-full left-0 right-0 mb-2 overflow-hidden z-50"
+              style={{ background: '#F9F9F7', border: '1px solid #111111', boxShadow: '4px 4px 0px 0px #111111' }}
             >
               {/* Header */}
-              <div className="px-4 py-2.5" style={{ borderBottom: '1px solid #F0EFEC', backgroundColor: '#F7F5F2' }}>
-                <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#AEABA6' }}>
-                  Filter by document — type to search
+              <div className="px-4 py-2.5" style={{ borderBottom: '1px solid #E5E5E0', backgroundColor: '#F0EDE6' }}>
+                <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>
+                  ★ Filter by document — type to search
                 </p>
               </div>
 
@@ -146,25 +144,25 @@ export default function ChatInput({ onSend, disabled }) {
                     onMouseDown={(e) => { e.preventDefault(); selectDoc(doc) }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-left cursor-pointer transition-colors"
                     style={{
-                      backgroundColor: i === dropdownIndex ? '#EEF1FD' : 'white',
-                      borderBottom: i < suggestions.length - 1 ? '1px solid #F4F3F0' : 'none',
+                      backgroundColor: i === dropdownIndex ? '#F0EDE6' : '#F9F9F7',
+                      borderBottom: i < suggestions.length - 1 ? '1px solid #E5E5E0' : 'none',
                     }}
                     onMouseEnter={() => setDropdownIndex(i)}
                   >
                     <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ backgroundColor: i === dropdownIndex ? '#C7D2FE' : '#F0EFEC' }}
+                      className="w-7 h-7 flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: i === dropdownIndex ? '#CC0000' : '#E5E5E0' }}
                     >
-                      <FileText className="w-3.5 h-3.5" style={{ color: i === dropdownIndex ? '#4361EE' : '#AEABA6' }} strokeWidth={2} />
+                      <FileText className="w-3.5 h-3.5" style={{ color: i === dropdownIndex ? '#F9F9F7' : '#7A7874' }} strokeWidth={2} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium truncate" style={{ color: '#111110' }}>
+                      <p className="np-sans text-[13px] font-medium truncate" style={{ color: '#111111' }}>
                         {doc.original_filename}
                       </p>
                     </div>
                     <span
-                      className="text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0"
-                      style={{ backgroundColor: '#F0EFEC', color: '#7A7874' }}
+                      className="np-mono text-[9px] font-bold px-1.5 py-0.5 shrink-0"
+                      style={{ backgroundColor: '#111111', color: '#F9F9F7' }}
                     >
                       {ext}
                     </span>
@@ -173,8 +171,8 @@ export default function ChatInput({ onSend, disabled }) {
               })}
 
               {/* Footer hint */}
-              <div className="px-4 py-2" style={{ backgroundColor: '#F7F5F2', borderTop: '1px solid #F0EFEC' }}>
-                <p className="text-[10px]" style={{ color: '#AEABA6' }}>
+              <div className="px-4 py-2" style={{ backgroundColor: '#F0EDE6', borderTop: '1px solid #E5E5E0' }}>
+                <p className="np-mono text-[10px]" style={{ color: '#AEABA6' }}>
                   ↑↓ navigate · ↵ select · Esc dismiss
                 </p>
               </div>
@@ -184,11 +182,10 @@ export default function ChatInput({ onSend, disabled }) {
 
         {/* ── Input card ─────────────────────────────────────────── */}
         <div
-          className="bg-white rounded-2xl px-4 transition-all duration-150"
+          className="bg-white px-4 transition-all duration-150"
           style={{
-            boxShadow: focused
-              ? '0 0 0 2px #4361EE, 0 8px 32px rgba(0,0,0,0.10)'
-              : '0 4px 20px rgba(0,0,0,0.08), 0 0 0 1.5px #E3E1DC',
+            border: focused ? '1.5px solid #111111' : '1.5px solid #E5E5E0',
+            boxShadow: focused ? '4px 4px 0px 0px #111111' : '0 2px 8px rgba(0,0,0,0.06)',
             paddingTop: taggedDocs.length > 0 ? '10px' : '14px',
             paddingBottom: '14px',
           }}
@@ -199,24 +196,24 @@ export default function ChatInput({ onSend, disabled }) {
               {taggedDocs.map((doc) => (
                 <span
                   key={doc.document_id}
-                  className="inline-flex items-center gap-1.5 pl-2 pr-1.5 py-1 rounded-lg text-[12px] font-semibold"
-                  style={{ backgroundColor: '#EEF1FD', color: '#4361EE', border: '1px solid #C7D2FE' }}
+                  className="inline-flex items-center gap-1.5 pl-2 pr-1.5 py-1 np-mono text-[11px] font-bold uppercase tracking-wide"
+                  style={{ backgroundColor: '#111111', color: '#F9F9F7' }}
                 >
                   <FileText className="w-3 h-3 shrink-0" strokeWidth={2} />
                   <span className="max-w-[160px] truncate">{doc.original_filename}</span>
                   <button
                     type="button"
                     onClick={() => removeTag(doc.document_id)}
-                    className="cursor-pointer rounded transition-colors ml-0.5"
-                    style={{ color: '#7C9AEE' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#DC2626' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#7C9AEE' }}
+                    className="cursor-pointer transition-colors ml-0.5"
+                    style={{ color: '#AEABA6' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = '#CC0000' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = '#AEABA6' }}
                   >
                     <X className="w-3 h-3" strokeWidth={2.5} />
                   </button>
                 </span>
               ))}
-              <span className="text-[11px] self-center" style={{ color: '#AEABA6' }}>
+              <span className="np-mono text-[11px] self-center" style={{ color: '#AEABA6' }}>
                 Answering only from {taggedDocs.length === 1 ? 'this file' : 'these files'}
               </span>
             </div>
@@ -239,21 +236,20 @@ export default function ChatInput({ onSend, disabled }) {
                 taggedDocs.length > 0 ? 'Ask about the tagged file(s)…' :
                 'Ask anything… type @ to filter by file'
               }
-              className="flex-1 resize-none bg-transparent focus:outline-none py-0.5 leading-relaxed"
-              style={{ fontSize: '15px', color: '#111110', opacity: disabled ? 0.5 : 1 }}
+              className="flex-1 resize-none bg-transparent focus:outline-none py-0.5 leading-relaxed np-body"
+              style={{ fontSize: '15px', color: '#111111', opacity: disabled ? 0.5 : 1 }}
             />
 
             <button
               onClick={submit}
               disabled={!canSend}
               aria-label="Send"
-              className="shrink-0 w-10 h-10 flex items-center justify-center rounded-xl text-white cursor-pointer transition-all disabled:cursor-not-allowed"
+              className="shrink-0 w-10 h-10 flex items-center justify-center text-white cursor-pointer transition-all disabled:cursor-not-allowed"
               style={{
-                backgroundColor: canSend ? '#4361EE' : '#E3E1DC',
-                boxShadow: canSend ? '0 4px 12px rgba(67,97,238,0.30)' : 'none',
+                backgroundColor: canSend ? '#CC0000' : '#E5E5E0',
               }}
-              onMouseEnter={(e) => { if (canSend) e.currentTarget.style.backgroundColor = '#3451D6' }}
-              onMouseLeave={(e) => { if (canSend) e.currentTarget.style.backgroundColor = canSend ? '#4361EE' : '#E3E1DC' }}
+              onMouseEnter={(e) => { if (canSend) e.currentTarget.style.backgroundColor = '#AA0000' }}
+              onMouseLeave={(e) => { if (canSend) e.currentTarget.style.backgroundColor = '#CC0000' }}
               onMouseDown={(e) => { if (canSend) e.currentTarget.style.transform = 'scale(0.95)' }}
               onMouseUp={(e) => { e.currentTarget.style.transform = '' }}
             >
@@ -272,13 +268,13 @@ export default function ChatInput({ onSend, disabled }) {
               <motion.p
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 transition={{ duration: 0.15 }}
-                className="text-[11px]" style={{ color: '#AEABA6' }}
+                className="np-mono text-[10px]" style={{ color: '#AEABA6' }}
               >
                 ↵ send · ⇧↵ new line · @ to tag a file
               </motion.p>
             )}
           </AnimatePresence>
-          <p className="text-[11px] ml-auto" style={{ color: '#AEABA6' }}>
+          <p className="np-mono text-[10px] ml-auto" style={{ color: '#AEABA6' }}>
             Answers grounded in your uploaded documents
           </p>
         </div>

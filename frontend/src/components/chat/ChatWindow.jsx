@@ -22,8 +22,8 @@ const SUGGESTIONS = [
     Icon: BookOpen,
     label: 'Summarise',
     example: 'Summarize the key points from the latest report.',
-    iconColor: '#4361EE',
-    iconBg: '#EEF1FD',
+    iconColor: '#CC0000',
+    iconBg: '#FEF2F2',
   },
   {
     Icon: FileSearch,
@@ -43,8 +43,8 @@ const SUGGESTIONS = [
     Icon: ListChecks,
     label: 'Action items',
     example: 'List all action items from the meeting notes.',
-    iconColor: '#7C3AED',
-    iconBg: '#F5F3FF',
+    iconColor: '#111111',
+    iconBg: '#F5F0E8',
   },
 ]
 
@@ -63,36 +63,24 @@ function EmptyState({ readyCount, onSuggest }) {
 
       {/* Heading */}
       <h2
-        className="font-bold tracking-[-0.02em] mb-2"
-        style={{ fontSize: '30px', color: '#111110' }}
+        className="np-serif font-black tracking-tight mb-2"
+        style={{ fontSize: '30px', color: '#111111', lineHeight: 0.95 }}
       >
         What would you like to know?
       </h2>
       {readyCount === 0 && (
-        <p className="text-[14px] leading-relaxed max-w-sm" style={{ color: '#7A7874' }}>
+        <p className="np-body text-[14px] leading-relaxed max-w-sm mt-3" style={{ color: '#737373' }}>
           Upload a document or connect Notion to start asking questions.
         </p>
       )}
 
       {readyCount === 0 && (
-        <div className="flex items-center gap-2 mt-5">
-          <Link
-            href="/upload"
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl transition-colors"
-            style={{ backgroundColor: '#EEF1FD', color: '#4361EE', border: '1px solid #C7D2FE' }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DDE7FC' }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#EEF1FD' }}
-          >
+        <div className="flex items-center gap-3 mt-6">
+          <Link href="/upload" className="btn-ink inline-flex items-center gap-1.5 px-5 h-10">
             Upload a document
             <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />
           </Link>
-          <Link
-            href="/integrations"
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl transition-colors"
-            style={{ backgroundColor: 'white', color: '#4A4845', border: '1px solid #E3E1DC' }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white' }}
-          >
+          <Link href="/integrations" className="btn-outline-ink inline-flex items-center gap-1.5 px-5 h-10">
             <Puzzle className="w-3.5 h-3.5" strokeWidth={2} />
             Connect Notion
           </Link>
@@ -104,7 +92,7 @@ function EmptyState({ readyCount, onSuggest }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="grid grid-cols-2 gap-3 w-full max-w-[700px] mt-6"
+          className="grid grid-cols-2 gap-3 w-full max-w-[700px] mt-8"
         >
           {SUGGESTIONS.map(({ Icon, label, example, iconColor, iconBg }, i) => (
             <motion.button
@@ -113,32 +101,22 @@ function EmptyState({ readyCount, onSuggest }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.15 + i * 0.06 }}
               onClick={() => onSuggest(example)}
-              className="text-left cursor-pointer rounded-2xl p-5 bg-white transition-all"
-              style={{ border: '1.5px solid #E3E1DC', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 8px 28px rgba(0,0,0,0.09)'
-                e.currentTarget.style.borderColor = iconColor
-                e.currentTarget.style.transform = 'translateY(-2px)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'
-                e.currentTarget.style.borderColor = '#E3E1DC'
-                e.currentTarget.style.transform = ''
-              }}
+              className="text-left cursor-pointer p-5 bg-white transition-all hard-shadow-hover"
+              style={{ border: '1px solid #111111' }}
             >
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                style={{ backgroundColor: iconBg }}
+                className="w-10 h-10 flex items-center justify-center mb-3"
+                style={{ backgroundColor: iconBg, border: '1px solid #E5E5E0' }}
               >
                 <Icon className="w-5 h-5" style={{ color: iconColor }} strokeWidth={1.8} />
               </div>
               <p
-                className="text-[10px] font-bold uppercase tracking-widest mb-2"
-                style={{ color: '#AEABA6' }}
+                className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] mb-2"
+                style={{ color: '#CC0000' }}
               >
                 {label}
               </p>
-              <p className="text-[13px] leading-[1.65]" style={{ color: '#4A4845' }}>
+              <p className="np-body text-[13px] leading-[1.65]" style={{ color: '#4A4845' }}>
                 "{example}"
               </p>
             </motion.button>
@@ -173,15 +151,13 @@ export default function ChatWindow({ chatId }) {
 
   const readyCount = documents.filter((d) => d.status === 'completed').length
 
-  // Load messages when navigating to an existing chat
   useEffect(() => {
     if (!chatId) return
-    // Only fetch if we're switching to a different chat
     if (storeChatId === chatId) return
     setChatId(chatId)
     getChatMessages(chatId)
       .then((msgs) => loadMessages(msgs))
-      .catch(() => {/* silently ignore — chat may be empty or invalid */})
+      .catch(() => {})
   }, [chatId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -191,14 +167,12 @@ export default function ChatWindow({ chatId }) {
   async function handleSend(query, docIds) {
     if (streaming) return
 
-    // Resolve the chat ID — create one if this is a new chat
     let activeChatId = chatId || storeChatId
     if (!activeChatId) {
       try {
         const newChat = await createNewChat()
         activeChatId = newChat.id
         setChatId(activeChatId)
-        // Navigate to the new chat URL (push so back button works)
         router.push(`/dashboard/${activeChatId}`)
       } catch {
         appendToken('\n\n⚠ Could not create chat session. Please try again.')
@@ -220,11 +194,8 @@ export default function ChatWindow({ chatId }) {
       appendToken('\n\n⚠ Something went wrong. Please try again.')
       setCitations([])
     } finally {
-      // Move chat to top of sidebar list
       bumpChat(activeChatId)
-      // Update title in sidebar from first message
       if (messages.length === 0) {
-        // first message — the backend auto-sets the title, sync it
         updateChatTitle(activeChatId, query.slice(0, 60) + (query.length > 60 ? '…' : ''))
       }
     }
@@ -236,7 +207,7 @@ export default function ChatWindow({ chatId }) {
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: '#F7F5F2' }}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#F9F9F7' }}>
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Chat column ─────────────────────────────────────── */}
@@ -267,33 +238,33 @@ export default function ChatWindow({ chatId }) {
             <motion.div
               {...PANEL_SLIDE}
               className="w-[320px] shrink-0 flex flex-col overflow-hidden"
-              style={{ backgroundColor: '#FFFFFF', borderLeft: '1px solid #E3E1DC' }}
+              style={{ backgroundColor: '#F9F9F7', borderLeft: '1px solid #111111' }}
             >
               {/* Header */}
               <div
                 className="px-5 py-4 shrink-0 flex items-start justify-between gap-3"
-                style={{ borderBottom: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}
+                style={{ borderBottom: '1px solid #E5E5E0', backgroundColor: '#F0EDE6' }}
               >
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#AEABA6' }}>
-                    Source
+                  <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] mb-1" style={{ color: '#CC0000' }}>
+                    ★ Source
                   </p>
-                  <p className="text-[13px] font-semibold truncate" style={{ color: '#111110' }}>
+                  <p className="np-sans text-[13px] font-semibold truncate" style={{ color: '#111111' }}>
                     {activeSource.fileName}
                   </p>
                   {activeSource.pageNumber != null && (
-                    <p className="text-[11px] mt-0.5" style={{ color: '#7A7874' }}>
+                    <p className="np-mono text-[11px] mt-0.5" style={{ color: '#7A7874' }}>
                       Page {activeSource.pageNumber}
                     </p>
                   )}
                 </div>
                 <button
                   onClick={() => setActiveSource(null)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors shrink-0 mt-0.5"
+                  className="w-7 h-7 flex items-center justify-center cursor-pointer transition-colors shrink-0 mt-0.5"
                   style={{ color: '#AEABA6' }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#E3E1DC'
-                    e.currentTarget.style.color = '#3D3C3A'
+                    e.currentTarget.style.backgroundColor = '#E5E5E0'
+                    e.currentTarget.style.color = '#111111'
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = ''
@@ -306,22 +277,22 @@ export default function ChatWindow({ chatId }) {
 
               {/* Excerpt */}
               <div className="flex-1 overflow-y-auto px-5 py-5">
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#AEABA6' }}>
+                <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] mb-3" style={{ color: '#AEABA6' }}>
                   Relevant excerpt
                 </p>
                 {activeSource.chunkPreview ? (
                   <div
-                    className="rounded-xl px-4 py-4"
-                    style={{ backgroundColor: '#FEFCE8', borderLeft: '3px solid #D97706' }}
+                    className="px-4 py-4"
+                    style={{ backgroundColor: '#FEF9F0', borderLeft: '3px solid #CC0000' }}
                   >
-                    <p className="text-[13px] leading-[1.75]" style={{ color: '#3D3C3A' }}>
+                    <p className="np-body text-[13px] leading-[1.75]" style={{ color: '#3D3C3A' }}>
                       {activeSource.chunkPreview}
                     </p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center py-10 text-center">
                     <FileX className="w-8 h-8 mb-3" style={{ color: '#D9D7D2' }} strokeWidth={1.5} />
-                    <p className="text-[12px]" style={{ color: '#AEABA6' }}>No preview available.</p>
+                    <p className="np-mono text-[12px]" style={{ color: '#AEABA6' }}>No preview available.</p>
                   </div>
                 )}
               </div>
@@ -329,13 +300,13 @@ export default function ChatWindow({ chatId }) {
               {/* Footer */}
               <div
                 className="px-5 py-3 shrink-0 flex items-center justify-between"
-                style={{ borderTop: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}
+                style={{ borderTop: '1px solid #E5E5E0', backgroundColor: '#F0EDE6' }}
               >
-                <span className="text-[11px] font-medium" style={{ color: '#7A7874' }}>Source</span>
+                <span className="np-mono text-[10px] uppercase tracking-widest font-semibold" style={{ color: '#7A7874' }}>Source</span>
                 <Link
                   href="/upload"
-                  className="text-[12px] font-semibold hover:underline"
-                  style={{ color: '#4361EE' }}
+                  className="np-mono text-[11px] font-bold uppercase tracking-widest transition-colors hover:text-[#AA0000]"
+                  style={{ color: '#CC0000' }}
                 >
                   View all →
                 </Link>

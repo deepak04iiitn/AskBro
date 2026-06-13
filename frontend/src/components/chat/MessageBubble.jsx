@@ -3,11 +3,10 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import CitationCard from './CitationCard'
 
-const AVATAR_SIZE = 40 // px — keep in sync with w-10 h-10
+const AVATAR_SIZE = 40
 
 function TypingIndicator() {
   return (
-    // Min-height matches avatar so dots are vertically centred with it
     <div
       className="flex items-center gap-1"
       style={{ minHeight: `${AVATAR_SIZE}px` }}
@@ -16,7 +15,7 @@ function TypingIndicator() {
         <motion.span
           key={i}
           className="block w-2 h-2 rounded-full"
-          style={{ backgroundColor: '#AEABA6' }}
+          style={{ backgroundColor: '#CC0000' }}
           animate={{ y: [0, -6, 0] }}
           transition={{ duration: 0.55, repeat: Infinity, delay: i * 0.13, ease: 'easeInOut' }}
         />
@@ -25,11 +24,9 @@ function TypingIndicator() {
   )
 }
 
-// ── Markdown component map ─────────────────────────────────────
-
 const MD_COMPONENTS = {
   p: ({ children }) => (
-    <p className="mb-4 last:mb-0 text-[15px] leading-[1.8]" style={{ color: '#111110' }}>
+    <p className="np-body mb-4 last:mb-0 text-[15px] leading-[1.8]" style={{ color: '#111111' }}>
       {children}
     </p>
   ),
@@ -44,57 +41,56 @@ const MD_COMPONENTS = {
     </ol>
   ),
   li: ({ children }) => (
-    <li className="text-[15px] leading-[1.7] pl-1" style={{ color: '#111110' }}>{children}</li>
+    <li className="np-body text-[15px] leading-[1.7] pl-1" style={{ color: '#111111' }}>{children}</li>
   ),
   strong: ({ children }) => (
-    <strong className="font-semibold" style={{ color: '#111110' }}>{children}</strong>
+    <strong className="font-bold" style={{ color: '#111111' }}>{children}</strong>
   ),
   em: ({ children }) => (
-    <em className="italic" style={{ color: '#111110' }}>{children}</em>
+    <em className="italic" style={{ color: '#3D3C3A' }}>{children}</em>
   ),
   h1: ({ children }) => (
-    <h1 className="text-[18px] font-bold mb-3 mt-5 first:mt-0 tracking-tight" style={{ color: '#111110' }}>{children}</h1>
+    <h1 className="np-serif text-[20px] font-black mb-3 mt-5 first:mt-0" style={{ color: '#111111' }}>{children}</h1>
   ),
   h2: ({ children }) => (
-    <h2 className="text-[16px] font-semibold mb-2 mt-4 first:mt-0 tracking-tight" style={{ color: '#111110' }}>{children}</h2>
+    <h2 className="np-serif text-[17px] font-bold mb-2 mt-4 first:mt-0" style={{ color: '#111111' }}>{children}</h2>
   ),
   h3: ({ children }) => (
-    <h3 className="text-[15px] font-semibold mb-2 mt-3 first:mt-0" style={{ color: '#111110' }}>{children}</h3>
+    <h3 className="np-sans text-[15px] font-bold mb-2 mt-3 first:mt-0" style={{ color: '#111111' }}>{children}</h3>
   ),
   code: ({ inline, children }) =>
     inline ? (
       <code
-        className="text-[13px] px-1.5 py-0.5 rounded font-mono"
-        style={{ backgroundColor: '#F0EFEC', color: '#3D3C3A', border: '1px solid #E3E1DC' }}
+        className="np-mono text-[13px] px-1.5 py-0.5"
+        style={{ backgroundColor: '#F5F0E8', color: '#111111', border: '1px solid #E5E5E0' }}
       >
         {children}
       </code>
     ) : (
-      <code className="block text-[13px] font-mono leading-relaxed" style={{ color: '#111110' }}>{children}</code>
+      <code className="block np-mono text-[13px] leading-relaxed" style={{ color: '#111111' }}>{children}</code>
     ),
   pre: ({ children }) => (
     <pre
-      className="mb-4 last:mb-0 rounded-xl px-4 py-4 overflow-x-auto text-[13px] font-mono leading-relaxed"
-      style={{ backgroundColor: '#F0EFEC', border: '1px solid #E3E1DC', color: '#3D3C3A' }}
+      className="mb-4 last:mb-0 px-4 py-4 overflow-x-auto np-mono text-[13px] leading-relaxed"
+      style={{ backgroundColor: '#F5F0E8', borderLeft: '3px solid #111111', color: '#111111' }}
     >
       {children}
     </pre>
   ),
   blockquote: ({ children }) => (
     <blockquote
-      className="mb-4 last:mb-0 pl-4 py-1 text-[14px] italic"
-      style={{ borderLeft: '3px solid #E3E1DC', color: '#4A4845' }}
+      className="mb-4 last:mb-0 pl-4 py-1 np-body text-[14px] italic"
+      style={{ borderLeft: '3px solid #CC0000', color: '#4A4845' }}
     >
       {children}
     </blockquote>
   ),
   a: ({ href, children }) => (
-    <a href={href} className="underline underline-offset-2" style={{ color: '#4361EE' }}>{children}</a>
+    <a href={href} className="underline underline-offset-2 transition-colors hover:text-[#AA0000]" style={{ color: '#CC0000' }}>{children}</a>
   ),
-  hr: () => <hr className="my-4" style={{ borderColor: '#E3E1DC' }} />,
+  hr: () => <hr className="my-4" style={{ borderColor: '#E5E5E0' }} />,
 }
 
-// Strip [Source: ...] entirely — citation chips below the answer handle attribution
 function stripPageNumbers(text) {
   return text.replace(/\[Source:[^\]]*\]/gi, '').replace(/\n{3,}/g, '\n\n').trim()
 }
@@ -112,13 +108,14 @@ export default function MessageBubble({ message, activeSourceId, onOpenSource })
     >
       {isUser ? (
         <>
-          <span className="text-[11px] font-medium px-1" style={{ color: '#AEABA6' }}>You</span>
+          <span className="np-mono text-[10px] font-bold uppercase tracking-widest px-1" style={{ color: '#CC0000' }}>You</span>
           <div
-            className="max-w-[78%] px-4 py-3 text-[15px] leading-relaxed"
+            className="max-w-[78%] px-4 py-3 np-body text-[15px] leading-relaxed"
             style={{
-              backgroundColor: '#F0EFEC',
+              backgroundColor: '#F0EDE6',
               borderRadius: '14px 14px 4px 14px',
-              color: '#111110',
+              border: '1px solid #E5E5E0',
+              color: '#111111',
             }}
           >
             {content}
@@ -126,10 +123,10 @@ export default function MessageBubble({ message, activeSourceId, onOpenSource })
         </>
       ) : (
         <div className="w-full flex gap-3 items-start">
-          {/* AI avatar — w-10 h-10 = 40px */}
+          {/* AI avatar */}
           <div
-            className="w-10 h-10 rounded-full overflow-hidden shrink-0 flex items-center justify-center"
-            style={{ backgroundColor: '#EEF1FD' }}
+            className="w-10 h-10 overflow-hidden shrink-0 flex items-center justify-center"
+            style={{ backgroundColor: '#F5F0E8', border: '1px solid #E5E5E0' }}
           >
             <img
               src="/AskBro_Logo.png"
@@ -149,7 +146,7 @@ export default function MessageBubble({ message, activeSourceId, onOpenSource })
                 {message.streaming && (
                   <span
                     className="inline-block w-0.5 h-4 ml-0.5 align-middle blink"
-                    style={{ backgroundColor: '#4361EE' }}
+                    style={{ backgroundColor: '#CC0000' }}
                   />
                 )}
               </div>
@@ -164,10 +161,10 @@ export default function MessageBubble({ message, activeSourceId, onOpenSource })
                   className="mt-4"
                 >
                   <p
-                    className="text-[10px] font-bold uppercase tracking-widest mb-2"
-                    style={{ color: '#AEABA6' }}
+                    className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] mb-2"
+                    style={{ color: '#CC0000' }}
                   >
-                    Sources
+                    ★ Sources
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {message.citations.map((c, i) => (

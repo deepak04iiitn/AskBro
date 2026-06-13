@@ -9,33 +9,36 @@ export default function CitationCard({ citation, onOpen, isActive }) {
   return (
     <button
       onClick={() => onOpen?.(citation)}
-      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-left cursor-pointer transition-colors"
+      className="inline-flex items-center gap-2 px-3 py-1.5 text-left cursor-pointer transition-all"
       style={{
-        backgroundColor: isActive ? '#EEF1FD' : '#F4F3F0',
-        border: `1px solid ${isActive ? '#4361EE' : '#E3E1DC'}`,
+        backgroundColor: isActive ? '#111111' : '#F5F0E8',
+        border: `1px solid ${isActive ? '#111111' : '#E5E5E0'}`,
+        boxShadow: isActive ? '2px 2px 0px 0px #CC0000' : 'none',
       }}
       onMouseEnter={(e) => {
         if (!isActive) {
-          e.currentTarget.style.backgroundColor = '#EEECEA'
-          e.currentTarget.style.borderColor = '#4361EE'
+          e.currentTarget.style.backgroundColor = '#F0EDE6'
+          e.currentTarget.style.borderColor = '#111111'
+          e.currentTarget.style.boxShadow = '2px 2px 0px 0px #111111'
         }
       }}
       onMouseLeave={(e) => {
         if (!isActive) {
-          e.currentTarget.style.backgroundColor = '#F4F3F0'
-          e.currentTarget.style.borderColor = '#E3E1DC'
+          e.currentTarget.style.backgroundColor = '#F5F0E8'
+          e.currentTarget.style.borderColor = '#E5E5E0'
+          e.currentTarget.style.boxShadow = 'none'
         }
       }}
     >
-      <FileText className="w-3 h-3 shrink-0" style={{ color: '#AEABA6' }} strokeWidth={2} />
-      <span className="text-[9px] font-semibold uppercase shrink-0" style={{ color: '#AEABA6' }}>
+      <FileText className="w-3 h-3 shrink-0" style={{ color: isActive ? '#F9F9F7' : '#AEABA6' }} strokeWidth={2} />
+      <span className="np-mono text-[9px] font-bold uppercase shrink-0" style={{ color: isActive ? '#F9F9F7' : '#CC0000' }}>
         {ext}
       </span>
-      <span className="text-[12px] truncate max-w-[120px]" style={{ color: '#3D3C3A' }}>
+      <span className="np-sans text-[12px] truncate max-w-[120px]" style={{ color: isActive ? '#F9F9F7' : '#3D3C3A' }}>
         {citation.fileName ?? 'Unknown file'}
       </span>
       {page && (
-        <span className="text-[11px] shrink-0" style={{ color: '#AEABA6' }}>{page}</span>
+        <span className="np-mono text-[11px] shrink-0" style={{ color: isActive ? '#D9D7D2' : '#AEABA6' }}>{page}</span>
       )}
     </button>
   )

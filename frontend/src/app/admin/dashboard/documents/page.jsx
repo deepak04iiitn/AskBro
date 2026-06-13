@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMemo } from 'react'
 import { useMetrics } from '../AdminDashboardShell'
@@ -8,8 +8,8 @@ import {
 } from 'recharts'
 import { FileText, HardDrive } from 'lucide-react'
 
-const PIE_COLORS = ['#4361EE','#7C3AED','#16A34A','#D97706','#DC2626','#0EA5E9']
-const BAR_PALETTE = ['#4361EE','#7C3AED','#16A34A','#D97706','#DC2626','#0EA5E9','#EC4899','#0D9488']
+const PIE_COLORS = ['#CC0000','#111111','#16A34A','#D97706','#DC2626','#0EA5E9']
+const BAR_PALETTE = ['#CC0000','#111111','#16A34A','#D97706','#DC2626','#0EA5E9','#EC4899','#0D9488']
 
 function formatBytes(b) {
   if (!b) return '0 B'
@@ -21,16 +21,16 @@ function formatBytes(b) {
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ minWidth: 140, boxShadow: '0 12px 36px rgba(0,0,0,0.16), 0 0 0 1px #E3E1DC', backgroundColor: 'white' }}>
-      <div className="px-4 py-2.5" style={{ backgroundColor: '#F7F5F2', borderBottom: '1px solid #E3E1DC' }}>
-        <p className="text-[12px] font-bold" style={{ color: '#111110' }}>{label}</p>
+    <div className="overflow-hidden" style={{ minWidth: 140, border: '1px solid #111111', boxShadow: '4px 4px 0px 0px #111111', backgroundColor: '#F9F9F7' }}>
+      <div className="px-4 py-2.5" style={{ backgroundColor: '#F0EDE6', borderBottom: '1px solid #E5E5E0' }}>
+        <p className="np-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: '#111111' }}>{label}</p>
       </div>
       <div className="px-4 py-3">
         {payload.map((e, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: e.color ?? e.fill }} />
-            <span className="text-[13px] font-bold" style={{ color: '#111110' }}>{typeof e.value === 'number' ? e.value.toLocaleString() : e.value}</span>
-            <span className="text-[11px]" style={{ color: '#AEABA6' }}>{e.name}</span>
+            <span className="w-2.5 h-2.5" style={{ backgroundColor: e.color ?? e.fill }} />
+            <span className="np-sans text-[13px] font-bold" style={{ color: '#111111' }}>{typeof e.value === 'number' ? e.value.toLocaleString() : e.value}</span>
+            <span className="np-mono text-[11px]" style={{ color: '#AEABA6' }}>{e.name}</span>
           </div>
         ))}
       </div>
@@ -38,27 +38,27 @@ function CustomTooltip({ active, payload, label }) {
   )
 }
 
-function ChartCard({ title, sub, accent = '#4361EE', children }) {
+function ChartCard({ title, sub, accent = '#CC0000', children }) {
   return (
-    <div className="bg-white rounded-2xl" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-      <div className="px-6 pt-5 pb-2">
-        <p className="text-[15px] font-bold" style={{ color: '#111110' }}>{title}</p>
-        {sub && <p className="text-[12px] mt-0.5" style={{ color: '#7A7874' }}>{sub}</p>}
+    <div style={{ border: '1px solid #E5E5E0', backgroundColor: '#F9F9F7' }}>
+      <div className="px-6 pt-4 pb-3" style={{ borderBottom: '1px solid #E5E5E0', backgroundColor: '#F0EDE6' }}>
+        <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>★ {title}</p>
+        {sub && <p className="np-body text-[12px] mt-0.5" style={{ color: '#737373' }}>{sub}</p>}
       </div>
-      <div className="px-6 pb-6">{children}</div>
+      <div className="px-6 pb-6 pt-4">{children}</div>
     </div>
   )
 }
 
 function StatCard({ Icon, iconBg, iconColor, label, value }) {
   return (
-    <div className="bg-white rounded-2xl p-6 flex items-center gap-4" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: iconBg }}>
+    <div className="p-6 flex items-center gap-4" style={{ border: '1px solid #E5E5E0', backgroundColor: '#F9F9F7' }}>
+      <div className="w-12 h-12 flex items-center justify-center shrink-0" style={{ backgroundColor: iconBg, border: '1px solid #E5E5E0' }}>
         <Icon className="w-5 h-5" style={{ color: iconColor }} strokeWidth={1.8} />
       </div>
       <div>
-        <p className="text-[28px] font-bold leading-none tabular-nums" style={{ color: '#111110' }}>{value}</p>
-        <p className="text-[12px] font-medium mt-1.5" style={{ color: '#7A7874' }}>{label}</p>
+        <p className="np-serif font-black leading-none tabular-nums" style={{ fontSize: '28px', color: '#111111' }}>{value}</p>
+        <p className="np-mono text-[11px] uppercase tracking-widest font-bold mt-1.5" style={{ color: '#737373' }}>{label}</p>
       </div>
     </div>
   )
@@ -72,7 +72,7 @@ export default function DocumentsPage() {
 
   if (loading || !metrics) return (
     <div className="p-8 space-y-5">
-      {Array.from({ length: 4 }).map((_, i) => <div key={i} className="bg-white rounded-2xl h-32 animate-pulse" style={{ border: '1px solid #E3E1DC' }} />)}
+      {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-32 animate-pulse" style={{ border: '1px solid #E5E5E0', backgroundColor: '#F5F0E8' }} />)}
     </div>
   )
 
@@ -95,13 +95,13 @@ export default function DocumentsPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="font-bold tracking-[-0.02em]" style={{ fontSize: '24px', color: '#111110' }}>Documents</h1>
+        <h1 className="np-serif font-black" style={{ fontSize: '24px', color: '#111111' }}>Documents</h1>
         <p className="text-[13px] mt-1" style={{ color: '#7A7874' }}>{metrics.total_documents.toLocaleString()} documents &nbsp;·&nbsp; {formatBytes(metrics.total_storage_bytes)} total storage</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StatCard Icon={FileText}  iconBg="#FFF7ED" iconColor="#D97706" label="Total Documents"    value={metrics.total_documents.toLocaleString()} />
-        <StatCard Icon={HardDrive} iconBg="#FEF2F2" iconColor="#DC2626" label="Total Storage Used" value={formatBytes(metrics.total_storage_bytes)} />
+        <StatCard Icon={HardDrive} iconBg="#FEF2F2" iconColor="#CC0000" label="Total Storage Used" value={formatBytes(metrics.total_storage_bytes)} />
       </div>
 
       {/* File type donut */}

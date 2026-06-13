@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useMetrics } from '../AdminDashboardShell'
 import {
@@ -17,16 +17,16 @@ function timeAgo(ts) {
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ minWidth: 140, boxShadow: '0 12px 36px rgba(0,0,0,0.16), 0 0 0 1px #E3E1DC', backgroundColor: 'white' }}>
-      <div className="px-4 py-2.5" style={{ backgroundColor: '#F7F5F2', borderBottom: '1px solid #E3E1DC' }}>
-        <p className="text-[12px] font-bold" style={{ color: '#111110' }}>{label}</p>
+    <div className="overflow-hidden" style={{ minWidth: 140, border: '1px solid #111111', boxShadow: '4px 4px 0px 0px #111111', backgroundColor: '#F9F9F7' }}>
+      <div className="px-4 py-2.5" style={{ backgroundColor: '#F0EDE6', borderBottom: '1px solid #E5E5E0' }}>
+        <p className="np-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: '#111111' }}>{label}</p>
       </div>
       <div className="px-4 py-3">
         {payload.map((e, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: e.stroke || e.fill }} />
-            <span className="text-[13px] font-bold" style={{ color: '#111110' }}>{e.value.toLocaleString()}</span>
-            <span className="text-[11px]" style={{ color: '#AEABA6' }}>{e.name}</span>
+            <span className="w-2.5 h-2.5" style={{ backgroundColor: e.stroke || e.fill }} />
+            <span className="np-sans text-[13px] font-bold" style={{ color: '#111111' }}>{e.value.toLocaleString()}</span>
+            <span className="np-mono text-[11px]" style={{ color: '#AEABA6' }}>{e.name}</span>
           </div>
         ))}
       </div>
@@ -36,20 +36,20 @@ function CustomTooltip({ active, payload, label }) {
 
 function ChartCard({ title, sub, accent, Icon, iconColor, stat, statLabel, children }) {
   return (
-    <div className="bg-white rounded-2xl" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-      <div className="px-6 pt-5 pb-2 flex items-start justify-between">
+    <div style={{ border: '1px solid #E5E5E0', backgroundColor: '#F9F9F7' }}>
+      <div className="px-6 pt-4 pb-3 flex items-start justify-between" style={{ borderBottom: '1px solid #E5E5E0', backgroundColor: '#F0EDE6' }}>
         <div>
-          <p className="text-[15px] font-bold" style={{ color: '#111110' }}>{title}</p>
-          {sub && <p className="text-[12px] mt-0.5" style={{ color: '#7A7874' }}>{sub}</p>}
+          <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>★ {title}</p>
+          {sub && <p className="np-body text-[12px] mt-0.5" style={{ color: '#737373' }}>{sub}</p>}
         </div>
         {stat !== undefined && (
           <div className="text-right">
-            <p className="text-[22px] font-bold tabular-nums" style={{ color: iconColor }}>{stat}</p>
-            <p className="text-[11px]" style={{ color: '#AEABA6' }}>{statLabel}</p>
+            <p className="np-serif font-black tabular-nums" style={{ fontSize: '22px', color: iconColor || '#111111' }}>{stat}</p>
+            <p className="np-mono text-[10px]" style={{ color: '#AEABA6' }}>{statLabel}</p>
           </div>
         )}
       </div>
-      <div className="px-6 pb-6">{children}</div>
+      <div className="px-6 pb-6 pt-4">{children}</div>
     </div>
   )
 }
@@ -70,7 +70,7 @@ export default function ActivityPage() {
 
   if (loading || !metrics) return (
     <div className="p-8 space-y-5">
-      {Array.from({ length: 4 }).map((_, i) => <div key={i} className="bg-white rounded-2xl h-48 animate-pulse" style={{ border: '1px solid #E3E1DC' }} />)}
+      {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-48 animate-pulse" style={{ border: '1px solid #E5E5E0', backgroundColor: '#F5F0E8' }} />)}
     </div>
   )
 
@@ -85,52 +85,52 @@ export default function ActivityPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="font-bold tracking-[-0.02em]" style={{ fontSize: '24px', color: '#111110' }}>Activity</h1>
+        <h1 className="np-serif font-black" style={{ fontSize: '24px', color: '#111111' }}>Activity</h1>
         <p className="text-[13px] mt-1" style={{ color: '#7A7874' }}>Platform usage trends â€” last 14 days</p>
       </div>
 
       {/* Chat activity */}
-      <ChartCard title="Chat Activity" sub="Chats started per day" accent="#7C3AED" iconColor="#7C3AED" stat={totalChats14} statLabel="chats in 14 days">
+      <ChartCard title="Chat Activity" sub="Chats started per day" accent="#111111" iconColor="#111111" stat={totalChats14} statLabel="chats in 14 days">
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={metrics.chats_over_time} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
             <defs>
               <linearGradient id="chatActGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stopColor="#7C3AED" stopOpacity={0.25} />
-                <stop offset="60%"  stopColor="#7C3AED" stopOpacity={0.08} />
-                <stop offset="100%" stopColor="#7C3AED" stopOpacity={0} />
+                <stop offset="0%"   stopColor="#111111" stopOpacity={0.18} />
+                <stop offset="60%"  stopColor="#111111" stopOpacity={0.06} />
+                <stop offset="100%" stopColor="#111111" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="#F4F3F0" />
+            <CartesianGrid vertical={false} stroke="#E5E5E0" />
             <XAxis dataKey="date" {...AXIS_PROPS} tickFormatter={(v) => v.slice(5)} />
             <YAxis {...AXIS_PROPS} width={28} allowDecimals={false} />
             <Tooltip content={<CustomTooltip />} />
-            {chatAvg > 0 && <ReferenceLine y={chatAvg} stroke="#C4B5FD" strokeDasharray="5 4" label={{ value: `avg ${chatAvg}`, fill: '#AEABA6', fontSize: 10, position: 'right' }} />}
-            <Area type="monotone" dataKey="count" name="Chats" stroke="#7C3AED" strokeWidth={3}
+            {chatAvg > 0 && <ReferenceLine y={chatAvg} stroke="#E5E5E0" strokeDasharray="5 4" label={{ value: `avg ${chatAvg}`, fill: '#AEABA6', fontSize: 10, position: 'right' }} />}
+            <Area type="monotone" dataKey="count" name="Chats" stroke="#111111" strokeWidth={2.5}
               fill="url(#chatActGrad)" dot={false}
-              activeDot={{ r: 6, fill: '#7C3AED', stroke: '#fff', strokeWidth: 2.5, filter: 'drop-shadow(0 2px 6px rgba(124,58,237,0.4))' }} />
+              activeDot={{ r: 5, fill: '#111111', stroke: '#F9F9F7', strokeWidth: 2 }} />
           </AreaChart>
         </ResponsiveContainer>
       </ChartCard>
 
       {/* New users */}
-      <ChartCard title="New Users" sub="Registrations per day" accent="#4361EE" iconColor="#4361EE" stat={totalUsers14} statLabel="new users in 14 days">
+      <ChartCard title="New Users" sub="Registrations per day" accent="#CC0000" iconColor="#CC0000" stat={totalUsers14} statLabel="new users in 14 days">
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={metrics.users_over_time} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
             <defs>
               <linearGradient id="userActGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stopColor="#4361EE" stopOpacity={0.25} />
-                <stop offset="60%"  stopColor="#4361EE" stopOpacity={0.08} />
-                <stop offset="100%" stopColor="#4361EE" stopOpacity={0} />
+                <stop offset="0%"   stopColor="#CC0000" stopOpacity={0.22} />
+                <stop offset="60%"  stopColor="#CC0000" stopOpacity={0.07} />
+                <stop offset="100%" stopColor="#CC0000" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="#F4F3F0" />
+            <CartesianGrid vertical={false} stroke="#E5E5E0" />
             <XAxis dataKey="date" {...AXIS_PROPS} tickFormatter={(v) => v.slice(5)} />
             <YAxis {...AXIS_PROPS} width={28} allowDecimals={false} />
             <Tooltip content={<CustomTooltip />} />
-            {userAvg > 0 && <ReferenceLine y={userAvg} stroke="#93A8F8" strokeDasharray="5 4" label={{ value: `avg ${userAvg}`, fill: '#AEABA6', fontSize: 10, position: 'right' }} />}
-            <Area type="monotone" dataKey="count" name="New Users" stroke="#4361EE" strokeWidth={3}
+            {userAvg > 0 && <ReferenceLine y={userAvg} stroke="#FECACA" strokeDasharray="5 4" label={{ value: `avg ${userAvg}`, fill: '#AEABA6', fontSize: 10, position: 'right' }} />}
+            <Area type="monotone" dataKey="count" name="New Users" stroke="#CC0000" strokeWidth={2.5}
               fill="url(#userActGrad)" dot={false}
-              activeDot={{ r: 6, fill: '#4361EE', stroke: '#fff', strokeWidth: 2.5, filter: 'drop-shadow(0 2px 6px rgba(67,97,238,0.4))' }} />
+              activeDot={{ r: 5, fill: '#CC0000', stroke: '#F9F9F7', strokeWidth: 2 }} />
           </AreaChart>
         </ResponsiveContainer>
       </ChartCard>
@@ -152,13 +152,13 @@ export default function ActivityPage() {
       </ChartCard>
 
       {/* Active users now */}
-      <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-        <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid #E3E1DC' }}>
+      <div className="overflow-hidden" style={{ border: '1px solid #E5E5E0', backgroundColor: '#F9F9F7' }}>
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: '1px solid #E5E5E0', backgroundColor: '#F0EDE6' }}>
           <div>
-            <p className="text-[15px] font-bold" style={{ color: '#111110' }}>Active Right Now</p>
-            <p className="text-[12px] mt-0.5" style={{ color: '#7A7874' }}>Users who made a request in the last 15 minutes</p>
+            <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>★ Active Right Now</p>
+            <p className="np-body text-[12px] mt-0.5" style={{ color: '#737373' }}>Users who made a request in the last 15 minutes</p>
           </div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-bold"
+          <span className="inline-flex items-center gap-1.5 np-mono text-[10px] font-bold uppercase tracking-widest px-3 py-1"
             style={{ backgroundColor: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: '#16A34A' }} />
@@ -170,27 +170,27 @@ export default function ActivityPage() {
 
         {metrics.active_users.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: '#F4F3F0' }}>
+            <div className="w-12 h-12 flex items-center justify-center mb-3" style={{ backgroundColor: '#F5F0E8', border: '1px solid #E5E5E0' }}>
               <Zap className="w-5 h-5" style={{ color: '#AEABA6' }} strokeWidth={1.5} />
             </div>
-            <p className="text-[13px]" style={{ color: '#AEABA6' }}>No users active right now.</p>
+            <p className="np-mono text-[12px] uppercase tracking-widest" style={{ color: '#AEABA6' }}>No users active right now.</p>
           </div>
         ) : (
-          <div className="divide-y" style={{ borderColor: '#F4F3F0' }}>
+          <div className="divide-y" style={{ borderColor: '#E5E5E0' }}>
             {metrics.active_users.map((u, i) => (
               <div key={u.user_id || i} className="flex items-center justify-between px-6 py-4 transition-colors"
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F5F0E8' }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[13px] font-bold text-white"
-                    style={{ backgroundColor: '#4361EE' }}>
+                  <div className="w-9 h-9 flex items-center justify-center np-mono text-[13px] font-bold"
+                    style={{ backgroundColor: '#111111', color: '#F9F9F7' }}>
                     {u.email[0].toUpperCase()}
                   </div>
-                  <span className="text-[13px] font-medium" style={{ color: '#111110' }}>{u.email}</span>
+                  <span className="np-sans text-[13px] font-medium" style={{ color: '#111111' }}>{u.email}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-[12px]" style={{ color: '#AEABA6' }}>{timeAgo(u.last_seen)}</span>
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
+                  <span className="np-mono text-[12px]" style={{ color: '#AEABA6' }}>{timeAgo(u.last_seen)}</span>
+                  <span className="inline-flex items-center gap-1.5 np-mono text-[10px] font-bold uppercase tracking-widest px-2.5 py-1"
                     style={{ backgroundColor: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
                     <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#16A34A' }} /> Online
                   </span>

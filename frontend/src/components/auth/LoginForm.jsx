@@ -70,7 +70,7 @@ export default function LoginForm() {
     <div className="newsprint-bg flex flex-col items-center justify-center px-4 py-16">
 
       {/* Card */}
-      <div className="w-full max-w-[560px] border border-[#111111]" style={{ background: '#F9F9F7', boxShadow: '4px 4px 0px 0px #111111' }}>
+      <div className="w-full max-w-[680px] border border-[#111111]" style={{ background: '#F9F9F7', boxShadow: '4px 4px 0px 0px #111111', borderTop: '3px solid #CC0000' }}>
 
         {/* Masthead header */}
         <div className="flex items-center justify-center gap-3 px-8 py-6 border-b border-[#111111]" style={{ background: '#111111' }}>

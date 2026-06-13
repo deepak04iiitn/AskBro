@@ -24,7 +24,7 @@ export default function DashboardShell({ children }) {
   if (!hydrated || !user) return null
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F7F5F2' }}>
+    <div className="newsprint-bg flex h-screen overflow-hidden" style={{ backgroundColor: '#F9F9F7' }}>
       <div className="hidden md:flex">
         <Sidebar />
       </div>

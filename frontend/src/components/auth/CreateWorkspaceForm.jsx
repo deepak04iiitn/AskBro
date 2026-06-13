@@ -127,7 +127,7 @@ function StepProgress({ step }) {
       <div className="relative h-0.5 mb-3" style={{ backgroundColor: '#E5E5E0' }}>
         <div
           className="absolute left-0 top-0 h-full transition-all duration-300 ease-out"
-          style={{ width: `${pct}%`, background: '#111111' }}
+          style={{ width: `${pct}%`, background: '#CC0000' }}
         />
       </div>
       <div className="flex justify-between">
@@ -136,7 +136,7 @@ function StepProgress({ step }) {
             key={label}
             className="np-mono text-[9px] uppercase tracking-widest"
             style={{
-              color: i + 1 === step ? '#111111' : '#A3A3A3',
+              color: i + 1 === step ? '#CC0000' : '#A3A3A3',
               fontWeight: i + 1 === step ? 700 : 400,
             }}
           >
@@ -217,7 +217,7 @@ export default function CreateWorkspaceForm() {
       className="newsprint-bg flex flex-col items-center justify-center px-4 py-16"
     >
       {/* Card */}
-      <div className="w-full max-w-[560px] border border-[#111111]" style={{ background: '#F9F9F7', boxShadow: '4px 4px 0px 0px #111111' }}>
+      <div className="w-full max-w-[680px] border border-[#111111]" style={{ background: '#F9F9F7', boxShadow: '4px 4px 0px 0px #111111', borderTop: '3px solid #CC0000' }}>
 
         {/* Masthead header */}
         <div className="flex items-center justify-center gap-3 px-8 py-6 border-b border-[#111111]" style={{ background: '#111111' }}>
@@ -227,6 +227,7 @@ export default function CreateWorkspaceForm() {
 
         {/* Form body */}
         <div className="px-10 py-9">
+          <p className="np-mono text-[9px] uppercase tracking-[0.2em] mb-6" style={{ color: '#CC0000' }}>★ New Workspace</p>
           <StepProgress step={step} />
 
           <AnimatePresence mode="wait">

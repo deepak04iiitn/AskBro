@@ -14,17 +14,6 @@ import Sidebar from '@/components/layout/Sidebar'
 import UploadZone from '@/components/documents/UploadZone'
 import DocumentList from '@/components/documents/DocumentList'
 
-const B = {
-  navy:       '#1E3A8A',
-  blue:       '#2563EB',
-  lightBlue:  '#EFF6FF',
-  softBlue:   '#DBEAFE',
-  cardBorder: '#BFDBFE',
-  divider:    '#BFDBFE',
-  textMuted:  '#6B7280',
-  textFaint:  '#9CA3AF',
-}
-
 function CountUp({ value }) {
   const [display, setDisplay] = useState(0)
   useEffect(() => {
@@ -40,10 +29,10 @@ function CountUp({ value }) {
 }
 
 const STATS = [
-  { key: 'total',      Icon: FileText,     label: 'Total',       unit: 'files uploaded',      color: B.blue    },
-  { key: 'ready',      Icon: CheckCircle2, label: 'Ready',       unit: 'ready to ask about',  color: '#16A34A' },
-  { key: 'processing', Icon: Clock,        label: 'Working on',  unit: 'being prepared',       color: '#D97706' },
-  { key: 'storage',    Icon: HardDrive,    label: 'Storage',     unit: 'MB used',              color: '#7C3AED' },
+  { key: 'total',      Icon: FileText,     label: 'Total',      unit: 'files uploaded',     color: '#111111' },
+  { key: 'ready',      Icon: CheckCircle2, label: 'Ready',      unit: 'ready to ask about', color: '#16A34A' },
+  { key: 'processing', Icon: Clock,        label: 'Working on', unit: 'being prepared',      color: '#D97706' },
+  { key: 'storage',    Icon: HardDrive,    label: 'Storage',    unit: 'MB used',             color: '#CC0000' },
 ]
 
 export default function UploadPage() {
@@ -74,36 +63,36 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F7F5F2' }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F9F9F7' }}>
       <div className="hidden md:flex">
         <Sidebar />
       </div>
 
-      <main className="flex-1 overflow-y-auto" style={{ backgroundColor: B.lightBlue }}>
+      <main className="flex-1 overflow-y-auto newsprint-bg" style={{ backgroundColor: '#F9F9F7' }}>
 
         {/* ── Sticky top bar ──────────────────────────────────── */}
         <div
-          className="sticky top-0 z-10 bg-white px-8 h-14 flex items-center justify-between shrink-0"
-          style={{ borderBottom: `1px solid ${B.cardBorder}` }}
+          className="sticky top-0 z-10 px-8 h-14 flex items-center justify-between shrink-0"
+          style={{ backgroundColor: '#F9F9F7', borderBottom: '1px solid #111111' }}
         >
-          <div className="flex items-center gap-2.5">
-            <BookOpen className="w-4 h-4" style={{ color: B.blue }} strokeWidth={2} />
-            <h1 className="text-[15px] font-bold" style={{ color: B.navy }}>
+          <div className="flex items-center gap-3">
+            <BookOpen className="w-4 h-4" style={{ color: '#CC0000' }} strokeWidth={2} />
+            <h1 className="np-serif font-black text-[16px]" style={{ color: '#111111' }}>
               Knowledge Library
             </h1>
             <span
-              className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: B.softBlue, color: B.blue }}
+              className="np-mono text-[10px] font-bold uppercase tracking-widest px-2 py-0.5"
+              style={{ backgroundColor: '#111111', color: '#F9F9F7' }}
             >
               {documents.length} docs
             </span>
           </div>
           <Link
             href="/dashboard"
-            className="flex items-center gap-1.5 text-[13px] font-semibold transition-colors"
-            style={{ color: B.blue }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = B.navy }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = B.blue }}
+            className="np-mono flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors"
+            style={{ color: '#CC0000' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#AA0000' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#CC0000' }}
           >
             <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2.5} />
             Back to chat
@@ -113,29 +102,33 @@ export default function UploadPage() {
         {/* ── Page content ────────────────────────────────────── */}
         <div className="max-w-6xl mx-auto px-8 py-8 space-y-8">
 
-          {/* ── Stats bar — 4 metrics in one card ───────────────── */}
+          {/* ── Stats bar ───────────────────────────────────────── */}
           <div
-            className="bg-white rounded-2xl overflow-hidden"
-            style={{ border: `1px solid ${B.cardBorder}` }}
+            className="overflow-hidden"
+            style={{ border: '1px solid #111111', boxShadow: '4px 4px 0px 0px #111111', backgroundColor: '#F9F9F7' }}
           >
-            <div className="grid grid-cols-2 sm:grid-cols-4 divide-x" style={{ borderColor: B.cardBorder }}>
-              {STATS.map(({ key, Icon, label, unit, color }) => (
-                <div key={key} className="px-6 py-5 flex flex-col gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 divide-x" style={{ borderColor: '#E5E5E0' }}>
+              {STATS.map(({ key, Icon, label, unit, color }, idx) => (
+                <div
+                  key={key}
+                  className="px-6 py-5 flex flex-col gap-3"
+                  style={{ borderRight: idx < 3 ? '1px solid #E5E5E0' : 'none' }}
+                >
                   <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: `${color}18` }}
+                    className="w-8 h-8 flex items-center justify-center"
+                    style={{ backgroundColor: '#F0EDE6', border: '1px solid #E5E5E0' }}
                   >
                     <Icon className="w-4 h-4" style={{ color }} strokeWidth={2} />
                   </div>
                   <div>
                     <p
-                      className="font-bold leading-none tabular-nums"
-                      style={{ fontSize: '28px', color: B.navy }}
+                      className="np-serif font-black leading-none tabular-nums"
+                      style={{ fontSize: '28px', color: '#111111' }}
                     >
                       <CountUp value={statsValues[key]} />
                     </p>
-                    <p className="text-[12px] font-semibold mt-1.5" style={{ color: B.textMuted }}>{label}</p>
-                    <p className="text-[10px] mt-0.5" style={{ color: B.textFaint }}>{unit}</p>
+                    <p className="np-mono text-[11px] font-bold uppercase tracking-widest mt-2" style={{ color: '#737373' }}>{label}</p>
+                    <p className="np-body text-[10px] mt-0.5" style={{ color: '#AEABA6' }}>{unit}</p>
                   </div>
                 </div>
               ))}
@@ -144,8 +137,8 @@ export default function UploadPage() {
 
           {/* ── Tab switcher ─────────────────────────────────────── */}
           <div
-            className="flex items-center gap-1 p-1 rounded-xl self-start w-fit"
-            style={{ backgroundColor: '#DBEAFE', border: `1px solid ${B.cardBorder}` }}
+            className="flex items-center gap-0 self-start w-fit"
+            style={{ border: '1px solid #111111' }}
           >
             {[
               { id: 'upload',    Icon: UploadCloud, label: 'Upload'        },
@@ -159,19 +152,22 @@ export default function UploadPage() {
                     prevTab.current = activeTab
                     setActiveTab(id)
                   }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all cursor-pointer"
+                  className="flex items-center gap-2 px-5 py-2.5 np-mono text-[11px] font-bold uppercase tracking-widest transition-all cursor-pointer"
                   style={{
-                    backgroundColor: isActive ? '#FFFFFF' : 'transparent',
-                    color: isActive ? B.navy : '#6B7280',
-                    boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.10)' : 'none',
+                    backgroundColor: isActive ? '#111111' : 'transparent',
+                    color: isActive ? '#F9F9F7' : '#737373',
+                    borderRight: id === 'upload' ? '1px solid #111111' : 'none',
                   }}
                 >
                   <Icon className="w-3.5 h-3.5" strokeWidth={2} />
                   {label}
                   {id === 'documents' && documents.length > 0 && (
                     <span
-                      className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                      style={{ backgroundColor: isActive ? B.softBlue : '#E5E7EB', color: isActive ? B.blue : '#6B7280' }}
+                      className="np-mono text-[9px] font-bold px-1.5 py-0.5"
+                      style={{
+                        backgroundColor: isActive ? '#CC0000' : '#111111',
+                        color: '#F9F9F7',
+                      }}
                     >
                       {documents.length}
                     </span>
@@ -181,7 +177,7 @@ export default function UploadPage() {
             })}
           </div>
 
-          {/* ── Tab content with slide transition ───────────────── */}
+          {/* ── Tab content ─────────────────────────────────────── */}
           <div className="relative overflow-hidden pb-24" style={{ minHeight: '380px' }}>
             <AnimatePresence mode="wait" custom={activeTab === 'documents' ? 1 : -1}>
               {activeTab === 'upload' ? (
@@ -194,8 +190,8 @@ export default function UploadPage() {
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
                   <div className="flex items-baseline justify-between mb-4">
-                    <p className="text-[14px] font-bold" style={{ color: B.navy }}>Upload a document</p>
-                    <p className="text-[11px]" style={{ color: B.textFaint }}>
+                    <p className="np-serif font-bold text-[16px]" style={{ color: '#111111' }}>Upload a document</p>
+                    <p className="np-mono text-[10px] uppercase tracking-widest" style={{ color: '#AEABA6' }}>
                       PDF · DOCX · Markdown · TXT · max 50 MB
                     </p>
                   </div>
@@ -210,12 +206,12 @@ export default function UploadPage() {
                   exit={{ opacity: 0, x: 30 }}
                   transition={{ duration: 0.25, ease: 'easeInOut' }}
                 >
-                  <div className="flex items-center gap-2.5 mb-5">
-                    <p className="text-[14px] font-bold" style={{ color: B.navy }}>All documents</p>
+                  <div className="flex items-center gap-3 mb-5">
+                    <p className="np-serif font-bold text-[16px]" style={{ color: '#111111' }}>All documents</p>
                     {documents.length > 0 && (
                       <span
-                        className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: B.softBlue, color: B.blue }}
+                        className="np-mono text-[10px] font-bold uppercase tracking-widest px-2 py-0.5"
+                        style={{ backgroundColor: '#111111', color: '#F9F9F7' }}
                       >
                         {documents.length}
                       </span>

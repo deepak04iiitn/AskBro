@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useMemo } from 'react'
 import { useMetrics } from '../AdminDashboardShell'
@@ -8,7 +8,7 @@ import {
 } from 'recharts'
 import { Users, Crown, UserCheck, ChevronUp, ChevronDown } from 'lucide-react'
 
-const BAR_PALETTE = ['#4361EE','#7C3AED','#16A34A','#D97706','#DC2626','#0EA5E9','#EC4899','#0D9488']
+const BAR_PALETTE = ['#CC0000','#111111','#16A34A','#D97706','#DC2626','#0EA5E9','#EC4899','#0D9488']
 const SortAsc  = () => <ChevronUp   style={{ width:12, height:12, display:'inline', marginLeft:4 }} strokeWidth={2.5} />
 const SortDesc = () => <ChevronDown style={{ width:12, height:12, display:'inline', marginLeft:4 }} strokeWidth={2.5} />
 const PAGE_SZ = 10
@@ -17,16 +17,16 @@ const PAGE_SZ = 10
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-2xl overflow-hidden" style={{ minWidth: 140, boxShadow: '0 12px 36px rgba(0,0,0,0.16), 0 0 0 1px #E3E1DC', backgroundColor: 'white' }}>
-      <div className="px-4 py-2.5" style={{ backgroundColor: '#F7F5F2', borderBottom: '1px solid #E3E1DC' }}>
-        <p className="text-[12px] font-bold" style={{ color: '#111110' }}>{label}</p>
+    <div className="overflow-hidden" style={{ minWidth: 140, border: '1px solid #111111', boxShadow: '4px 4px 0px 0px #111111', backgroundColor: '#F9F9F7' }}>
+      <div className="px-4 py-2.5" style={{ backgroundColor: '#F0EDE6', borderBottom: '1px solid #E5E5E0' }}>
+        <p className="np-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: '#111111' }}>{label}</p>
       </div>
       <div className="px-4 py-3">
         {payload.map((e, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: e.color ?? e.fill }} />
-            <span className="text-[13px] font-bold" style={{ color: '#111110' }}>{e.value.toLocaleString()}</span>
-            <span className="text-[11px]" style={{ color: '#AEABA6' }}>{e.name}</span>
+            <span className="w-2.5 h-2.5 shrink-0" style={{ backgroundColor: e.color ?? e.fill }} />
+            <span className="np-sans text-[13px] font-bold" style={{ color: '#111111' }}>{e.value.toLocaleString()}</span>
+            <span className="np-mono text-[11px]" style={{ color: '#AEABA6' }}>{e.name}</span>
           </div>
         ))}
       </div>
@@ -35,27 +35,27 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 // â”€â”€ Chart card with accent top stripe â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function ChartCard({ title, sub, accent = '#4361EE', children }) {
+function ChartCard({ title, sub, accent = '#CC0000', children }) {
   return (
-    <div className="bg-white rounded-2xl" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-      <div className="px-6 pt-5 pb-2">
-        <p className="text-[15px] font-bold" style={{ color: '#111110' }}>{title}</p>
-        {sub && <p className="text-[12px] mt-0.5" style={{ color: '#7A7874' }}>{sub}</p>}
+    <div style={{ border: '1px solid #E5E5E0', backgroundColor: '#F9F9F7' }}>
+      <div className="px-6 pt-4 pb-3" style={{ borderBottom: '1px solid #E5E5E0', backgroundColor: '#F0EDE6' }}>
+        <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>★ {title}</p>
+        {sub && <p className="np-body text-[12px] mt-0.5" style={{ color: '#737373' }}>{sub}</p>}
       </div>
-      <div className="px-6 pb-6">{children}</div>
+      <div className="px-6 pb-6 pt-4">{children}</div>
     </div>
   )
 }
 
 function StatCard({ Icon, iconBg, iconColor, label, value }) {
   return (
-    <div className="bg-white rounded-2xl p-6 flex items-center gap-4" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
-      <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: iconBg }}>
+    <div className="p-6 flex items-center gap-4" style={{ border: '1px solid #E5E5E0', backgroundColor: '#F9F9F7' }}>
+      <div className="w-12 h-12 flex items-center justify-center shrink-0" style={{ backgroundColor: iconBg, border: '1px solid #E5E5E0' }}>
         <Icon className="w-5 h-5" style={{ color: iconColor }} strokeWidth={1.8} />
       </div>
       <div>
-        <p className="text-[28px] font-bold leading-none tabular-nums" style={{ color: '#111110' }}>{value}</p>
-        <p className="text-[12px] font-medium mt-1.5" style={{ color: '#7A7874' }}>{label}</p>
+        <p className="np-serif font-black leading-none tabular-nums" style={{ fontSize: '28px', color: '#111111' }}>{value}</p>
+        <p className="np-mono text-[11px] uppercase tracking-widest font-bold mt-1.5" style={{ color: '#737373' }}>{label}</p>
       </div>
     </div>
   )
@@ -107,7 +107,7 @@ export default function UsersPage() {
 
   if (loading || !metrics) return (
     <div className="p-8 space-y-5">
-      {Array.from({ length: 4 }).map((_, i) => <div key={i} className="bg-white rounded-2xl h-32 animate-pulse" style={{ border: '1px solid #E3E1DC' }} />)}
+      {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-32 animate-pulse" style={{ border: '1px solid #E5E5E0', backgroundColor: '#F5F0E8' }} />)}
     </div>
   )
 
@@ -128,13 +128,13 @@ export default function UsersPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="font-bold tracking-[-0.02em]" style={{ fontSize: '24px', color: '#111110' }}>Users</h1>
-        <p className="text-[13px] mt-1" style={{ color: '#7A7874' }}>{totalUsers.toLocaleString()} total users across all workspaces</p>
+        <h1 className="np-serif font-black" style={{ fontSize: '24px', color: '#111111' }}>Users</h1>
+        <p className="np-body text-[13px] mt-1" style={{ color: '#737373' }}>{totalUsers.toLocaleString()} total users across all workspaces</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <StatCard Icon={Users}     iconBg="#EEF1FD" iconColor="#4361EE" label="Total Users"  value={totalUsers.toLocaleString()} />
-        <StatCard Icon={Crown}     iconBg="#F5F3FF" iconColor="#7C3AED" label="Owners"       value={ownerCount.toLocaleString()} />
+        <StatCard Icon={Users}     iconBg="#FEF2F2" iconColor="#CC0000" label="Total Users"  value={totalUsers.toLocaleString()} />
+        <StatCard Icon={Crown}     iconBg="#F5F0E8" iconColor="#111111" label="Owners"       value={ownerCount.toLocaleString()} />
         <StatCard Icon={UserCheck} iconBg="#F0FDF4" iconColor="#16A34A" label="Members"      value={memberCount.toLocaleString()} />
       </div>
 
@@ -168,7 +168,7 @@ export default function UsersPage() {
             <PieChart>
               <defs>
                 <linearGradient id="ownerGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#4361EE" /><stop offset="100%" stopColor="#7C3AED" />
+                  <stop offset="0%" stopColor="#CC0000" /><stop offset="100%" stopColor="#AA0000" />
                 </linearGradient>
                 <linearGradient id="memberGrad" x1="0" y1="0" x2="1" y2="1">
                   <stop offset="0%" stopColor="#16A34A" /><stop offset="100%" stopColor="#0D9488" />
@@ -200,14 +200,14 @@ export default function UsersPage() {
         </select>
       </div>
 
-      <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 12px rgba(0,0,0,0.05)' }}>
+      <div className="overflow-hidden" style={{ border: '1px solid #E5E5E0', backgroundColor: '#F9F9F7' }}>
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead>
-              <tr style={{ backgroundColor: '#F7F5F2', borderBottom: '1px solid #E3E1DC' }}>
+              <tr style={{ backgroundColor: '#F0EDE6', borderBottom: '1px solid #E5E5E0' }}>
                 {[['email','Email'],['role','Role'],['workspace_name','Workspace'],['workspace_code','Code'],['created_at','Joined']].map(([k,l]) => (
-                  <th key={k} className="text-left px-5 py-3.5 text-[11px] font-bold uppercase tracking-widest cursor-pointer"
-                    style={{ color: '#7A7874' }} onClick={() => { if (sortKey === k) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortKey(k); setSortDir('asc') } }}>
+                  <th key={k} className="text-left px-5 py-3 np-mono text-[9px] font-bold uppercase tracking-[0.2em] cursor-pointer"
+                    style={{ color: '#CC0000' }} onClick={() => { if (sortKey === k) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortKey(k); setSortDir('asc') } }}>
                     {l}{sortKey === k && (sortDir.length === 3 ? <SortAsc /> : <SortDesc />)}
                   </th>
                 ))}
@@ -215,32 +215,32 @@ export default function UsersPage() {
             </thead>
             <tbody>
               {paginated.map((u, i) => (
-                <tr key={u.id} style={{ borderBottom: i < paginated.length - 1 ? '1px solid #F4F3F0' : 'none' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
+                <tr key={u.id} style={{ borderBottom: i < paginated.length - 1 ? '1px solid #E5E5E0' : 'none' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F5F0E8' }}
                   onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}>
-                  <td className="px-5 py-3.5 font-medium" style={{ color: '#111110' }}>{u.email}</td>
+                  <td className="px-5 py-3.5 np-sans font-medium" style={{ color: '#111111' }}>{u.email}</td>
                   <td className="px-5 py-3.5">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize"
-                      style={{ backgroundColor: u.role === 'owner' ? '#EEF1FD' : '#F4F3F0', color: u.role === 'owner' ? '#4361EE' : '#7A7874' }}>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 np-mono text-[10px] font-bold uppercase tracking-widest"
+                      style={{ backgroundColor: u.role === 'owner' ? '#111111' : '#F5F0E8', color: u.role === 'owner' ? '#F9F9F7' : '#737373' }}>
                       {u.role}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5" style={{ color: '#4A4845' }}>{u.workspace_name}</td>
-                  <td className="px-5 py-3.5"><span className="font-mono text-[11px] px-2 py-0.5 rounded" style={{ backgroundColor: '#F4F3F0', color: '#7A7874' }}>{u.workspace_code}</span></td>
-                  <td className="px-5 py-3.5" style={{ color: '#7A7874' }}>{new Date(u.created_at).toLocaleDateString()}</td>
+                  <td className="px-5 py-3.5 np-body" style={{ color: '#4A4845' }}>{u.workspace_name}</td>
+                  <td className="px-5 py-3.5"><span className="np-mono text-[11px] px-2 py-0.5" style={{ backgroundColor: '#F0EDE6', color: '#111111' }}>{u.workspace_code}</span></td>
+                  <td className="px-5 py-3.5 np-mono text-[12px]" style={{ color: '#737373' }}>{new Date(u.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between px-5 py-3.5" style={{ borderTop: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}>
-          <span className="text-[12px]" style={{ color: '#AEABA6' }}>{filtered.length.toLocaleString()} results &nbsp;·&nbsp; Page {page} of {totalPages}</span>
+        <div className="flex items-center justify-between px-5 py-3" style={{ borderTop: '1px solid #E5E5E0', backgroundColor: '#F0EDE6' }}>
+          <span className="np-mono text-[11px]" style={{ color: '#AEABA6' }}>{filtered.length.toLocaleString()} results · Page {page} of {totalPages}</span>
           <div className="flex gap-2">
             {['Previous','Next'].map((label, idx) => (
               <button key={label} onClick={() => setPage((p) => idx === 0 ? Math.max(1,p-1) : Math.min(totalPages,p+1))}
                 disabled={idx === 0 ? page === 1 : page === totalPages}
-                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-colors disabled:opacity-30 cursor-pointer"
-                style={{ border: '1px solid #E3E1DC', color: '#4361EE', backgroundColor: 'white' }}>{label}</button>
+                className="px-3 py-1.5 np-mono text-[11px] font-bold uppercase tracking-widest transition-colors disabled:opacity-30 cursor-pointer"
+                style={{ border: '1px solid #111111', color: '#CC0000', backgroundColor: 'transparent' }}>{label}</button>
             ))}
           </div>
         </div>

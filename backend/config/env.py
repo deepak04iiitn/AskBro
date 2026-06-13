@@ -80,6 +80,14 @@ class Settings(BaseSettings):
     # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
     NOTION_ENCRYPTION_KEY: str = Field(..., description="Fernet key used to encrypt Notion tokens at rest")
 
+    # ── GitHub integration ────────────────────────────────────────
+    GITHUB_CLIENT_ID: str = Field(default="", description="GitHub OAuth App client ID")
+    GITHUB_CLIENT_SECRET: str = Field(default="", description="GitHub OAuth App client secret")
+    # Uses same Fernet key as Notion by default; set a separate key for stronger isolation
+    GITHUB_ENCRYPTION_KEY: str = Field(default="", description="Fernet key for GitHub tokens (falls back to NOTION_ENCRYPTION_KEY)")
+    BACKEND_URL: str = Field(default="http://localhost:8000", description="Public URL of this backend (for OAuth callbacks)")
+    FRONTEND_URL: str = Field(default="http://localhost:3000", description="Public URL of the frontend (for OAuth redirects)")
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def parse_cors(cls, v: str | list[str]) -> list[str]:

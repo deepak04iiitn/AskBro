@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -10,8 +10,10 @@ import {
 } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
+import useGitHubStore from '@/store/useGitHubStore'
 import Sidebar from '@/components/layout/Sidebar'
 import { connectNotion, disconnectNotion, getNotionStatus } from '@/lib/integrationsApi'
+import GitHubConnectPanel from '@/components/github/GitHubConnectPanel'
 
 function NotionLogo({ size = 22 }) {
   return (
@@ -368,14 +370,26 @@ function IntegrationCard({ icon, name, desc, badge, active, connected, onClick, 
   )
 }
 
+function GitHubLogo({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+    </svg>
+  )
+}
+
 export default function IntegrationsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const hydrate   = useAuthStore((s) => s.hydrate)
   const user      = useAuthStore((s) => s.user)
   const fetchDocs = useDocumentStore((s) => s.fetchDocuments)
+  const fetchGHRepos   = useGitHubStore((s) => s.fetchRepos)
+  const setGHStatus    = useGitHubStore((s) => s.setStatus)
   const [hydrated, setHydrated] = useState(false)
   const [active, setActive]     = useState('notion')
   const [notionStatus, setNotionStatus] = useState(null)
+  const [githubStatus, setGitHubStatus] = useState(null)
 
   useEffect(() => { hydrate(); setHydrated(true) }, [hydrate])
 
@@ -384,11 +398,24 @@ export default function IntegrationsPage() {
     if (!user) { router.replace('/login'); return }
     fetchDocs()
     getNotionStatus().then(setNotionStatus).catch(() => {})
-  }, [hydrated, user, router, fetchDocs])
+
+    // Load GitHub status
+    import('@/lib/githubApi').then(({ getGitHubStatus }) => {
+      getGitHubStatus().then((s) => { setGitHubStatus(s); setGHStatus(s) }).catch(() => {})
+    })
+
+    // Handle OAuth callback success
+    const ghParam = searchParams.get('github')
+    if (ghParam === 'connected') {
+      setActive('github')
+      router.replace('/integrations', { scroll: false })
+    }
+  }, [hydrated, user, router, fetchDocs]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!hydrated || !user) return null
 
   return (
+    <>
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F9F9F7' }}>
       <div className="hidden md:flex">
         <Sidebar />
@@ -444,8 +471,11 @@ export default function IntegrationsPage() {
             <IntegrationCard
               icon={<GitBranch className="w-5 h-5" strokeWidth={1.8} />}
               name="GitHub"
-              desc="Sync repositories, READMEs, and wikis as knowledge base documents."
-              comingSoon
+              desc="Chat with your repos — code, commits, issues, and PRs. Public and private."
+              badge={githubStatus?.connected ? 'Connected' : 'Not connected'}
+              connected={githubStatus?.connected}
+              active={active === 'github'}
+              onClick={() => setActive('github')}
             />
           </div>
 
@@ -459,7 +489,6 @@ export default function IntegrationsPage() {
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* Section header */}
                 <div
                   className="flex items-center gap-3 px-5 py-4 mb-1"
                   style={{ backgroundColor: '#F0EDE6', border: '1px solid #E5E5E0', borderLeft: '3px solid #CC0000' }}
@@ -482,16 +511,69 @@ export default function IntegrationsPage() {
                     </span>
                   )}
                 </div>
-
                 <NotionDetail
                   status={notionStatus}
                   onStatusChange={(s) => setNotionStatus(s)}
                 />
               </motion.div>
             )}
+
+            {active === 'github' && (
+              <motion.div
+                key="github"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.2 }}
+              >
+                {/* GitHub section header */}
+                <div
+                  className="flex items-center gap-3 px-5 py-4 mb-1"
+                  style={{ backgroundColor: '#F0EDE6', border: '1px solid #E5E5E0', borderLeft: '3px solid #CC0000' }}
+                >
+                  <div className="w-8 h-8 flex items-center justify-center" style={{ backgroundColor: '#111111', color: 'white' }}>
+                    <GitHubLogo size={16} />
+                  </div>
+                  <div>
+                    <p className="np-serif text-[14px] font-black" style={{ color: '#111111' }}>GitHub Integration</p>
+                    <p className="np-body text-[12px]" style={{ color: '#737373' }}>
+                      {githubStatus?.connected
+                        ? `Connected as @${githubStatus.github_username}`
+                        : 'Connect GitHub to chat with your repositories'}
+                    </p>
+                  </div>
+                  {githubStatus?.connected && (
+                    <span className="ml-auto flex items-center gap-1.5 np-mono text-[10px] font-bold uppercase tracking-widest px-3 py-1" style={{ backgroundColor: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#16A34A' }} />
+                      Active
+                    </span>
+                  )}
+                </div>
+
+                <GitHubConnectPanel
+                  status={githubStatus}
+                  onStatusChange={(s) => {
+                    setGitHubStatus(s)
+                    setGHStatus(s)
+                    if (s.connected) fetchGHRepos()
+                  }}
+                />
+
+                {/* Tip: repos are managed from the sidebar */}
+                {githubStatus?.connected && (
+                  <div className="mt-4 p-4 flex items-start gap-3" style={{ backgroundColor: '#F5F0E8', border: '1px solid #E5E5E0', borderLeft: '3px solid #CC0000' }}>
+                    <GitBranch className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#CC0000' }} strokeWidth={2} />
+                    <p className="np-body text-[12px] leading-[1.65]" style={{ color: '#3D3C3A' }}>
+                      GitHub is connected. Use the <strong>"Add a repository"</strong> button in the sidebar to import repos and start chatting with your code.
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </main>
     </div>
+    </>
   )
 }

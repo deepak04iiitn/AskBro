@@ -26,6 +26,8 @@ celery_app = Celery(
     include=[
         "workers.ingestion_worker",
         "workers.cleanup_worker",
+        "workers.github_ingestion_worker",
+        "workers.cleanup_github_worker",
     ],
 )
 

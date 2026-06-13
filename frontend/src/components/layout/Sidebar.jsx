@@ -7,12 +7,13 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   Plus, Upload, ChevronUp, Users, LogOut,
   ChevronLeft, ChevronRight, FileText, MessageSquare, Trash2,
-  DoorOpen, AlertTriangle, Puzzle, Home,
+  DoorOpen, AlertTriangle, Puzzle, Home, GitBranch,
 } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import useChatStore from '@/store/useChatStore'
 import useChatsStore from '@/store/useChatsStore'
+import useGitHubStore from '@/store/useGitHubStore'
 import { leaveWorkspace } from '@/lib/api'
 import { getNotionStatus } from '@/lib/integrationsApi'
 import { SCALE_IN } from '@/lib/animations'
@@ -46,8 +47,14 @@ export default function Sidebar() {
   const fetchChats = useChatsStore((s) => s.fetchChats)
   const deleteChat = useChatsStore((s) => s.deleteChat)
 
+  const githubRepos = useGitHubStore((s) => s.repos)
+  const fetchGitHubRepos = useGitHubStore((s) => s.fetchRepos)
+  const githubStatus = useGitHubStore((s) => s.status)
+  const fetchGitHubStatus = useGitHubStore((s) => s.fetchStatus)
+
   const [collapsed, setCollapsed] = useState(false)
   const [notionConnected, setNotionConnected] = useState(false)
+  const [reposExpanded, setReposExpanded] = useState(true)
   const [showMenu, setShowMenu] = useState(false)
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [leaveLoading, setLeaveLoading] = useState(false)
@@ -67,6 +74,8 @@ export default function Sidebar() {
     getNotionStatus()
       .then((s) => setNotionConnected(s.connected))
       .catch(() => {})
+    fetchGitHubStatus()
+    fetchGitHubRepos()
   }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -263,7 +272,7 @@ export default function Sidebar() {
         </div>
 
         {/* ── Scrollable body ───────────────────────────────────── */}
-        <div className="flex-1 overflow-hidden py-3 flex flex-col">
+        <div className="flex-1 overflow-hidden overflow-x-hidden py-3 flex flex-col">
 
           {/* Recent chats label */}
           {collapsed ? (
@@ -489,6 +498,99 @@ export default function Sidebar() {
             </div>
           )}
 
+          {/* ── GitHub Repos section ──────────────────────────── */}
+          {githubStatus?.connected && githubRepos.length > 0 && (
+            <>
+              {!collapsed && (
+                <div style={{ margin: '8px 16px 0', borderTop: '1px solid #E5E5E0' }} />
+              )}
+              {collapsed ? (
+                <div className="flex justify-center mb-2 mt-3">
+                  <GitBranch className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
+                </div>
+              ) : (
+                <button
+                  onClick={() => setReposExpanded((v) => !v)}
+                  className="w-full flex items-center justify-between px-4 mb-1 mt-3 cursor-pointer"
+                >
+                  <p className="np-mono text-[11px] font-bold uppercase tracking-widest" style={{ color: '#7A7874' }}>
+                    GitHub Repos
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="np-mono text-[10px] font-bold px-1.5 py-0.5" style={{ backgroundColor: '#111111', color: '#F9F9F7' }}>
+                      {githubRepos.length}
+                    </span>
+                    <motion.div animate={{ rotate: reposExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                      <ChevronUp className="w-3.5 h-3.5" style={{ color: '#AEABA6' }} strokeWidth={2} />
+                    </motion.div>
+                  </div>
+                </button>
+              )}
+
+              <AnimatePresence initial={false}>
+                {(reposExpanded || collapsed) && (
+                  <motion.div
+                    key="repo-list"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    <div className="space-y-px px-2 overflow-y-auto" style={{ maxHeight: 160 }}>
+                      {githubRepos.map((repo) => {
+                        const isReady   = repo.status === 'ready'
+                        const isFailed  = repo.status === 'failed'
+                        const isActive  = ['ingesting', 'syncing', 'pending'].includes(repo.status)
+                        const statusLabel = repo.status === 'ingesting' ? 'Indexing…'
+                          : repo.status === 'syncing' ? 'Syncing…'
+                          : repo.status === 'pending' ? 'Queued…'
+                          : null
+                        return (
+                          <div
+                            key={repo.repo_id}
+                            className="px-2.5 pt-2.5 pb-2 cursor-default transition-colors"
+                            style={{ justifyContent: collapsed ? 'center' : 'flex-start' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F5F2EB' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '' }}
+                            title={collapsed ? repo.full_name : undefined}
+                          >
+                            {/* Row */}
+                            <div className="flex items-center gap-2.5">
+                              <GitBranch
+                                className="w-3.5 h-3.5 shrink-0"
+                                style={{ color: isReady ? '#CC0000' : '#AEABA6' }}
+                                strokeWidth={1.8}
+                              />
+                              {!collapsed && (
+                                <>
+                                  <span className="flex-1 min-w-0 np-sans text-[12px] font-medium truncate" style={{ color: '#111111' }}>
+                                    {repo.repo_name}
+                                  </span>
+                                  {isReady && (
+                                    <span className="shrink-0 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#16A34A' }} />
+                                  )}
+                                  {isFailed && (
+                                    <span className="shrink-0 w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#DC2626' }} />
+                                  )}
+                                  {isActive && (
+                                    <span className="shrink-0 np-mono text-[9px] font-bold uppercase tracking-widest truncate max-w-[90px]" style={{ color: '#D97706' }}>
+                                      {repo.progress_step || statusLabel}
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </div>
+
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
+
           {/* Upload button */}
           <div style={{ padding: collapsed ? '12px 8px 0' : '16px 8px 0' }}>
             <Link
@@ -518,6 +620,38 @@ export default function Sidebar() {
               )}
             </Link>
           </div>
+
+          {/* Repositories button (only when GitHub connected) */}
+          {githubStatus?.connected && (
+            <div style={{ padding: '6px 8px 0' }}>
+              <Link
+                href="/repositories"
+                className="btn-outline-ink flex items-center gap-2.5 transition-all"
+                style={{
+                  padding: collapsed ? '10px' : '10px 14px',
+                  justifyContent: 'center',
+                  width: '100%',
+                  borderStyle: 'dashed',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#CC0000'
+                  e.currentTarget.style.color = '#CC0000'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#111111'
+                  e.currentTarget.style.color = '#111111'
+                }}
+                title={collapsed ? 'Repositories' : undefined}
+              >
+                <GitBranch className="w-4 h-4 shrink-0" strokeWidth={2} />
+                {!collapsed && (
+                  <motion.span animate={{ opacity: collapsed ? 0 : 1 }} transition={LABEL_TRANSITION}>
+                    Repositories
+                  </motion.span>
+                )}
+              </Link>
+            </div>
+          )}
 
           {/* Integrations link */}
           {!collapsed && <div style={{ margin: '16px 16px 0', borderTop: '1px solid #E5E5E0' }} />}
@@ -551,7 +685,7 @@ export default function Sidebar() {
             ) : (
               <Link
                 href="/integrations"
-                className="btn-outline-ink flex items-center gap-2.5 relative transition-all"
+                className="btn-ink flex items-center gap-2.5 relative transition-all"
                 style={{
                   padding: collapsed ? '10px' : '10px 14px',
                   justifyContent: 'center',
@@ -564,7 +698,7 @@ export default function Sidebar() {
                   {notionConnected && (
                     <span
                       className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                      style={{ backgroundColor: '#16A34A', border: '1.5px solid #F9F9F7' }}
+                      style={{ backgroundColor: '#16A34A', border: '1.5px solid #111111' }}
                     />
                   )}
                 </div>

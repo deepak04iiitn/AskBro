@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import Navbar from './Navbar'
 import ScrollAnimations from './ScrollAnimations'
-import { Share2, Code2, Globe } from 'lucide-react'
+import { Share2, Globe } from 'lucide-react'
 
 const footerSections = [
   {
@@ -43,9 +43,8 @@ const footerSections = [
 ]
 
 const socialLinks = [
-  { Icon: Share2, href: '#', label: 'Twitter / X' },
-  { Icon: Code2,  href: '#', label: 'GitHub' },
-  { Icon: Globe,  href: '#', label: 'LinkedIn' },
+  { Icon: Globe,  href: 'https://www.linkedin.com/in/deepak-kumar-yadav-a0653b248/', label: 'LinkedIn' },
+  { Icon: Share2, href: 'https://x.com/Deepak2003Yadav',                             label: 'Twitter / X' },
 ]
 
 export default function PublicLayout({ children }) {
@@ -73,16 +72,20 @@ export default function PublicLayout({ children }) {
                 <p className="np-body text-[14px] leading-relaxed mb-6" style={{ color: '#999' }}>
                   The AI workspace that turns your documents, GitHub repos, and study material into answers — instantly.
                 </p>
-                <div className="flex items-center gap-3">
-                  {socialLinks.map(({ Icon, href, label }) => (
-                    <a
-                      key={label}
-                      href={href}
-                      aria-label={label}
-                      className="w-9 h-9 flex items-center justify-center transition-all duration-150 hover:text-[#F9F9F7] hover:border-[#888]"
-                      style={{ border: '1px solid #444', color: '#888', borderRadius: 0 }}
-                    >
-                    <Icon className="w-4 h-4" strokeWidth={1.5} />
+                <p className="np-mono text-[9px] uppercase mb-3" style={{ letterSpacing: '0.2em', color: '#555' }}>Connect</p>
+              <div className="flex items-center gap-3">
+                {socialLinks.map(({ Icon, href, label }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    aria-label={label}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 px-3 py-2 transition-all duration-150 hover:text-[#F9F9F7] hover:border-[#888]"
+                    style={{ border: '1px solid #333', color: '#888', borderRadius: 0 }}
+                  >
+                    <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} />
+                    <span className="np-mono text-[9px] uppercase" style={{ letterSpacing: '0.1em' }}>{label}</span>
                   </a>
                 ))}
               </div>

@@ -96,3 +96,29 @@ export async function adminDeletePost(id) {
   if (!res.ok) throw new Error('Failed to delete post')
   return res.json()
 }
+
+// ── Testimonials admin ────────────────────────────────────────────────────────
+
+export async function adminFetchTestimonials() {
+  const res = await adminRequest('/testimonials/admin')
+  if (!res.ok) throw new Error('Failed to fetch testimonials')
+  return res.json()
+}
+
+export async function adminUpdateTestimonialStatus(id, status) {
+  const res = await adminRequest(`/testimonials/admin/${id}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || 'Failed to update status')
+  }
+  return res.json()
+}
+
+export async function adminDeleteTestimonial(id) {
+  const res = await adminRequest(`/testimonials/admin/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error('Failed to delete testimonial')
+  return res.json()
+}

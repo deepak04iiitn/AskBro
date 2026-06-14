@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Users, Building2, FileText,
-  Activity, LogOut, ChevronLeft, ChevronRight, ShieldCheck, BookOpen,
+  Activity, LogOut, ChevronLeft, ChevronRight, ShieldCheck, BookOpen, MessageSquare,
 } from 'lucide-react'
 import { fetchAdminMetrics } from '@/lib/adminApi'
 
@@ -19,7 +19,8 @@ const NAV_ITEMS = [
   { label: 'Workspaces',  href: '/admin/dashboard/workspaces', Icon: Building2       },
   { label: 'Documents',   href: '/admin/dashboard/documents',  Icon: FileText        },
   { label: 'Activity',    href: '/admin/dashboard/activity',   Icon: Activity        },
-  { label: 'Blog',        href: '/admin/dashboard/blog',       Icon: BookOpen        },
+  { label: 'Blog',         href: '/admin/dashboard/blog',         Icon: BookOpen        },
+  { label: 'Testimonials', href: '/admin/dashboard/testimonials', Icon: MessageSquare   },
 ]
 
 const LABEL_T = { duration: 0.1 }

@@ -1,3 +1,5 @@
+import { fireRateLimit, parseRetryAfter } from '@/lib/rateLimitEvent'
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 function getToken() {
@@ -16,6 +18,10 @@ async function authFetch(path, options = {}) {
   if (res.status === 401 && typeof window !== 'undefined') {
     window.location.href = '/login'
     throw new Error('Unauthorized')
+  }
+  if (res.status === 429) {
+    fireRateLimit(parseRetryAfter(res.headers.get('Retry-After')))
+    throw new Error('Rate limit exceeded. Please wait before trying again.')
   }
   return res
 }

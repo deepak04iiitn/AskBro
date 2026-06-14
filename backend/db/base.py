@@ -13,6 +13,7 @@ from models.github_integration import GitHubIntegration
 from models.github_repo import GitHubRepo
 from models.message import Message
 from models.notion_integration import NotionIntegration
+from models.testimonial import Testimonial
 from models.user import User
 from models.workspace import Workspace
 
@@ -28,4 +29,5 @@ DOCUMENT_MODELS = [
     GitHubIntegration,
     GitHubRepo,
     BlogPost,
+    Testimonial,
 ]

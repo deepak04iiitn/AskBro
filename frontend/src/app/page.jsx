@@ -7,6 +7,7 @@ import {
 import JsonLd from '@/components/seo/JsonLd'
 import PublicLayout from '@/components/seo/PublicLayout'
 import PersonaTabs from '@/components/seo/PersonaTabs'
+import TestimonialsSection from '@/components/seo/TestimonialsSection'
 
 export const metadata = {
   title: 'AskBro — AI Knowledge Base, Interview Prep, Quizzes & Flashcards',
@@ -25,10 +26,10 @@ const homepageJsonLd = [
 const features = [
   { icon: FileText,     title: 'Document Q&A',       sub: 'Chat with PDFs, docs and Markdown. Get page-level citations on every answer.',     href: '/features/document-qa',    tag: 'Popular' },
   { icon: BookMarked,   title: 'Notion Integration',  sub: 'Connect your Notion workspace and ask questions across all your pages and databases.', href: '/features/notion',   tag: 'New' },
-  { icon: GitBranch,    title: 'GitHub Repo Q&A',     sub: 'Paste any public repo URL. Understand entire codebases in seconds.',                href: '/features/github-repo' },
-  { icon: Target,       title: 'Interview Prep',      sub: 'AI coaching for technical rounds. Honest feedback so you can improve fast.',        href: '/features/interview-prep' },
-  { icon: BrainCircuit, title: 'AI Quizzes',          sub: 'Turn any document into an adaptive quiz. Test knowledge, not memory.',             href: '/features/quizzes' },
-  { icon: Layers,       title: 'Flashcards',          sub: 'Spaced-repetition decks auto-generated from your study material.',                 href: '/features/flashcards' },
+  { icon: GitBranch,    title: 'GitHub Repo Q&A',     sub: 'Connect your GitHub account and import any repository. Ask questions across the entire codebase with exact file citations.',                href: '/features/github-repo' },
+  { icon: Target,       title: 'Interview Prep',      sub: 'AI coaching for technical rounds. Honest feedback so you can improve fast.',        href: '/features/interview-prep', comingSoon: true },
+  { icon: BrainCircuit, title: 'AI Quizzes',          sub: 'Turn any document into an adaptive quiz. Test knowledge, not memory.',             href: '/features/quizzes',        comingSoon: true },
+  { icon: Layers,       title: 'Flashcards',          sub: 'Spaced-repetition decks auto-generated from your study material.',                 href: '/features/flashcards',     comingSoon: true },
 ]
 
 const steps = [
@@ -37,11 +38,6 @@ const steps = [
   { icon: MessageSquare, n: '03', title: 'Ask, Quiz, Prepare', body: 'Chat with your knowledge, generate quizzes, build flashcards, or start a live interview session.' },
 ]
 
-const testimonials = [
-  { quote: 'Cut my study time in half. The flashcard generation from my lecture notes is genuinely magic.', name: 'Sarah A.', role: 'CS Student, Univ. of Edinburgh', initials: 'SA', stars: 5 },
-  { quote: 'Onboarded 3 developers to a new codebase in 2 days. Previously that took two full weeks.', name: 'James M.', role: 'Engineering Lead', initials: 'JM', stars: 5 },
-  { quote: 'Landed my dream role after 2 weeks of interview prep with AskBro. The feedback is brutally honest.', name: 'Riya K.', role: 'Software Engineer', initials: 'RK', stars: 5 },
-]
 
 const stats = [
   { value: '2,400+', label: 'Active Workspaces' },
@@ -270,9 +266,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Grid: 5 cards — 3 top, 2 bottom */}
+          {/* Grid: 6 cards — 3 top, 3 bottom */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 border-l border-t border-[#111111]">
-            {features.map(({ icon: Icon, title, sub, href, tag }, i) => (
+            {features.map(({ icon: Icon, title, sub, href, tag, comingSoon }, i) => (
               <Link
                 key={title}
                 href={href}
@@ -287,11 +283,15 @@ export default function HomePage() {
                   >
                     <Icon className="w-5 h-5" strokeWidth={1.5} />
                   </div>
-                  {tag && (
+                  {comingSoon ? (
+                    <span className="np-mono text-[8px] font-bold uppercase px-2.5 py-1.5" style={{ background: '#F0EDE6', color: '#737373', border: '1px solid #D9D7D2', letterSpacing: '0.12em' }}>
+                      Coming Soon
+                    </span>
+                  ) : tag ? (
                     <span className="np-mono text-[8px] font-bold uppercase px-2.5 py-1.5" style={{ background: '#CC0000', color: '#F9F9F7', letterSpacing: '0.12em' }}>
                       {tag}
                     </span>
-                  )}
+                  ) : null}
                 </div>
                 <h3 className="np-serif font-bold text-[1.35rem] leading-tight mb-3" style={{ color: '#111111' }}>{title}</h3>
                 <p className="np-body text-[14px] leading-relaxed mb-8" style={{ color: '#525252' }}>{sub}</p>
@@ -383,67 +383,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Testimonials ─────────────────────────────────────── */}
-      <section className="mt-10" style={{ background: '#F9F9F7', borderBottom: '4px solid #111111' }}>
-        <div className="mx-auto max-w-screen-xl px-6 py-16 md:py-20">
-
-          {/* Section header — matches site-wide style */}
-          <div className="flex items-center gap-5 mb-14">
-            <span className="np-mono text-[9px] uppercase" style={{ letterSpacing: '0.2em', color: '#CC0000' }}>§ 04</span>
-            <h2 className="np-serif font-black" style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.8rem)', color: '#111111' }}>User Testimonials</h2>
-            <div className="flex-1 h-px bg-[#111111] hidden md:block" />
-          </div>
-
-          {/* Cards */}
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map(({ quote, name, role, initials, stars }, i) => (
-              <div
-                key={name}
-                data-animate="up" data-delay={String(i * 100)}
-                data-lift
-                className="flex flex-col p-8"
-                style={{
-                  background: '#fff',
-                  border: '1px solid #E5E5E0',
-                  boxShadow: i === 1 ? '0 8px 32px rgba(0,0,0,0.08)' : '0 2px 12px rgba(0,0,0,0.04)',
-                  transform: i === 1 ? 'translateY(-8px)' : 'none',
-                }}
-              >
-                {/* Stars */}
-                <div className="flex gap-1 mb-5">
-                  {Array.from({ length: stars }).map((_, s) => (
-                    <span key={s} style={{ color: '#CC0000', fontSize: '14px' }}>★</span>
-                  ))}
-                </div>
-
-                {/* Quote */}
-                <p className="np-body text-[15px] leading-relaxed flex-1 mb-7" style={{ color: '#404040' }}>
-                  "{quote}"
-                </p>
-
-                {/* Author */}
-                <div className="flex items-center gap-3 pt-5" style={{ borderTop: '1px solid #F0F0EE' }}>
-                  <div
-                    className="w-10 h-10 shrink-0 flex items-center justify-center np-sans text-[12px] font-bold"
-                    style={{ background: i === 1 ? '#CC0000' : '#111111', color: '#F9F9F7', borderRadius: 0 }}
-                  >
-                    {initials}
-                  </div>
-                  <div>
-                    <p className="np-sans text-[13px] font-semibold" style={{ color: '#111111' }}>{name}</p>
-                    <p className="np-mono text-[9px] uppercase mt-0.5" style={{ letterSpacing: '0.1em', color: '#A3A3A3' }}>{role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom trust line */}
-          <p className="text-center np-mono text-[10px] uppercase mt-12" style={{ letterSpacing: '0.15em', color: '#A3A3A3' }}>
-            Joining 2,400+ workspaces worldwide · Rated 4.9 ★
-          </p>
-
-        </div>
-      </section>
+      <TestimonialsSection />
 
       {/* ── CTA ──────────────────────────────────────────────── */}
       <section className="mt-10" style={{ background: '#F9F9F7', borderBottom: '4px solid #111111' }}>

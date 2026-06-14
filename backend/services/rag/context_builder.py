@@ -61,19 +61,26 @@ def _format_block(payload: dict) -> str:
 
 def build_context(
     hits: list[ScoredPoint],
-    top_n: int = 8,
-    relative_threshold: float = 0.80,
-    abs_min_score: float = 0.35,
-    citation_threshold: float = 0.92,
+    top_n: int = 10,
+    relative_threshold: float = 0.70,
+    abs_min_score: float = 0.20,
+    citation_threshold: float = 0.90,
 ) -> tuple[str, list[str]]:
     """
     Format the top-N Qdrant hits into a readable context block for the LLM.
 
-    Uses two separate thresholds:
-    - relative_threshold (0.80): loose — controls which chunks enter the LLM context.
-    - citation_threshold (0.92): tight — controls which documents are shown as citations.
-      Only documents with a chunk scoring ≥ best_score × 0.92 are cited, so citations
-      reflect where the answer actually came from rather than every searched file.
+    Threshold notes:
+    - relative_threshold (0.70): controls which chunks enter the LLM context
+      relative to the best-scoring hit. Lowered from 0.80 so that code chunks
+      (which naturally score lower than prose against natural-language queries)
+      are not silently dropped.
+    - abs_min_score (0.20): absolute floor. Lowered from 0.35 for the same
+      reason — code-to-query cosine similarity is typically 0.20–0.45.
+    - citation_threshold (0.90): tighter threshold for the UI citation panel;
+      only highly relevant sources appear there.
+
+    Fallback guarantee: if nothing passes the threshold (rare but possible),
+    we always surface the top-3 hits so the LLM has something to work with.
     """
     if not hits:
         return "", []
@@ -82,7 +89,12 @@ def build_context(
     min_score = max(best_score * relative_threshold, abs_min_score)
 
     selected = [h for h in hits if h.score >= min_score][:top_n]
-    if not selected and hits:
+
+    # Guarantee at least 3 chunks reach the LLM so it has enough material
+    # to produce a useful answer, even when scores are uniformly low.
+    if len(selected) < 3 and len(hits) >= 3:
+        selected = hits[:3]
+    elif not selected and hits:
         selected = hits[:1]
 
     context = "\n\n".join(_format_block(h.payload or {}) for h in selected)

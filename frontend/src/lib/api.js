@@ -1,4 +1,5 @@
 import { clearToken, getToken } from '@/lib/auth'
+import { fireRateLimit, parseRetryAfter } from '@/lib/rateLimitEvent'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -7,6 +8,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
  * - Prepends API_URL
  * - Injects Authorization header when a token exists
  * - On 401: clears token and redirects to /login
+ * - On 429: fires the rate-limit overlay event
  */
 async function request(path, options = {}) {
   const token = getToken()
@@ -25,6 +27,11 @@ async function request(path, options = {}) {
       window.location.href = '/login'
     }
     throw new Error('Unauthorized')
+  }
+
+  if (res.status === 429) {
+    fireRateLimit(parseRetryAfter(res.headers.get('Retry-After')))
+    throw new Error('Rate limit exceeded. Please wait before trying again.')
   }
 
   return res
@@ -121,6 +128,11 @@ export function uploadDocumentWithProgress(file, tags = [], onProgress) {
         clearToken()
         window.location.href = '/login'
         return reject(new Error('Unauthorized'))
+      }
+      if (xhr.status === 429) {
+        const retryAfter = xhr.getResponseHeader('Retry-After')
+        fireRateLimit(parseRetryAfter(retryAfter))
+        return reject(new Error('Rate limit exceeded. Please wait before trying again.'))
       }
       if (xhr.status >= 200 && xhr.status < 300) {
         try { resolve(JSON.parse(xhr.responseText)) }

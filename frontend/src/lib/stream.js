@@ -1,4 +1,5 @@
 import { clearToken, getToken } from '@/lib/auth'
+import { fireRateLimit, parseRetryAfter } from '@/lib/rateLimitEvent'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -35,6 +36,11 @@ export async function* streamChat(query, chatId, documentIds, source = 'all', re
     clearToken()
     window.location.href = '/login'
     return
+  }
+
+  if (res.status === 429) {
+    fireRateLimit(parseRetryAfter(res.headers.get('Retry-After')))
+    throw new Error('Rate limit exceeded. Please wait before trying again.')
   }
 
   if (!res.ok) {

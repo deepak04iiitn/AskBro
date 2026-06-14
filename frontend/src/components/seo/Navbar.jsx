@@ -13,9 +13,9 @@ const NAV_LINKS = [
     children: [
       { href: '/features/document-qa',    label: 'Document Q&A',    sub: 'Chat with PDFs & docs' },
       { href: '/features/github-repo',    label: 'GitHub Repo Q&A', sub: 'Understand any codebase' },
-      { href: '/features/interview-prep', label: 'Interview Prep',  sub: 'Ace technical interviews' },
-      { href: '/features/quizzes',        label: 'AI Quizzes',      sub: 'Generate quizzes from docs' },
-      { href: '/features/flashcards',     label: 'Flashcards',      sub: 'Spaced-repetition study' },
+      { href: '/features/interview-prep', label: 'Interview Prep',  sub: 'Ace technical interviews', comingSoon: true },
+      { href: '/features/quizzes',        label: 'AI Quizzes',      sub: 'Generate quizzes from docs', comingSoon: true },
+      { href: '/features/flashcards',     label: 'Flashcards',      sub: 'Spaced-repetition study',    comingSoon: true },
     ],
   },
   {
@@ -83,7 +83,14 @@ function DropdownMenu({ label, children }) {
               onClick={() => setOpen(false)}
               className="block px-4 py-2.5 border-b border-[#E5E5E0] last:border-b-0 transition-colors duration-150 hover:bg-[#111111] hover:text-[#F9F9F7] group"
             >
-              <span className="np-sans text-[11px] font-semibold uppercase tracking-widest block">{item.label}</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="np-sans text-[11px] font-semibold uppercase tracking-widest block">{item.label}</span>
+                {item.comingSoon && (
+                  <span className="np-mono text-[8px] font-bold uppercase shrink-0 px-1.5 py-0.5" style={{ background: '#F0EDE6', color: '#737373', border: '1px solid #D9D7D2', letterSpacing: '0.1em' }}>
+                    Soon
+                  </span>
+                )}
+              </div>
               {item.sub && (
                 <span className="np-body text-[11px] text-[#737373] group-hover:text-[#E5E5E0] block mt-0.5">{item.sub}</span>
               )}
@@ -249,10 +256,15 @@ export default function Navbar() {
                             key={child.href}
                             href={child.href}
                             onClick={() => { setMobileOpen(false); setMobileSection(null) }}
-                            className="block py-2.5 np-sans text-[11px] font-semibold uppercase tracking-widest hover:text-[#CC0000] transition-colors border-b border-[#E5E5E0] last:border-b-0"
+                            className="flex items-center justify-between py-2.5 np-sans text-[11px] font-semibold uppercase tracking-widest hover:text-[#CC0000] transition-colors border-b border-[#E5E5E0] last:border-b-0"
                             style={{ color: '#525252' }}
                           >
                             {child.label}
+                            {child.comingSoon && (
+                              <span className="np-mono text-[8px] font-bold uppercase px-1.5 py-0.5 ml-2" style={{ background: '#F0EDE6', color: '#737373', border: '1px solid #D9D7D2', letterSpacing: '0.1em' }}>
+                                Soon
+                              </span>
+                            )}
                           </Link>
                         ))}
                       </div>

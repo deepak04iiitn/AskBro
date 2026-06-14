@@ -1,5 +1,6 @@
 import './globals.css'
 import { Inter, JetBrains_Mono } from 'next/font/google'
+import RateLimitOverlay from '@/components/RateLimitOverlay'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -62,6 +63,7 @@ export default function RootLayout({ children }) {
         }}
       >
         {children}
+        <RateLimitOverlay />
       </body>
     </html>
   )

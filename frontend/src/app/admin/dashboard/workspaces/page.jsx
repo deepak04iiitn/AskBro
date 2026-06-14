@@ -3,9 +3,89 @@
 import { useMemo, useState } from 'react'
 import { useMetrics } from '../AdminDashboardShell'
 import { BarChart, Bar, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList, ReferenceLine } from 'recharts'
-import { Building2, Users, FileText } from 'lucide-react'
+import { Building2, Users, FileText, Trash2, Loader2, AlertTriangle } from 'lucide-react'
+import { adminDeleteWorkspace } from '@/lib/adminApi'
 
 const BAR_PALETTE = ['#CC0000','#111111','#16A34A','#D97706','#DC2626','#0EA5E9','#EC4899','#0D9488']
+
+// ── Confirm delete dialog ─────────────────────────────────────────────────────
+function ConfirmDeleteDialog({ workspace, onCancel, onConfirm, busy }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(17,17,17,0.6)', backdropFilter: 'blur(3px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget && !busy) onCancel() }}
+    >
+      <div
+        className="w-full max-w-sm"
+        style={{ background: '#F9F9F7', border: '3px solid #111111', boxShadow: '6px 6px 0 #111111' }}
+      >
+        {/* Header */}
+        <div className="px-5 py-3" style={{ background: '#111111', borderBottom: '2px solid #CC0000' }}>
+          <p className="np-mono text-[10px] tracking-widest uppercase" style={{ color: '#CC0000' }}>
+            ◆ Confirm Deletion
+          </p>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 py-5">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-9 h-9 shrink-0 flex items-center justify-center" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+              <AlertTriangle className="w-4 h-4" style={{ color: '#DC2626' }} strokeWidth={2} />
+            </div>
+            <div>
+              <p className="np-sans text-[13px] font-semibold mb-1" style={{ color: '#111111' }}>
+                Delete workspace <span style={{ color: '#CC0000' }}>"{workspace.name}"</span>?
+              </p>
+              <p className="np-body text-[12px]" style={{ color: '#737373' }}>
+                This is <strong style={{ color: '#111111' }}>irreversible</strong>. All members, documents, chats, messages, and integrations belonging to this workspace will be permanently deleted.
+              </p>
+            </div>
+          </div>
+
+          {/* Cascade summary */}
+          <div className="px-3 py-2.5" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+            <p className="np-mono text-[10px] uppercase tracking-widest mb-1.5" style={{ color: '#DC2626' }}>Will permanently delete:</p>
+            <ul className="space-y-0.5">
+              {[
+                `${workspace.member_count} member${workspace.member_count !== 1 ? 's' : ''}`,
+                `${workspace.document_count} document${workspace.document_count !== 1 ? 's' : ''}`,
+                `${workspace.chat_count} chat${workspace.chat_count !== 1 ? 's' : ''}`,
+                'All messages, chunks & vector embeddings',
+                'Notion & GitHub integrations',
+              ].map((item) => (
+                <li key={item} className="np-mono text-[10px] flex items-center gap-1.5" style={{ color: '#737373' }}>
+                  <span style={{ color: '#DC2626' }}>×</span> {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 px-5 py-3" style={{ borderTop: '1px solid #E5E5E0' }}>
+          <button
+            onClick={onCancel}
+            disabled={busy}
+            className="px-4 py-2 np-mono text-[11px] font-bold uppercase tracking-widest cursor-pointer disabled:opacity-40"
+            style={{ border: '1px solid #E5E5E0', color: '#737373' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={busy}
+            className="px-4 py-2 np-mono text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            style={{ background: '#CC0000', color: '#F9F9F7', border: '1px solid #CC0000' }}
+          >
+            {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+            {busy ? 'Deleting…' : 'Delete Everything'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function formatBytes(b) {
   if (!b) return '0 B'
@@ -61,7 +141,24 @@ function StatCard({ Icon, iconBg, iconColor, label, value }) {
 }
 
 export default function WorkspacesPage() {
-  const { metrics, loading } = useMetrics()
+  const { metrics, loading, refetch } = useMetrics()
+  const [confirmWs, setConfirmWs]     = useState(null)
+  const [deleting, setDeleting]       = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
+  async function handleDeleteConfirm() {
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await adminDeleteWorkspace(confirmWs.id)
+      setConfirmWs(null)
+      await refetch()
+    } catch (err) {
+      setDeleteError(err.message)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const avgMembers = useMemo(() => {
     if (!metrics?.workspaces.length) return 0
@@ -169,7 +266,7 @@ export default function WorkspacesPage() {
           <table className="w-full text-[13px]">
             <thead>
               <tr style={{ backgroundColor: '#F0EDE6', borderBottom: '1px solid #E5E5E0' }}>
-                {['Workspace','Code','Owner','Members','Documents','Storage','Chats','Created'].map((h) => (
+                {['Workspace','Code','Owner','Members','Documents','Storage','Chats','Created','Actions'].map((h) => (
                   <th key={h} className="text-left px-5 py-3 np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>{h}</th>
                 ))}
               </tr>
@@ -189,6 +286,18 @@ export default function WorkspacesPage() {
                   <td className="px-5 py-3.5 np-mono text-[12px]" style={{ color: '#737373' }}>{formatBytes(w.total_size_bytes)}</td>
                   <td className="px-5 py-3.5 text-center np-mono font-bold" style={{ color: '#111111' }}>{w.chat_count}</td>
                   <td className="px-5 py-3.5 np-mono text-[12px]" style={{ color: '#AEABA6' }}>{new Date(w.created_at).toLocaleDateString()}</td>
+                  <td className="px-5 py-3.5">
+                    <button
+                      onClick={() => { setDeleteError(''); setConfirmWs(w) }}
+                      className="w-7 h-7 flex items-center justify-center cursor-pointer transition-colors"
+                      style={{ border: '1px solid #FECACA', color: '#DC2626' }}
+                      title={`Delete workspace ${w.name}`}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#FEF2F2' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -206,8 +315,25 @@ export default function WorkspacesPage() {
           </div>
         </div>
       </div>
+      {confirmWs && (
+        <ConfirmDeleteDialog
+          workspace={confirmWs}
+          busy={deleting}
+          onCancel={() => setConfirmWs(null)}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
+
+      {deleteError && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-3"
+          style={{ background: '#111111', border: '2px solid #CC0000', zIndex: 60, minWidth: 320 }}
+        >
+          <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: '#CC0000' }} strokeWidth={2} />
+          <p className="np-sans text-[13px]" style={{ color: '#F9F9F7' }}>{deleteError}</p>
+          <button onClick={() => setDeleteError('')} className="ml-auto np-mono text-[10px] uppercase" style={{ color: '#737373' }}>✕</button>
+        </div>
+      )}
     </div>
   )
 }
-
-

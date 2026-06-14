@@ -1,7 +1,10 @@
+import asyncio
+
 from fastapi import HTTPException
 
 from models.testimonial import Testimonial
 from schemas.testimonial import TestimonialAdminItem, TestimonialPublic, TestimonialStatusUpdate, TestimonialSubmit
+from services.email.resend_client import send_new_testimonial_email
 
 
 def _initials(name: str) -> str:
@@ -48,6 +51,17 @@ async def submit_testimonial(data: TestimonialSubmit) -> dict:
         status="pending",
     )
     await doc.insert()
+
+    # Fire-and-forget — don't delay the HTTP response if email is slow / fails
+    asyncio.create_task(
+        send_new_testimonial_email(
+            name=data.name,
+            role=data.role,
+            quote=data.quote,
+            stars=data.stars,
+        )
+    )
+
     return {"message": "Thank you! Your testimonial has been submitted and will appear after review."}
 
 

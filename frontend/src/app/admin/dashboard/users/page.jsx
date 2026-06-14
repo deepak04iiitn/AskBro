@@ -6,9 +6,72 @@ import {
   BarChart, Bar, Cell, PieChart, Pie,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LabelList,
 } from 'recharts'
-import { Users, Crown, UserCheck, ChevronUp, ChevronDown } from 'lucide-react'
+import { Users, Crown, UserCheck, ChevronUp, ChevronDown, Trash2, Loader2, AlertTriangle } from 'lucide-react'
+import { adminDeleteUser } from '@/lib/adminApi'
 
 const BAR_PALETTE = ['#CC0000','#111111','#16A34A','#D97706','#DC2626','#0EA5E9','#EC4899','#0D9488']
+
+// ── Confirm delete dialog ─────────────────────────────────────────────────────
+function ConfirmDeleteDialog({ user, onCancel, onConfirm, busy }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ backgroundColor: 'rgba(17,17,17,0.6)', backdropFilter: 'blur(3px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget && !busy) onCancel() }}
+    >
+      <div
+        className="w-full max-w-sm"
+        style={{ background: '#F9F9F7', border: '3px solid #111111', boxShadow: '6px 6px 0 #111111' }}
+      >
+        {/* Header */}
+        <div className="px-5 py-3" style={{ background: '#111111', borderBottom: '2px solid #CC0000' }}>
+          <p className="np-mono text-[10px] tracking-widest uppercase" style={{ color: '#CC0000' }}>
+            ◆ Confirm Deletion
+          </p>
+        </div>
+
+        {/* Body */}
+        <div className="px-5 py-5">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-9 h-9 shrink-0 flex items-center justify-center" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+              <AlertTriangle className="w-4 h-4" style={{ color: '#DC2626' }} strokeWidth={2} />
+            </div>
+            <div>
+              <p className="np-sans text-[13px] font-semibold mb-1" style={{ color: '#111111' }}>
+                Delete this user?
+              </p>
+              <p className="np-body text-[12px]" style={{ color: '#737373' }}>
+                <span className="font-semibold" style={{ color: '#111111' }}>{user.email}</span>
+                {' '}will be permanently removed. Their workspace remains intact.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 px-5 py-3" style={{ borderTop: '1px solid #E5E5E0' }}>
+          <button
+            onClick={onCancel}
+            disabled={busy}
+            className="px-4 py-2 np-mono text-[11px] font-bold uppercase tracking-widest cursor-pointer disabled:opacity-40"
+            style={{ border: '1px solid #E5E5E0', color: '#737373' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={busy}
+            className="px-4 py-2 np-mono text-[11px] font-bold uppercase tracking-widest flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            style={{ background: '#CC0000', color: '#F9F9F7', border: '1px solid #CC0000' }}
+          >
+            {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+            {busy ? 'Deleting…' : 'Delete User'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 const SortAsc  = () => <ChevronUp   style={{ width:12, height:12, display:'inline', marginLeft:4 }} strokeWidth={2.5} />
 const SortDesc = () => <ChevronDown style={{ width:12, height:12, display:'inline', marginLeft:4 }} strokeWidth={2.5} />
 const PAGE_SZ = 10
@@ -62,12 +125,29 @@ function StatCard({ Icon, iconBg, iconColor, label, value }) {
 }
 
 export default function UsersPage() {
-  const { metrics, loading } = useMetrics()
+  const { metrics, loading, refetch } = useMetrics()
   const [search, setSearch]           = useState('')
   const [roleFilter, setRoleFilter]   = useState('all')
   const [sortKey, setSortKey]         = useState('created_at')
   const [sortDir, setSortDir]         = useState('desc')
   const [page, setPage]               = useState(1)
+  const [confirmUser, setConfirmUser] = useState(null)   // user object being confirmed
+  const [deleting, setDeleting]       = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
+  async function handleDeleteConfirm() {
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      await adminDeleteUser(confirmUser.id)
+      setConfirmUser(null)
+      await refetch()
+    } catch (err) {
+      setDeleteError(err.message)
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   const filtered = useMemo(() => {
     if (!metrics) return []
@@ -211,6 +291,7 @@ export default function UsersPage() {
                     {l}{sortKey === k && (sortDir.length === 3 ? <SortAsc /> : <SortDesc />)}
                   </th>
                 ))}
+                <th className="text-left px-5 py-3 np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -228,6 +309,18 @@ export default function UsersPage() {
                   <td className="px-5 py-3.5 np-body" style={{ color: '#4A4845' }}>{u.workspace_name}</td>
                   <td className="px-5 py-3.5"><span className="np-mono text-[11px] px-2 py-0.5" style={{ backgroundColor: '#F0EDE6', color: '#111111' }}>{u.workspace_code}</span></td>
                   <td className="px-5 py-3.5 np-mono text-[12px]" style={{ color: '#737373' }}>{new Date(u.created_at).toLocaleDateString()}</td>
+                  <td className="px-5 py-3.5">
+                    <button
+                      onClick={() => { setDeleteError(''); setConfirmUser(u) }}
+                      className="w-7 h-7 flex items-center justify-center cursor-pointer transition-colors"
+                      style={{ border: '1px solid #FECACA', color: '#DC2626' }}
+                      title={`Delete ${u.email}`}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#FEF2F2' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" strokeWidth={2} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -245,8 +338,25 @@ export default function UsersPage() {
           </div>
         </div>
       </div>
+      {confirmUser && (
+        <ConfirmDeleteDialog
+          user={confirmUser}
+          busy={deleting}
+          onCancel={() => setConfirmUser(null)}
+          onConfirm={handleDeleteConfirm}
+        />
+      )}
+
+      {deleteError && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-3"
+          style={{ background: '#111111', border: '2px solid #CC0000', zIndex: 60, minWidth: 320 }}
+        >
+          <AlertTriangle className="w-4 h-4 shrink-0" style={{ color: '#CC0000' }} strokeWidth={2} />
+          <p className="np-sans text-[13px]" style={{ color: '#F9F9F7' }}>{deleteError}</p>
+          <button onClick={() => setDeleteError('')} className="ml-auto np-mono text-[10px] uppercase" style={{ color: '#737373' }}>✕</button>
+        </div>
+      )}
     </div>
   )
 }
-
-

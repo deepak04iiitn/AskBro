@@ -122,3 +122,23 @@ export async function adminDeleteTestimonial(id) {
   if (!res.ok) throw new Error('Failed to delete testimonial')
   return res.json()
 }
+
+// ── User / Workspace deletion ─────────────────────────────────────────────────
+
+export async function adminDeleteUser(id) {
+  const res = await adminRequest(`/admin/users/${id}`, { method: 'DELETE' })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || 'Failed to delete user')
+  }
+  return res.json()
+}
+
+export async function adminDeleteWorkspace(id) {
+  const res = await adminRequest(`/admin/workspaces/${id}`, { method: 'DELETE' })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.detail || 'Failed to delete workspace')
+  }
+  return res.json()
+}

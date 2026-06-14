@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  BookOpen, FileSearch, GitCompare, ListChecks,
+  BookOpen, FileSearch, ListChecks,
   ArrowUpRight, X, FileX, Puzzle,
 } from 'lucide-react'
 import { streamChat } from '@/lib/stream'
@@ -17,13 +17,52 @@ import MessageBubble, { buildSourceId } from './MessageBubble'
 import ChatInput from './ChatInput'
 import { PANEL_SLIDE } from '@/lib/animations'
 
+// Cleans raw PDF-extracted chunk text for readable display
+function cleanExcerpt(raw, maxChars = 480) {
+  if (!raw) return ''
+  let text = raw
+    // Strip PDF glyph/icon artifacts (symbols that replace icons in extracted text)
+    .replace(/[♂♀⌢⌣→←↑↓·•◦▪▫▸▹►◄◀★☆○●◆◇■□▲△▼▽⊕⊗]/g, ' ')
+    // Strip icon label tokens merged into contact info (phone, envelope, globe, github, linkedin…)
+    .replace(/\b(phone|envel|gl\w{0,4}be|github|linkedin|twitter|instagram)\b/gi, ' ')
+    // Remove URL path fragments like /deepak/github or /portfolio/deepak
+    .replace(/\/[a-z0-9_%-]+(\/[a-z0-9_%-]+)*/gi, ' ')
+    // Fix PDF split capital: "T echnology" → "Technology"
+    .replace(/\b([A-Z])\s+(?=[a-z]{2,})/g, '$1')
+    // Insert space at merged word boundaries ("NagpurNov" → "Nagpur Nov")
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    // Collapse tabs and multiple spaces
+    .replace(/[ \t]+/g, ' ')
+    // Normalize line endings
+    .replace(/\r\n/g, '\n')
+    // Collapse 3+ newlines into paragraph break
+    .replace(/\n{3,}/g, '\n\n')
+    // Mid-sentence PDF line-wrap: lowercase–newline–lowercase → space
+    .replace(/([a-z,;:])\n([a-z])/g, '$1 $2')
+    // Clean up leftover stray punctuation runs
+    .replace(/\s+([.,;:])/g, '$1')
+    .replace(/([/\\])\s+/g, ' ')
+    .trim()
+
+  if (text.length <= maxChars) return text
+
+  const truncated = text.slice(0, maxChars)
+  const lastStop = Math.max(
+    truncated.lastIndexOf('. '),
+    truncated.lastIndexOf('.\n'),
+    truncated.lastIndexOf('! '),
+    truncated.lastIndexOf('? '),
+  )
+  return (lastStop > maxChars * 0.55 ? truncated.slice(0, lastStop + 1) : truncated) + '…'
+}
+
 const SUGGESTIONS = [
   {
     Icon: BookOpen,
     label: 'Summarise',
     example: 'Summarize the key points from the latest report.',
-    iconColor: '#4361EE',
-    iconBg: '#EEF1FD',
+    iconColor: '#CC0000',
+    iconBg: '#FEF2F2',
   },
   {
     Icon: FileSearch,
@@ -43,8 +82,8 @@ const SUGGESTIONS = [
     Icon: ListChecks,
     label: 'Action items',
     example: 'List all action items from the meeting notes.',
-    iconColor: '#7C3AED',
-    iconBg: '#F5F3FF',
+    iconColor: '#111111',
+    iconBg: '#F5F0E8',
   },
 ]
 
@@ -63,36 +102,24 @@ function EmptyState({ readyCount, onSuggest }) {
 
       {/* Heading */}
       <h2
-        className="font-bold tracking-[-0.02em] mb-2"
-        style={{ fontSize: '30px', color: '#111110' }}
+        className="np-serif font-black tracking-tight mb-2"
+        style={{ fontSize: '30px', color: '#111111', lineHeight: 0.95 }}
       >
         What would you like to know?
       </h2>
       {readyCount === 0 && (
-        <p className="text-[14px] leading-relaxed max-w-sm" style={{ color: '#7A7874' }}>
+        <p className="np-body text-[14px] leading-relaxed max-w-sm mt-3" style={{ color: '#737373' }}>
           Upload a document or connect Notion to start asking questions.
         </p>
       )}
 
       {readyCount === 0 && (
-        <div className="flex items-center gap-2 mt-5">
-          <Link
-            href="/upload"
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl transition-colors"
-            style={{ backgroundColor: '#EEF1FD', color: '#4361EE', border: '1px solid #C7D2FE' }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DDE7FC' }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#EEF1FD' }}
-          >
+        <div className="flex items-center gap-3 mt-6">
+          <Link href="/upload" className="btn-ink inline-flex items-center gap-1.5 px-5 h-10">
             Upload a document
             <ArrowUpRight className="w-3.5 h-3.5" strokeWidth={2.5} />
           </Link>
-          <Link
-            href="/integrations"
-            className="inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-2 rounded-xl transition-colors"
-            style={{ backgroundColor: 'white', color: '#4A4845', border: '1px solid #E3E1DC' }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
-            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'white' }}
-          >
+          <Link href="/integrations" className="btn-outline-ink inline-flex items-center gap-1.5 px-5 h-10">
             <Puzzle className="w-3.5 h-3.5" strokeWidth={2} />
             Connect Notion
           </Link>
@@ -104,7 +131,7 @@ function EmptyState({ readyCount, onSuggest }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
-          className="grid grid-cols-2 gap-3 w-full max-w-[700px] mt-6"
+          className="grid grid-cols-2 gap-3 w-full max-w-[700px] mt-8"
         >
           {SUGGESTIONS.map(({ Icon, label, example, iconColor, iconBg }, i) => (
             <motion.button
@@ -113,32 +140,22 @@ function EmptyState({ readyCount, onSuggest }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.15 + i * 0.06 }}
               onClick={() => onSuggest(example)}
-              className="text-left cursor-pointer rounded-2xl p-5 bg-white transition-all"
-              style={{ border: '1.5px solid #E3E1DC', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.boxShadow = '0 8px 28px rgba(0,0,0,0.09)'
-                e.currentTarget.style.borderColor = iconColor
-                e.currentTarget.style.transform = 'translateY(-2px)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)'
-                e.currentTarget.style.borderColor = '#E3E1DC'
-                e.currentTarget.style.transform = ''
-              }}
+              className="text-left cursor-pointer p-5 bg-white transition-all hard-shadow-hover"
+              style={{ border: '1px solid #111111' }}
             >
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center mb-3"
-                style={{ backgroundColor: iconBg }}
+                className="w-10 h-10 flex items-center justify-center mb-3"
+                style={{ backgroundColor: iconBg, border: '1px solid #E5E5E0' }}
               >
                 <Icon className="w-5 h-5" style={{ color: iconColor }} strokeWidth={1.8} />
               </div>
               <p
-                className="text-[10px] font-bold uppercase tracking-widest mb-2"
-                style={{ color: '#AEABA6' }}
+                className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] mb-2"
+                style={{ color: '#CC0000' }}
               >
                 {label}
               </p>
-              <p className="text-[13px] leading-[1.65]" style={{ color: '#4A4845' }}>
+              <p className="np-body text-[13px] leading-[1.65]" style={{ color: '#4A4845' }}>
                 "{example}"
               </p>
             </motion.button>
@@ -173,32 +190,28 @@ export default function ChatWindow({ chatId }) {
 
   const readyCount = documents.filter((d) => d.status === 'completed').length
 
-  // Load messages when navigating to an existing chat
   useEffect(() => {
     if (!chatId) return
-    // Only fetch if we're switching to a different chat
     if (storeChatId === chatId) return
     setChatId(chatId)
     getChatMessages(chatId)
       .then((msgs) => loadMessages(msgs))
-      .catch(() => {/* silently ignore — chat may be empty or invalid */})
+      .catch(() => {})
   }, [chatId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  async function handleSend(query, docIds) {
+  async function handleSend(query, docIds, source, repoIds) {
     if (streaming) return
 
-    // Resolve the chat ID — create one if this is a new chat
     let activeChatId = chatId || storeChatId
     if (!activeChatId) {
       try {
         const newChat = await createNewChat()
         activeChatId = newChat.id
         setChatId(activeChatId)
-        // Navigate to the new chat URL (push so back button works)
         router.push(`/dashboard/${activeChatId}`)
       } catch {
         appendToken('\n\n⚠ Could not create chat session. Please try again.')
@@ -211,7 +224,7 @@ export default function ChatWindow({ chatId }) {
     setStreaming(true)
 
     try {
-      for await (const event of streamChat(query, activeChatId, docIds)) {
+      for await (const event of streamChat(query, activeChatId, docIds, source, repoIds)) {
         if (event.error) appendToken('\n\n⚠ ' + event.error)
         else if (event.done && event.citations !== undefined) setCitations(event.citations)
         else if (event.token) appendToken(event.token)
@@ -220,11 +233,8 @@ export default function ChatWindow({ chatId }) {
       appendToken('\n\n⚠ Something went wrong. Please try again.')
       setCitations([])
     } finally {
-      // Move chat to top of sidebar list
       bumpChat(activeChatId)
-      // Update title in sidebar from first message
       if (messages.length === 0) {
-        // first message — the backend auto-sets the title, sync it
         updateChatTitle(activeChatId, query.slice(0, 60) + (query.length > 60 ? '…' : ''))
       }
     }
@@ -236,7 +246,7 @@ export default function ChatWindow({ chatId }) {
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ backgroundColor: '#F7F5F2' }}>
+    <div className="flex flex-col h-full" style={{ backgroundColor: '#F9F9F7' }}>
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Chat column ─────────────────────────────────────── */}
@@ -266,79 +276,81 @@ export default function ChatWindow({ chatId }) {
           {activeSource && (
             <motion.div
               {...PANEL_SLIDE}
-              className="w-[320px] shrink-0 flex flex-col overflow-hidden"
-              style={{ backgroundColor: '#FFFFFF', borderLeft: '1px solid #E3E1DC' }}
+              className="w-[340px] shrink-0 flex flex-col overflow-hidden"
+              style={{ backgroundColor: '#F9F9F7', borderLeft: '2px solid #111111' }}
             >
               {/* Header */}
               <div
-                className="px-5 py-4 shrink-0 flex items-start justify-between gap-3"
-                style={{ borderBottom: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}
+                className="px-6 pt-5 pb-4 shrink-0"
+                style={{ borderBottom: '1px solid #E5E5E0' }}
               >
-                <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: '#AEABA6' }}>
-                    Source
-                  </p>
-                  <p className="text-[13px] font-semibold truncate" style={{ color: '#111110' }}>
-                    {activeSource.fileName}
-                  </p>
-                  {activeSource.pageNumber != null && (
-                    <p className="text-[11px] mt-0.5" style={{ color: '#7A7874' }}>
-                      Page {activeSource.pageNumber}
-                    </p>
-                  )}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <span
+                    className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] px-2 py-1"
+                    style={{ backgroundColor: '#CC0000', color: '#F9F9F7' }}
+                  >
+                    ★ Source
+                  </span>
+                  <button
+                    onClick={() => setActiveSource(null)}
+                    className="w-7 h-7 flex items-center justify-center cursor-pointer transition-colors shrink-0"
+                    style={{ color: '#AEABA6' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#E5E5E0'; e.currentTarget.style.color = '#111111' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = ''; e.currentTarget.style.color = '#AEABA6' }}
+                  >
+                    <X className="w-4 h-4" strokeWidth={2.5} />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setActiveSource(null)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors shrink-0 mt-0.5"
-                  style={{ color: '#AEABA6' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#E3E1DC'
-                    e.currentTarget.style.color = '#3D3C3A'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = ''
-                    e.currentTarget.style.color = '#AEABA6'
-                  }}
-                >
-                  <X className="w-4 h-4" strokeWidth={2.5} />
-                </button>
+                <p className="np-sans text-[14px] font-bold leading-snug" style={{ color: '#111111' }}>
+                  {activeSource.fileName}
+                </p>
+                {activeSource.pageNumber != null && (
+                  <p className="np-mono text-[10px] mt-1.5 uppercase tracking-widest" style={{ color: '#AEABA6' }}>
+                    Page {activeSource.pageNumber}
+                  </p>
+                )}
               </div>
 
               {/* Excerpt */}
-              <div className="flex-1 overflow-y-auto px-5 py-5">
-                <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: '#AEABA6' }}>
+              <div
+                className="flex-1 px-6 py-5"
+                style={{ overflowY: 'auto', overflowX: 'hidden' }}
+              >
+                <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] mb-4" style={{ color: '#AEABA6' }}>
                   Relevant excerpt
                 </p>
-                {activeSource.chunkPreview ? (
-                  <div
-                    className="rounded-xl px-4 py-4"
-                    style={{ backgroundColor: '#FEFCE8', borderLeft: '3px solid #D97706' }}
-                  >
-                    <p className="text-[13px] leading-[1.75]" style={{ color: '#3D3C3A' }}>
-                      {activeSource.chunkPreview}
-                    </p>
-                  </div>
-                ) : (
+
+                {activeSource.chunkPreview ? (() => {
+                  const paras = cleanExcerpt(activeSource.chunkPreview).split('\n\n').filter(Boolean)
+                  return (
+                    <div className="space-y-4" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                      {paras.map((para, i) => (
+                        <p
+                          key={i}
+                          className="np-body text-[13.5px] leading-[1.8]"
+                          style={{ color: '#3D3C3A' }}
+                        >
+                          {para.trim()}
+                        </p>
+                      ))}
+                    </div>
+                  )
+                })() : (
                   <div className="flex flex-col items-center justify-center py-10 text-center">
                     <FileX className="w-8 h-8 mb-3" style={{ color: '#D9D7D2' }} strokeWidth={1.5} />
-                    <p className="text-[12px]" style={{ color: '#AEABA6' }}>No preview available.</p>
+                    <p className="np-mono text-[12px]" style={{ color: '#AEABA6' }}>No preview available.</p>
                   </div>
                 )}
               </div>
 
               {/* Footer */}
               <div
-                className="px-5 py-3 shrink-0 flex items-center justify-between"
-                style={{ borderTop: '1px solid #E3E1DC', backgroundColor: '#F7F5F2' }}
+                className="px-6 py-3 shrink-0"
+                style={{ borderTop: '1px solid #E5E5E0' }}
               >
-                <span className="text-[11px] font-medium" style={{ color: '#7A7874' }}>Source</span>
-                <Link
-                  href="/upload"
-                  className="text-[12px] font-semibold hover:underline"
-                  style={{ color: '#4361EE' }}
-                >
-                  View all →
-                </Link>
+                <span className="np-mono text-[10px] uppercase tracking-widest" style={{ color: '#AEABA6' }}>
+                  {activeSource.pageNumber != null ? `p. ${activeSource.pageNumber}` : 'excerpt'}
+                </span>
               </div>
             </motion.div>
           )}

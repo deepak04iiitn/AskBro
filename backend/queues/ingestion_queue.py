@@ -31,6 +31,8 @@ def configure_queues(app: Celery) -> None:
     app.conf.task_default_exchange = "askbro"
     app.conf.task_default_routing_key = "ingestion"
     app.conf.task_routes = {
-        "workers.ingestion_worker.ingest_document": {"queue": "ingestion"},
-        "workers.cleanup_worker.cleanup_document":  {"queue": "cleanup"},
+        "workers.ingestion_worker.ingest_document":                 {"queue": "ingestion"},
+        "workers.cleanup_worker.cleanup_document":                  {"queue": "cleanup"},
+        "workers.github_ingestion_worker.ingest_github_repo":       {"queue": "ingestion"},
+        "workers.cleanup_github_worker.cleanup_github_repo":        {"queue": "cleanup"},
     }

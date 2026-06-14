@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
 import Sidebar from '@/components/layout/Sidebar'
+import WorkspaceCodeModal from '@/components/workspace/WorkspaceCodeModal'
+
+const CODE_SEEN_KEY = 'askbro_ws_code_seen'
 
 export default function DashboardShell({ children }) {
   const router = useRouter()
@@ -12,6 +15,7 @@ export default function DashboardShell({ children }) {
   const user = useAuthStore((s) => s.user)
   const fetchDocuments = useDocumentStore((s) => s.fetchDocuments)
   const [hydrated, setHydrated] = useState(false)
+  const [showCodeModal, setShowCodeModal] = useState(false)
 
   useEffect(() => { hydrate(); setHydrated(true) }, [hydrate])
 
@@ -19,18 +23,38 @@ export default function DashboardShell({ children }) {
     if (!hydrated) return
     if (!user) { router.replace('/login'); return }
     fetchDocuments()
+
+    // Show the workspace code modal once per user (keyed by user id)
+    const seenKey = `${CODE_SEEN_KEY}_${user.id}`
+    if (!localStorage.getItem(seenKey)) {
+      setShowCodeModal(true)
+    }
   }, [hydrated, user, router, fetchDocuments])
+
+  function handleCloseCodeModal() {
+    if (user?.id) {
+      localStorage.setItem(`${CODE_SEEN_KEY}_${user.id}`, '1')
+    }
+    setShowCodeModal(false)
+  }
 
   if (!hydrated || !user) return null
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F7F5F2' }}>
+    <div className="newsprint-bg flex h-screen overflow-hidden" style={{ backgroundColor: '#F9F9F7' }}>
       <div className="hidden md:flex">
         <Sidebar />
       </div>
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {children}
       </main>
+
+      {showCodeModal && (
+        <WorkspaceCodeModal
+          user={user}
+          onClose={handleCloseCodeModal}
+        />
+      )}
     </div>
   )
 }

@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Lock, Mail, KeyRound, ArrowRight, Eye, EyeOff } from 'lucide-react'
+import { Lock, Mail, KeyRound, ArrowRight, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { adminLogin, adminVerifyOtp } from '@/lib/adminApi'
 
-const DOT_BG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='2' cy='2' r='1.2' fill='%23D9D7D2' opacity='0.7'/%3E%3C/svg%3E")`
 
 export default function AdminLoginPage() {
   const router = useRouter()
-  const [step, setStep] = useState('credentials') // 'credentials' | 'otp'
+  const [step, setStep] = useState('credentials')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [otp, setOtp] = useState('')
@@ -56,43 +55,24 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
-      style={{ backgroundColor: '#F7F5F2', backgroundImage: DOT_BG }}
-    >
-      <div
-        className="w-full max-w-[600px] bg-white rounded-3xl overflow-hidden"
-        style={{ boxShadow: '0 24px 60px rgba(0,0,0,0.10), 0 6px 16px rgba(0,0,0,0.06)' }}
-      >
-        {/* Logo header */}
-        <div
-          className="flex justify-center px-12 py-10"
-          style={{ backgroundColor: '#EEF1FD', borderBottom: '1px solid #DDE3F8' }}
-        >
-          <img
-            src="/AskBro_Logo.png"
-            alt="AskBro"
-            className="h-20 w-auto mix-blend-multiply"
-          />
+    <div className="newsprint-bg flex flex-col items-center justify-center px-4 py-16">
+
+      {/* Card */}
+      <div className="w-full max-w-[680px] border border-[#111111]" style={{ background: '#F9F9F7', boxShadow: '4px 4px 0px 0px #111111' }}>
+
+        {/* Masthead header */}
+        <div className="flex items-center justify-center gap-3 px-8 py-6 border-b border-[#111111]" style={{ background: '#111111' }}>
+          <ShieldCheck className="w-5 h-5" style={{ color: '#CC0000' }} strokeWidth={1.5} />
+          <span className="np-serif font-black text-[1.4rem] leading-none" style={{ color: '#F9F9F7' }}>Admin Access</span>
         </div>
 
         {/* Form body */}
         <div className="px-10 py-8">
-          <div className="flex items-center gap-2 mb-1">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: '#EEF1FD' }}
-            >
-              <Lock className="w-3.5 h-3.5" style={{ color: '#4361EE' }} strokeWidth={2} />
-            </div>
-            <h2
-              className="font-bold tracking-[-0.02em]"
-              style={{ fontSize: '20px', color: '#111110' }}
-            >
-              Admin Access
-            </h2>
-          </div>
-          <p className="text-[13px] mb-7" style={{ color: '#6B6865' }}>
+          <p className="np-mono text-[9px] uppercase tracking-[0.2em] mb-4" style={{ color: '#CC0000' }}>★ Restricted Area</p>
+          <h2 className="np-serif font-black mb-2" style={{ fontSize: '1.6rem', color: '#111111', lineHeight: 0.95 }}>
+            {step === 'credentials' ? 'Sign In' : 'Verify OTP'}
+          </h2>
+          <p className="np-body text-[13px] mb-7" style={{ color: '#737373' }}>
             {step === 'credentials'
               ? 'Enter your admin credentials to receive a one-time password.'
               : `Enter the 6-digit OTP sent to ${email}`}
@@ -123,12 +103,12 @@ export default function AdminLoginPage() {
                 </IconField>
 
                 <div>
-                  <label className="block text-[13px] font-semibold mb-1.5" style={{ color: '#111110' }}>
+                  <label className="block text-[13px] font-semibold mb-1.5" style={{ color: 'rgba(0,0,0,0.75)' }}>
                     Password
                   </label>
                   <div className="relative">
                     <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <Lock className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
+                      <Lock className="w-4 h-4" style={{ color: 'rgba(0,0,0,0.25)' }} strokeWidth={1.8} />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -143,10 +123,8 @@ export default function AdminLoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 cursor-pointer transition-colors"
-                      style={{ color: '#AEABA6' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#4A4845' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = '#AEABA6' }}
+                      className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer transition-colors hover:text-[#111111]"
+                      style={{ color: '#A3A3A3' }}
                     >
                       {showPassword
                         ? <EyeOff className="w-4 h-4" strokeWidth={1.8} />
@@ -165,10 +143,8 @@ export default function AdminLoginPage() {
                 <div className="flex items-center justify-center pt-1">
                   <Link
                     href="/login"
-                    className="text-[12px] font-medium transition-colors"
-                    style={{ color: '#AEABA6' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.color = '#4361EE' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.color = '#AEABA6' }}
+                    className="np-mono text-[9px] uppercase tracking-widest transition-colors hover:text-[#CC0000]"
+                    style={{ color: '#A3A3A3' }}
                   >
                     ← Back to user sign in
                   </Link>
@@ -209,10 +185,10 @@ export default function AdminLoginPage() {
                 <button
                   type="button"
                   onClick={() => { setStep('credentials'); setOtp(''); setError('') }}
-                  className="w-full text-center text-[13px] mt-1"
-                  style={{ color: '#AEABA6' }}
+                  className="w-full text-center np-mono text-[9px] uppercase tracking-widest mt-1 transition-colors hover:text-[#CC0000]"
+                  style={{ color: '#A3A3A3' }}
                 >
-                  Back to credentials
+                  ← Back to credentials
                 </button>
               </motion.form>
             )}
@@ -226,12 +202,12 @@ export default function AdminLoginPage() {
 function IconField({ label, Icon, children }) {
   return (
     <div>
-      <label className="block text-[13px] font-semibold mb-1.5" style={{ color: '#111110' }}>
+      <label className="np-mono text-[10px] font-semibold uppercase tracking-widest block mb-2" style={{ color: '#111111' }}>
         {label}
       </label>
       <div className="relative">
-        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
-          <Icon className="w-4 h-4" style={{ color: '#AEABA6' }} strokeWidth={1.8} />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 pointer-events-none">
+          <Icon className="w-4 h-4" style={{ color: '#A3A3A3' }} strokeWidth={1.5} />
         </div>
         {children}
       </div>
@@ -248,10 +224,10 @@ function ErrorMessage({ error }) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="rounded-r-lg px-4 py-3"
-          style={{ backgroundColor: '#FEF2F2', borderLeft: '3px solid #DC2626' }}
+          className="px-4 py-3"
+          style={{ borderLeft: '3px solid #CC0000' }}
         >
-          <p className="text-[13px]" style={{ color: '#DC2626' }}>{error}</p>
+          <p className="np-mono text-[11px] uppercase tracking-wide" style={{ color: '#CC0000' }}>{error}</p>
         </motion.div>
       )}
     </AnimatePresence>
@@ -263,12 +239,7 @@ function SubmitButton({ loading, children }) {
     <button
       type="submit"
       disabled={loading}
-      className="w-full h-12 text-white text-[14px] font-semibold rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-colors disabled:opacity-40 mt-2"
-      style={{ backgroundColor: '#4361EE' }}
-      onMouseEnter={(e) => { if (!loading) e.currentTarget.style.backgroundColor = '#3451D6' }}
-      onMouseLeave={(e) => { if (!loading) e.currentTarget.style.backgroundColor = '#4361EE' }}
-      onMouseDown={(e) => { e.currentTarget.style.transform = 'scale(0.99)' }}
-      onMouseUp={(e) => { e.currentTarget.style.transform = '' }}
+      className="btn-ink w-full h-12 cursor-pointer flex items-center justify-center gap-2 mt-2 disabled:opacity-40"
     >
       {loading ? (
         <>

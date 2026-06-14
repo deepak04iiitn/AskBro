@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -10,10 +10,11 @@ import {
 } from 'lucide-react'
 import useAuthStore from '@/store/useAuthStore'
 import useDocumentStore from '@/store/useDocumentStore'
+import useGitHubStore from '@/store/useGitHubStore'
 import Sidebar from '@/components/layout/Sidebar'
 import { connectNotion, disconnectNotion, getNotionStatus } from '@/lib/integrationsApi'
+import GitHubConnectPanel from '@/components/github/GitHubConnectPanel'
 
-// ── Notion SVG logo ───────────────────────────────────────────
 function NotionLogo({ size = 22 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
@@ -22,26 +23,24 @@ function NotionLogo({ size = 22 }) {
   )
 }
 
-// ── Step row (single-line horizontal) ─────────────────────────
 function StepRow({ num, title, right, last = false }) {
   return (
     <div
       className="flex items-center gap-4 px-6 h-12"
-      style={last ? {} : { borderBottom: '1px solid #F4F3F0' }}
+      style={last ? {} : { borderBottom: '1px solid #E5E5E0' }}
     >
       <div
-        className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[11px] font-bold"
-        style={{ backgroundColor: '#EEF1FD', color: '#4361EE', border: '1.5px solid #C7D2FE', lineHeight: 1 }}
+        className="w-6 h-6 shrink-0 flex items-center justify-center np-mono text-[11px] font-bold"
+        style={{ backgroundColor: '#111111', color: '#F9F9F7', lineHeight: 1 }}
       >
         {num}
       </div>
-      <p className="flex-1 text-[13px] font-medium" style={{ color: '#111110' }}>{title}</p>
+      <p className="flex-1 np-body text-[13px]" style={{ color: '#111111' }}>{title}</p>
       {right && <div className="shrink-0">{right}</div>}
     </div>
   )
 }
 
-// ── Notion detail panel ────────────────────────────────────────
 function NotionDetail({ status, onStatusChange }) {
   const user = useAuthStore((s) => s.user)
   const isOwner = user?.role === 'owner'
@@ -84,35 +83,32 @@ function NotionDetail({ status, onStatusChange }) {
     return (
       <div className="space-y-4 mt-6">
 
-        {/* ── Connected status card ──────────────────────────── */}
-        <div className="rounded-2xl overflow-hidden" style={{ border: '1.5px solid #BBF7D0', boxShadow: '0 4px 20px rgba(22,163,74,0.08)' }}>
-          <div className="px-6 py-5" style={{ backgroundColor: '#F0FDF4' }}>
+        {/* Connected status card */}
+        <div style={{ border: '1px solid #111111', boxShadow: '4px 4px 0px 0px #16A34A' }}>
+          <div className="px-6 py-5" style={{ backgroundColor: '#F0FDF4', borderBottom: '1px solid #E5E5E0' }}>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#DCFCE7', border: '1.5px solid #BBF7D0' }}>
+              <div className="w-12 h-12 flex items-center justify-center shrink-0" style={{ backgroundColor: '#DCFCE7', border: '1px solid #BBF7D0' }}>
                 <CheckCircle2 className="w-6 h-6" style={{ color: '#16A34A' }} strokeWidth={2} />
               </div>
               <div>
-                <p className="text-[16px] font-bold tracking-[-0.01em]" style={{ color: '#15803D' }}>Notion connected</p>
+                <p className="np-serif text-[16px] font-black" style={{ color: '#15803D' }}>Notion connected</p>
                 {status.workspace_name && (
-                  <p className="text-[13px] font-medium mt-0.5" style={{ color: '#4B9660' }}>{status.workspace_name}</p>
+                  <p className="np-mono text-[11px] font-bold uppercase tracking-widest mt-0.5" style={{ color: '#4B9660' }}>{status.workspace_name}</p>
                 )}
               </div>
-              <span className="ml-auto flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full" style={{ backgroundColor: '#DCFCE7', color: '#16A34A' }}>
+              <span className="ml-auto flex items-center gap-1.5 np-mono text-[10px] font-bold uppercase tracking-widest px-3 py-1.5" style={{ backgroundColor: '#DCFCE7', color: '#16A34A', border: '1px solid #BBF7D0' }}>
                 <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#16A34A' }} />
                 Live
               </span>
             </div>
           </div>
-          <div className="px-6 py-5 bg-white">
-            <p className="text-[13px] leading-[1.6] mb-4" style={{ color: '#7A7874' }}>
+          <div className="px-6 py-5" style={{ backgroundColor: '#F9F9F7' }}>
+            <p className="np-body text-[13px] leading-[1.6] mb-4" style={{ color: '#737373' }}>
               Your workspace is connected. Share any Notion page with your AskBro connection, then import it from the upload page.
             </p>
             <Link
               href="/upload"
-              className="inline-flex items-center gap-2 text-white text-[14px] font-semibold rounded-xl px-5 h-11 transition-colors"
-              style={{ backgroundColor: '#4361EE' }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#3451D6' }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4361EE' }}
+              className="btn-ink inline-flex items-center gap-2 px-5 h-11"
             >
               <NotionLogo size={16} />
               Go to Upload a document
@@ -121,33 +117,33 @@ function NotionDetail({ status, onStatusChange }) {
           </div>
         </div>
 
-        {/* ── How to import guide ────────────────────────────── */}
-        <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-          <div className="px-6 py-3.5" style={{ backgroundColor: '#FAFAF9', borderBottom: '1px solid #F0EFEC' }}>
-            <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#AEABA6' }}>How to import a page</p>
+        {/* How to import guide */}
+        <div style={{ border: '1px solid #E5E5E0', backgroundColor: '#F9F9F7' }}>
+          <div className="px-6 py-3.5" style={{ backgroundColor: '#F0EDE6', borderBottom: '1px solid #E5E5E0' }}>
+            <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>★ How to import a page</p>
           </div>
           <StepRow num={1} title="Open the Notion page you want to import" />
           <StepRow num={2} title={<>Click <strong>...</strong> (three dots) in the top-right corner of the page</>} />
           <StepRow num={3} title={<>Click <strong>"Add connections"</strong> and select your <strong>AskBro</strong> integration</>} />
           <StepRow num={4} title="Copy the Notion page URL from your browser" />
           <StepRow num={5} last
-            title={<>Go to <Link href="/upload" className="font-semibold underline underline-offset-2" style={{ color: '#4361EE' }}>Upload a document</Link> &mdash; open the <strong>Notion</strong> tab and paste the URL</>}
+            title={<>Go to <Link href="/upload" className="font-semibold underline underline-offset-2 transition-colors hover:text-[#AA0000]" style={{ color: '#CC0000' }}>Upload a document</Link> — open the <strong>Notion</strong> tab and paste the URL</>}
           />
         </div>
 
-        {/* ── Disconnect (owner only) ────────────────────────── */}
+        {/* Disconnect (owner only) */}
         {isOwner && (
           <div>
             {error && (
-              <div className="rounded-xl px-4 py-3 mb-3" style={{ backgroundColor: '#FEF2F2', borderLeft: '3px solid #DC2626' }}>
-                <p className="text-[12px]" style={{ color: '#DC2626' }}>{error}</p>
+              <div className="px-4 py-3 mb-3" style={{ borderLeft: '3px solid #CC0000' }}>
+                <p className="np-mono text-[12px] uppercase tracking-wide" style={{ color: '#CC0000' }}>{error}</p>
               </div>
             )}
             <button
               onClick={() => setShowConfirm(true)}
               disabled={disconnecting}
-              className="flex items-center gap-2 text-[13px] font-semibold cursor-pointer transition-colors rounded-xl px-4 py-2.5 disabled:opacity-50"
-              style={{ color: '#DC2626', border: '1.5px solid #FECACA', backgroundColor: 'transparent' }}
+              className="flex items-center gap-2 np-mono text-[11px] font-bold uppercase tracking-widest cursor-pointer transition-colors px-4 py-2.5 disabled:opacity-50"
+              style={{ color: '#DC2626', border: '1px solid #FECACA', backgroundColor: 'transparent' }}
               onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FEF2F2' }}
               onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
             >
@@ -168,24 +164,24 @@ function NotionDetail({ status, onStatusChange }) {
                     initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 8 }}
                     transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                    className="bg-white rounded-3xl overflow-hidden w-full max-w-[420px]"
-                    style={{ boxShadow: '0 32px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06)' }}
+                    className="overflow-hidden w-full max-w-[420px]"
+                    style={{ background: '#F9F9F7', border: '1px solid #111111', boxShadow: '6px 6px 0px 0px #111111' }}
                   >
                     <div className="flex justify-center pt-8 pb-4">
-                      <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#FEF2F2' }}>
+                      <div className="w-16 h-16 flex items-center justify-center" style={{ backgroundColor: '#FEF2F2', border: '1px solid #E5E5E0' }}>
                         <Link2Off className="w-8 h-8" style={{ color: '#DC2626' }} strokeWidth={1.8} />
                       </div>
                     </div>
                     <div className="px-8 pb-6 text-center">
-                      <h3 className="text-[18px] font-bold tracking-[-0.01em] mb-2" style={{ color: '#111110' }}>Disconnect Notion?</h3>
-                      <p className="text-[14px] leading-[1.65]" style={{ color: '#7A7874' }}>
+                      <h3 className="np-serif text-[18px] font-black mb-2" style={{ color: '#111111' }}>Disconnect Notion?</h3>
+                      <p className="np-body text-[14px] leading-[1.65]" style={{ color: '#737373' }}>
                         Members will no longer be able to import Notion pages. Previously imported documents will remain in your knowledge base.
                       </p>
                     </div>
                     <div className="px-8 pb-8 flex flex-col gap-3">
                       <button
                         onClick={() => { setShowConfirm(false); handleDisconnect() }}
-                        className="w-full h-12 text-white text-[14px] font-semibold rounded-xl cursor-pointer flex items-center justify-center gap-2 transition-colors"
+                        className="w-full h-12 text-white np-sans text-[13px] font-bold uppercase tracking-widest cursor-pointer flex items-center justify-center gap-2 transition-colors"
                         style={{ backgroundColor: '#DC2626' }}
                         onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#B91C1C' }}
                         onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#DC2626' }}
@@ -195,10 +191,7 @@ function NotionDetail({ status, onStatusChange }) {
                       </button>
                       <button
                         onClick={() => setShowConfirm(false)}
-                        className="w-full h-11 text-[14px] font-medium rounded-xl cursor-pointer transition-colors"
-                        style={{ border: '1.5px solid #E3E1DC', color: '#4A4845', backgroundColor: 'transparent' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F7F5F2' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+                        className="btn-outline-ink w-full h-11 cursor-pointer"
                       >
                         Cancel, keep it connected
                       </button>
@@ -213,70 +206,67 @@ function NotionDetail({ status, onStatusChange }) {
     )
   }
 
-  // ── Not connected ──────────────────────────────────────────────
   return (
     <div className="mt-6">
 
       {/* Setup guide card */}
-      <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-        {/* Card header */}
-        <div className="px-6 py-4 flex items-center justify-between" style={{ backgroundColor: '#FAFAF9', borderBottom: '1px solid #F0EFEC' }}>
+      <div style={{ border: '1px solid #E5E5E0', backgroundColor: '#F9F9F7' }}>
+        <div className="px-6 py-4 flex items-center justify-between" style={{ backgroundColor: '#F0EDE6', borderBottom: '1px solid #E5E5E0' }}>
           <div className="flex items-center gap-2.5">
-            <div className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black" style={{ backgroundColor: '#EEF1FD', color: '#4361EE', lineHeight: 1 }}>
+            <div className="w-5 h-5 flex items-center justify-center np-mono text-[10px] font-black" style={{ backgroundColor: '#111111', color: '#F9F9F7', lineHeight: 1 }}>
               1
             </div>
-            <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#AEABA6' }}>
-              Create your Notion connection
+            <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>
+              ★ Create your Notion connection
             </p>
           </div>
           <a
             href="https://www.notion.so/profile/integrations"
             target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1 text-[12px] font-semibold transition-colors"
-            style={{ color: '#4361EE' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#3451D6' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#4361EE' }}
+            className="np-mono flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest transition-colors"
+            style={{ color: '#111111' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#CC0000' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#111111' }}
           >
             Open Notion
             <ExternalLink className="w-3.5 h-3.5" strokeWidth={2} />
           </a>
         </div>
 
-        {/* Steps */}
         <StepRow num={1}
-          title={<>Go to <a href="https://www.notion.so/profile/integrations" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2" style={{ color: '#4361EE' }}>notion.so/profile/integrations</a></>}
+          title={<>Go to <a href="https://www.notion.so/profile/integrations" target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2 transition-colors hover:text-[#AA0000]" style={{ color: '#CC0000' }}>notion.so/profile/integrations</a></>}
         />
         <StepRow num={2}
-          title={<>Click the <span className="inline-flex items-center font-semibold px-1.5 py-0.5 rounded-md text-[11px] mx-0.5" style={{ backgroundColor: '#EEF1FD', color: '#4361EE' }}>+ New connection</span> button in the top-right</>}
+          title={<>Click the <span className="inline-flex items-center font-bold px-1.5 py-0.5 np-mono text-[11px] mx-0.5" style={{ backgroundColor: '#111111', color: '#F9F9F7' }}>+ New connection</span> button in the top-right</>}
         />
         <StepRow num={3} title={<>Enter <strong>"AskBro"</strong> as the name, select <strong>Access token</strong> method</>} />
         <StepRow num={4} title={<>Under <strong>Installable in</strong>, pick your Notion workspace</>} />
-        <StepRow num={5} title={<>Scroll to <strong>Capabilities</strong> &mdash; check <strong>"Read content"</strong> only, then <strong>Save</strong></>} last />
+        <StepRow num={5} title={<>Scroll to <strong>Capabilities</strong> — check <strong>"Read content"</strong> only, then <strong>Save</strong></>} last />
       </div>
 
       {/* Connector */}
-      <div className="flex items-center gap-3 my-3 px-2">
-        <div className="h-px flex-1" style={{ backgroundColor: '#E3E1DC' }} />
-        <span className="text-[11px] font-bold uppercase tracking-widest px-3 py-1 rounded-full" style={{ backgroundColor: '#EEF1FD', color: '#4361EE' }}>
+      <div className="flex items-center gap-3 my-4 px-2">
+        <div className="h-px flex-1" style={{ backgroundColor: '#E5E5E0' }} />
+        <span className="np-mono text-[10px] font-bold uppercase tracking-widest px-3 py-1" style={{ backgroundColor: '#111111', color: '#F9F9F7' }}>
           then
         </span>
-        <div className="h-px flex-1" style={{ backgroundColor: '#E3E1DC' }} />
+        <div className="h-px flex-1" style={{ backgroundColor: '#E5E5E0' }} />
       </div>
 
       {/* Token form card */}
-      <div className="bg-white rounded-2xl overflow-hidden" style={{ border: '1px solid #E3E1DC', boxShadow: '0 2px 12px rgba(0,0,0,0.04)' }}>
-        <div className="px-6 py-4 flex items-center gap-2.5" style={{ backgroundColor: '#FAFAF9', borderBottom: '1px solid #F0EFEC' }}>
-          <div className="w-5 h-5 rounded-md flex items-center justify-center text-[10px] font-black" style={{ backgroundColor: '#EEF1FD', color: '#4361EE', lineHeight: 1 }}>
+      <div style={{ border: '1px solid #E5E5E0', backgroundColor: '#F9F9F7' }}>
+        <div className="px-6 py-4 flex items-center gap-2.5" style={{ backgroundColor: '#F0EDE6', borderBottom: '1px solid #E5E5E0' }}>
+          <div className="w-5 h-5 flex items-center justify-center np-mono text-[10px] font-black" style={{ backgroundColor: '#111111', color: '#F9F9F7', lineHeight: 1 }}>
             6
           </div>
-          <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: '#AEABA6' }}>
-            Paste your Access Token
+          <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>
+            ★ Paste your Access Token
           </p>
         </div>
         <div className="p-6">
           <form onSubmit={handleConnect} className="space-y-4">
             <div>
-              <label className="block text-[13px] font-semibold mb-1.5" style={{ color: '#111110' }}>
+              <label className="np-mono block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: '#111111' }}>
                 Access Token
               </label>
               <input
@@ -288,15 +278,15 @@ function NotionDetail({ status, onStatusChange }) {
                 className="auth-input"
                 style={{ fontFamily: 'var(--font-jetbrains), monospace', fontSize: '12px' }}
               />
-              <p className="text-[11px] mt-1.5" style={{ color: '#AEABA6' }}>
-                notion.so/profile/integrations &rarr; your connection &rarr; Integration token &rarr; Access token
+              <p className="np-mono text-[10px] mt-1.5" style={{ color: '#AEABA6' }}>
+                notion.so/profile/integrations → your connection → Integration token → Access token
               </p>
               <div className="flex items-center gap-1.5 mt-2">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#16A34A', flexShrink: 0 }}>
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
-                <p className="text-[11px]" style={{ color: '#16A34A' }}>
+                <p className="np-body text-[11px]" style={{ color: '#16A34A' }}>
                   Your token is encrypted and completely secure with us.
                 </p>
               </div>
@@ -305,19 +295,16 @@ function NotionDetail({ status, onStatusChange }) {
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                className="rounded-r-lg px-4 py-3" style={{ backgroundColor: '#FEF2F2', borderLeft: '3px solid #DC2626' }}
+                className="px-4 py-3" style={{ borderLeft: '3px solid #CC0000' }}
               >
-                <p className="text-[13px]" style={{ color: '#DC2626' }}>{error}</p>
+                <p className="np-mono text-[12px] uppercase tracking-wide" style={{ color: '#CC0000' }}>{error}</p>
               </motion.div>
             )}
 
             <button
               type="submit"
               disabled={connecting || !token.trim()}
-              className="w-full h-11 flex items-center justify-center gap-2 text-white text-[14px] font-semibold rounded-xl cursor-pointer transition-colors disabled:opacity-40"
-              style={{ backgroundColor: '#4361EE' }}
-              onMouseEnter={(e) => { if (!connecting) e.currentTarget.style.backgroundColor = '#3451D6' }}
-              onMouseLeave={(e) => { if (!connecting) e.currentTarget.style.backgroundColor = '#4361EE' }}
+              className="btn-ink w-full h-11 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40"
             >
               {connecting
                 ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> Verifying...</>
@@ -329,11 +316,11 @@ function NotionDetail({ status, onStatusChange }) {
       </div>
 
       {/* Info banner */}
-      <div className="mt-3 rounded-xl p-4 flex items-start gap-3" style={{ backgroundColor: '#EEF1FD', border: '1px solid #C7D2FE' }}>
-        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-white font-black" style={{ backgroundColor: '#4361EE', fontSize: '11px' }}>
+      <div className="mt-3 p-4 flex items-start gap-3" style={{ backgroundColor: '#F5F0E8', border: '1px solid #E5E5E0', borderLeft: '3px solid #CC0000' }}>
+        <div className="w-5 h-5 flex items-center justify-center shrink-0 mt-0.5 text-white font-black np-mono" style={{ backgroundColor: '#111111', fontSize: '11px' }}>
           i
         </div>
-        <p className="text-[12px] leading-[1.65]" style={{ color: '#3451D6' }}>
+        <p className="np-body text-[12px] leading-[1.65]" style={{ color: '#3D3C3A' }}>
           After connecting, <strong>share each page</strong> (or a parent page) with your AskBro connection so it can be imported. Sub-pages are accessible automatically.
         </p>
       </div>
@@ -341,58 +328,68 @@ function NotionDetail({ status, onStatusChange }) {
   )
 }
 
-// ── Integration card ───────────────────────────────────────────
 function IntegrationCard({ icon, name, desc, badge, active, connected, onClick, comingSoon }) {
   return (
     <button
       onClick={!comingSoon ? onClick : undefined}
-      className="text-left rounded-2xl p-5 transition-all w-full"
+      className="text-left p-5 transition-all w-full"
       style={{
-        border: active ? '2px solid #4361EE' : '1.5px solid #E3E1DC',
-        backgroundColor: active ? '#F7F9FF' : 'white',
-        boxShadow: active ? '0 4px 20px rgba(67,97,238,0.10)' : '0 2px 8px rgba(0,0,0,0.04)',
+        border: active ? '2px solid #CC0000' : '1px solid #E5E5E0',
+        backgroundColor: active ? '#FEF9F0' : '#F9F9F7',
+        boxShadow: active ? '4px 4px 0px 0px #CC0000' : 'none',
         cursor: comingSoon ? 'default' : 'pointer',
         opacity: comingSoon ? 0.6 : 1,
       }}
-      onMouseEnter={(e) => { if (!comingSoon && !active) e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)' }}
-      onMouseLeave={(e) => { if (!comingSoon && !active) e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)' }}
+      onMouseEnter={(e) => { if (!comingSoon && !active) { e.currentTarget.style.boxShadow = '4px 4px 0px 0px #111111'; e.currentTarget.style.borderColor = '#111111' } }}
+      onMouseLeave={(e) => { if (!comingSoon && !active) { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = '#E5E5E0' } }}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div
-          className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-          style={{ backgroundColor: active ? '#EEF1FD' : '#F4F3F0', color: active ? '#4361EE' : '#7A7874' }}
+          className="w-11 h-11 flex items-center justify-center shrink-0"
+          style={{ backgroundColor: active ? '#F5F0E8' : '#F0EDE6', color: active ? '#CC0000' : '#7A7874', border: '1px solid #E5E5E0' }}
         >
           {icon}
         </div>
         {badge && (
           <span
-            className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full shrink-0"
-            style={{ backgroundColor: connected ? '#F0FDF4' : '#FFF7ED', color: connected ? '#16A34A' : '#D97706' }}
+            className="np-mono text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 shrink-0"
+            style={{ backgroundColor: connected ? '#F0FDF4' : '#FFF7ED', color: connected ? '#16A34A' : '#D97706', border: `1px solid ${connected ? '#BBF7D0' : '#FDE68A'}` }}
           >
             {badge}
           </span>
         )}
         {comingSoon && (
-          <span className="text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full" style={{ backgroundColor: '#F4F3F0', color: '#AEABA6' }}>
+          <span className="np-mono text-[9px] font-bold uppercase tracking-widest px-2.5 py-1" style={{ backgroundColor: '#F5F0E8', color: '#AEABA6', border: '1px solid #E5E5E0' }}>
             Coming soon
           </span>
         )}
       </div>
-      <p className="text-[14px] font-bold mb-1" style={{ color: '#111110' }}>{name}</p>
-      <p className="text-[12px] leading-[1.55]" style={{ color: '#7A7874' }}>{desc}</p>
+      <p className="np-serif text-[14px] font-black mb-1" style={{ color: '#111111' }}>{name}</p>
+      <p className="np-body text-[12px] leading-[1.55]" style={{ color: '#737373' }}>{desc}</p>
     </button>
   )
 }
 
-// ── Main page ──────────────────────────────────────────────────
+function GitHubLogo({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+    </svg>
+  )
+}
+
 export default function IntegrationsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const hydrate   = useAuthStore((s) => s.hydrate)
   const user      = useAuthStore((s) => s.user)
   const fetchDocs = useDocumentStore((s) => s.fetchDocuments)
+  const fetchGHRepos   = useGitHubStore((s) => s.fetchRepos)
+  const setGHStatus    = useGitHubStore((s) => s.setStatus)
   const [hydrated, setHydrated] = useState(false)
   const [active, setActive]     = useState('notion')
   const [notionStatus, setNotionStatus] = useState(null)
+  const [githubStatus, setGitHubStatus] = useState(null)
 
   useEffect(() => { hydrate(); setHydrated(true) }, [hydrate])
 
@@ -401,12 +398,25 @@ export default function IntegrationsPage() {
     if (!user) { router.replace('/login'); return }
     fetchDocs()
     getNotionStatus().then(setNotionStatus).catch(() => {})
-  }, [hydrated, user, router, fetchDocs])
+
+    // Load GitHub status
+    import('@/lib/githubApi').then(({ getGitHubStatus }) => {
+      getGitHubStatus().then((s) => { setGitHubStatus(s); setGHStatus(s) }).catch(() => {})
+    })
+
+    // Handle OAuth callback success
+    const ghParam = searchParams.get('github')
+    if (ghParam === 'connected') {
+      setActive('github')
+      router.replace('/integrations', { scroll: false })
+    }
+  }, [hydrated, user, router, fetchDocs]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!hydrated || !user) return null
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F7F5F2' }}>
+    <>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#F9F9F7' }}>
       <div className="hidden md:flex">
         <Sidebar />
       </div>
@@ -415,19 +425,19 @@ export default function IntegrationsPage() {
 
         {/* ── Top bar ─────────────────────────────────────────── */}
         <div
-          className="sticky top-0 z-10 bg-white px-8 h-14 flex items-center justify-between shrink-0"
-          style={{ borderBottom: '1px solid #E3E1DC' }}
+          className="sticky top-0 z-10 px-8 h-14 flex items-center justify-between shrink-0"
+          style={{ backgroundColor: '#F9F9F7', borderBottom: '1px solid #111111' }}
         >
-          <div className="flex items-center gap-2.5">
-            <Puzzle className="w-4 h-4" style={{ color: '#4361EE' }} strokeWidth={2} />
-            <h1 className="text-[15px] font-bold" style={{ color: '#111110' }}>Integrations</h1>
+          <div className="flex items-center gap-3">
+            <Puzzle className="w-4 h-4" style={{ color: '#CC0000' }} strokeWidth={2} />
+            <h1 className="np-serif font-black text-[16px]" style={{ color: '#111111' }}>Integrations</h1>
           </div>
           <Link
             href="/dashboard"
-            className="flex items-center gap-1.5 text-[13px] font-semibold transition-colors"
-            style={{ color: '#4361EE' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#3451D6' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = '#4361EE' }}
+            className="np-mono flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors"
+            style={{ color: '#CC0000' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = '#AA0000' }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = '#CC0000' }}
           >
             <ArrowLeft className="w-3.5 h-3.5" strokeWidth={2.5} />
             Back to chat
@@ -438,10 +448,11 @@ export default function IntegrationsPage() {
 
           {/* Page heading */}
           <div className="mb-8">
-            <h2 className="text-[22px] font-bold tracking-[-0.02em]" style={{ color: '#111110' }}>
+            <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em] mb-2" style={{ color: '#CC0000' }}>★ Integrations</p>
+            <h2 className="np-serif font-black" style={{ fontSize: '28px', color: '#111111', lineHeight: 0.95 }}>
               Connect your tools
             </h2>
-            <p className="text-[13px] mt-1" style={{ color: '#7A7874' }}>
+            <p className="np-body text-[13px] mt-3" style={{ color: '#737373' }}>
               Import content directly from your favourite apps into your AskBro knowledge base.
             </p>
           </div>
@@ -460,8 +471,11 @@ export default function IntegrationsPage() {
             <IntegrationCard
               icon={<GitBranch className="w-5 h-5" strokeWidth={1.8} />}
               name="GitHub"
-              desc="Sync repositories, READMEs, and wikis as knowledge base documents."
-              comingSoon
+              desc="Chat with your repos — code, commits, issues, and PRs. Public and private."
+              badge={githubStatus?.connected ? 'Connected' : 'Not connected'}
+              connected={githubStatus?.connected}
+              active={active === 'github'}
+              onClick={() => setActive('github')}
             />
           </div>
 
@@ -475,39 +489,91 @@ export default function IntegrationsPage() {
                 exit={{ opacity: 0, y: 8 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* Section header */}
                 <div
                   className="flex items-center gap-3 px-5 py-4 rounded-2xl mb-1"
                   style={{ backgroundColor: 'white', border: '1px solid #E3E1DC', boxShadow: '0 1px 4px rgba(67,97,238,0.06)' }}
                 >
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#111110', color: 'white' }}>
+                  <div className="w-8 h-8 flex items-center justify-center" style={{ backgroundColor: '#111111', color: 'white' }}>
                     <NotionLogo size={16} />
                   </div>
                   <div>
-                    <p className="text-[14px] font-bold" style={{ color: '#111110' }}>Notion Integration</p>
-                    <p className="text-[12px]" style={{ color: '#7A7874' }}>
+                    <p className="np-serif text-[14px] font-black" style={{ color: '#111111' }}>Notion Integration</p>
+                    <p className="np-body text-[12px]" style={{ color: '#737373' }}>
                       {notionStatus?.connected
                         ? `Connected to "${notionStatus.workspace_name}"`
                         : 'Connect your workspace to start importing pages'}
                     </p>
                   </div>
                   {notionStatus?.connected && (
-                    <span className="ml-auto flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1 rounded-full" style={{ backgroundColor: '#F0FDF4', color: '#16A34A' }}>
+                    <span className="ml-auto flex items-center gap-1.5 np-mono text-[10px] font-bold uppercase tracking-widest px-3 py-1" style={{ backgroundColor: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
                       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#16A34A' }} />
                       Active
                     </span>
                   )}
                 </div>
-
                 <NotionDetail
                   status={notionStatus}
                   onStatusChange={(s) => setNotionStatus(s)}
                 />
               </motion.div>
             )}
+
+            {active === 'github' && (
+              <motion.div
+                key="github"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ duration: 0.2 }}
+              >
+                {/* GitHub section header */}
+                <div
+                  className="flex items-center gap-3 px-5 py-4 mb-1"
+                  style={{ backgroundColor: '#F0EDE6', border: '1px solid #E5E5E0', borderLeft: '3px solid #CC0000' }}
+                >
+                  <div className="w-8 h-8 flex items-center justify-center" style={{ backgroundColor: '#111111', color: 'white' }}>
+                    <GitHubLogo size={16} />
+                  </div>
+                  <div>
+                    <p className="np-serif text-[14px] font-black" style={{ color: '#111111' }}>GitHub Integration</p>
+                    <p className="np-body text-[12px]" style={{ color: '#737373' }}>
+                      {githubStatus?.connected
+                        ? `Connected as @${githubStatus.github_username}`
+                        : 'Connect GitHub to chat with your repositories'}
+                    </p>
+                  </div>
+                  {githubStatus?.connected && (
+                    <span className="ml-auto flex items-center gap-1.5 np-mono text-[10px] font-bold uppercase tracking-widest px-3 py-1" style={{ backgroundColor: '#F0FDF4', color: '#16A34A', border: '1px solid #BBF7D0' }}>
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#16A34A' }} />
+                      Active
+                    </span>
+                  )}
+                </div>
+
+                <GitHubConnectPanel
+                  status={githubStatus}
+                  onStatusChange={(s) => {
+                    setGitHubStatus(s)
+                    setGHStatus(s)
+                    if (s.connected) fetchGHRepos()
+                  }}
+                />
+
+                {/* Tip: repos are managed from the sidebar */}
+                {githubStatus?.connected && (
+                  <div className="mt-4 p-4 flex items-start gap-3" style={{ backgroundColor: '#F5F0E8', border: '1px solid #E5E5E0', borderLeft: '3px solid #CC0000' }}>
+                    <GitBranch className="w-4 h-4 shrink-0 mt-0.5" style={{ color: '#CC0000' }} strokeWidth={2} />
+                    <p className="np-body text-[12px] leading-[1.65]" style={{ color: '#3D3C3A' }}>
+                      GitHub is connected. Use the <strong>"Add a repository"</strong> button in the sidebar to import repos and start chatting with your code.
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </main>
     </div>
+    </>
   )
 }

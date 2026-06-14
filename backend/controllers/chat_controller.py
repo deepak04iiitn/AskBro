@@ -141,6 +141,8 @@ async def handle_chat(
             query=request.query,
             workspace_id=workspace_id,
             document_ids=request.document_ids,
+            repo_ids=request.repo_ids,
+            source=request.source,
         ):
             if doc_ids is not None:
                 retrieved_doc_ids = doc_ids

@@ -1,11 +1,13 @@
 import './globals.css'
-import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google'
+import { Inter, JetBrains_Mono } from 'next/font/google'
+import RateLimitOverlay from '@/components/RateLimitOverlay'
+import JsonLd from '@/components/seo/JsonLd'
 
-const plusJakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-plus-jakarta',
+  variable: '--font-inter',
   display: 'swap',
-  weight: ['400', '500', '600', '700', '800'],
+  weight: ['300', '400', '500', '600', '700'],
 })
 
 const jetbrains = JetBrains_Mono({
@@ -16,76 +18,84 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata = {
   metadataBase: new URL('https://askbro.app'),
-
   title: {
-    default: 'AskBro — AI Knowledge Base for Teams',
+    default: 'AskBro — Chat with PDFs, GitHub Repos, Interview Prep & AI Flashcards',
     template: '%s | AskBro',
   },
-
   description:
-    'AskBro is an AI-powered document intelligence platform for teams. Upload PDFs, Docs and Markdown — then ask questions in plain English and get cited answers instantly.',
-
+    'AskBro is the AI workspace that lets you chat with PDFs, ask questions about any GitHub repository, ace technical interviews with AI coaching, and generate quizzes and flashcards from your documents — all in one private workspace.',
   keywords: [
-    'AI knowledge base',
-    'document intelligence',
-    'RAG',
-    'retrieval augmented generation',
-    'team knowledge base',
-    'document search',
-    'AI assistant',
-    'document Q&A',
-    'internal knowledge management',
-    'enterprise search',
-    'PDF question answering',
-    'document chatbot',
-    'AskBro',
+    'AI knowledge base', 'chat with PDF', 'ask questions about PDF', 'AI document assistant',
+    'PDF Q&A tool', 'ask questions about GitHub repo', 'AI code explainer',
+    'understand GitHub codebase', 'AI technical interview prep', 'coding interview practice AI',
+    'AI quiz generator from PDF', 'AI flashcard generator', 'study AI tools', 'AskBro',
+    'document AI chat', 'RAG document search', 'AI study tool', 'chat with documents',
+    'GitHub codebase search AI', 'AI interview coach', 'spaced repetition AI',
   ],
-
   authors: [{ name: 'AskBro Team' }],
   creator: 'AskBro',
   publisher: 'AskBro',
-
+  alternates: { canonical: 'https://askbro.app' },
   openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    siteName: 'AskBro',
-    title: 'AskBro — AI Knowledge Base for Teams',
-    description:
-      'Upload your team\'s documents and get instant cited answers. Powered by RAG — every response traces back to its exact source.',
-    images: [
-      {
-        url: '/AskBro_Logo.png',
-        width: 500,
-        height: 500,
-        alt: 'AskBro Logo',
-      },
-    ],
+    type: 'website', locale: 'en_US', siteName: 'AskBro', url: 'https://askbro.app',
+    title: 'AskBro — Chat with PDFs, GitHub Repos, Interview Prep & AI Flashcards',
+    description: 'Chat with PDFs, explore GitHub repos with AI, ace technical interviews, and generate quizzes and flashcards — all in one private workspace.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'AskBro — AI Knowledge Workspace' }],
   },
-
   twitter: {
-    card: 'summary',
-    title: 'AskBro — AI Knowledge Base for Teams',
-    description:
-      'Ask questions about your team\'s documents. Get cited answers instantly.',
-    images: ['/AskBro_Logo.png'],
+    card: 'summary_large_image',
+    title: 'AskBro — Chat with PDFs, GitHub Repos & AI Study Tools',
+    description: 'Chat with PDFs, ask questions about GitHub codebases, ace technical interviews, and generate AI quizzes and flashcards — free to start.',
+    images: ['/og-image.png'],
   },
-
   robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-image-preview': 'large',
-    },
+    index: true, follow: true,
+    googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 },
+  },
+  verification: {
+    // Add your Google Search Console verification token here when available
+    // google: 'your-token-here',
   },
 }
 
+const globalJsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'AskBro',
+    url: 'https://askbro.app',
+    logo: { '@type': 'ImageObject', url: 'https://askbro.app/AskBro_Logo.png' },
+    description: 'AskBro is an AI knowledge workspace for chatting with PDFs, understanding GitHub repositories, preparing for technical interviews, and generating quizzes and flashcards.',
+    sameAs: [],
+    contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', url: 'https://askbro.app' },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'AskBro',
+    url: 'https://askbro.app',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: { '@type': 'EntryPoint', urlTemplate: 'https://askbro.app/blog?q={search_term_string}' },
+      'query-input': 'required name=search_term_string',
+    },
+  },
+]
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${plusJakarta.variable} ${jetbrains.variable}`}>
-      <body className="min-h-screen">
+    <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
+      <body
+        className="min-h-screen"
+        style={{
+          fontFamily: 'var(--font-inter), system-ui, sans-serif',
+          backgroundColor: '#050506',
+          color: '#EDEDEF',
+        }}
+      >
+        <JsonLd data={globalJsonLd} />
         {children}
+        <RateLimitOverlay />
       </body>
     </html>
   )

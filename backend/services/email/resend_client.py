@@ -38,6 +38,94 @@ async def send_otp_email(to_email: str, otp: str) -> bool:
         return False
 
 
+async def send_new_testimonial_email(
+    name: str,
+    role: str,
+    quote: str,
+    stars: int,
+) -> bool:
+    """Notify the admin that a new testimonial is waiting for moderation."""
+    star_html = "★" * stars + "☆" * (5 - stars)
+    admin_url = f"{settings.FRONTEND_URL}/admin/dashboard/testimonials"
+    payload = {
+        "from": "AskBro <onboarding@resend.dev>",
+        "to": [settings.ADMIN_EMAIL],
+        "subject": f"New Testimonial Submitted — {name}",
+        "html": f"""
+        <div style="font-family:sans-serif;max-width:540px;margin:auto;padding:32px;background:#f7f5f2;">
+          <!-- Header bar -->
+          <div style="background:#111111;padding:14px 20px;margin-bottom:0;">
+            <span style="color:#CC0000;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;">
+              ◆ AskBro Admin
+            </span>
+          </div>
+
+          <!-- Red accent line -->
+          <div style="height:4px;background:#CC0000;margin-bottom:24px;"></div>
+
+          <!-- Headline -->
+          <h2 style="color:#111111;font-size:22px;font-weight:800;margin:0 0 4px 0;letter-spacing:-0.5px;">
+            New Testimonial Awaiting Review
+          </h2>
+          <p style="color:#737373;font-size:13px;margin:0 0 24px 0;">
+            Someone just shared their experience with AskBro. Approve or reject it from the admin panel.
+          </p>
+
+          <!-- Testimonial card -->
+          <div style="background:#ffffff;border:2px solid #111111;padding:24px;margin-bottom:24px;">
+            <!-- Stars -->
+            <div style="font-size:18px;color:#CC0000;letter-spacing:2px;margin-bottom:14px;">{star_html}</div>
+
+            <!-- Quote -->
+            <p style="color:#111111;font-size:15px;line-height:1.7;font-style:italic;margin:0 0 20px 0;padding-left:12px;border-left:3px solid #CC0000;">
+              "{quote}"
+            </p>
+
+            <!-- Author -->
+            <table style="border-collapse:collapse;width:100%;border-top:1px solid #E5E5E0;padding-top:14px;">
+              <tr>
+                <td style="padding-top:14px;">
+                  <div style="display:inline-block;background:#111111;color:#F9F9F7;font-size:12px;font-weight:700;padding:6px 10px;letter-spacing:1px;margin-bottom:6px;">
+                    {name[:2].upper()}
+                  </div>
+                  <p style="margin:4px 0 0 0;font-size:14px;font-weight:700;color:#111111;">{name}</p>
+                  <p style="margin:2px 0 0 0;font-size:11px;color:#737373;text-transform:uppercase;letter-spacing:1.5px;">{role}</p>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- CTA button -->
+          <div style="text-align:center;margin-bottom:28px;">
+            <a href="{admin_url}"
+               style="display:inline-block;background:#CC0000;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:12px 28px;text-decoration:none;border:2px solid #CC0000;">
+              Review in Admin Panel →
+            </a>
+          </div>
+
+          <!-- Footer -->
+          <div style="border-top:2px solid #111111;padding-top:14px;">
+            <p style="color:#AEABA6;font-size:11px;margin:0;">
+              This is an automated notification from AskBro. Only you receive this.
+            </p>
+          </div>
+        </div>
+        """,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                "https://api.resend.com/emails",
+                json=payload,
+                headers={"Authorization": f"Bearer {settings.RESEND_API_KEY}"},
+            )
+            resp.raise_for_status()
+            return True
+    except Exception as exc:
+        logger.error("Failed to send new-testimonial email", error=str(exc), submitter=name)
+        return False
+
+
 async def send_forgot_code_email(
     requester_email: str,
     workspace_name: str,

@@ -1,4 +1,5 @@
 import { clearToken, getToken } from '@/lib/auth'
+import { fireRateLimit, parseRetryAfter } from '@/lib/rateLimitEvent'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 
@@ -13,7 +14,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
  * @param {string} chatId — chat session ID (create via POST /chat/chats first)
  * @param {string[] | undefined} documentIds
  */
-export async function* streamChat(query, chatId, documentIds) {
+export async function* streamChat(query, chatId, documentIds, source = 'all', repoIds) {
   const token = getToken()
 
   const res = await fetch(`${API_URL}/chat`, {
@@ -22,13 +23,24 @@ export async function* streamChat(query, chatId, documentIds) {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ query, chat_id: chatId, document_ids: documentIds ?? null }),
+    body: JSON.stringify({
+      query,
+      chat_id: chatId,
+      document_ids: documentIds ?? null,
+      repo_ids: repoIds ?? null,
+      source: source ?? 'all',
+    }),
   })
 
   if (res.status === 401) {
     clearToken()
     window.location.href = '/login'
     return
+  }
+
+  if (res.status === 429) {
+    fireRateLimit(parseRetryAfter(res.headers.get('Retry-After')))
+    throw new Error('Rate limit exceeded. Please wait before trying again.')
   }
 
   if (!res.ok) {

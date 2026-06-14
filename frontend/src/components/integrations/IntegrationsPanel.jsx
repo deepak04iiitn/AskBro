@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -139,7 +139,7 @@ function NotionConnectFlow({ onConnected, onDisconnected, initialStatus }) {
           <StepItem num={1}>Open any page in Notion you want to import</StepItem>
           <StepItem num={2}>Click the <strong>...</strong> (three dots) menu in the top-right</StepItem>
           <StepItem num={3}>Click <strong>Add connections</strong></StepItem>
-          <StepItem num={4}>Search for and select your <strong>AskBro</strong> integration</StepItem>
+          <StepItem num={4}>Search for and select your <strong>Ask<span style={{ color: '#CC0000' }}>Bro</span></strong> integration</StepItem>
           <StepItem num={5}>Now paste the page URL in the <strong>Upload</strong> zone - <strong>Notion</strong> tab</StepItem>
         </div>
 
@@ -208,7 +208,7 @@ function NotionConnectFlow({ onConnected, onDisconnected, initialStatus }) {
           </a>
         </StepItem>
         <StepItem num={2}>Click <strong>New integration</strong></StepItem>
-        <StepItem num={3}>Name it (e.g. <strong>AskBro</strong>) and select your workspace</StepItem>
+        <StepItem num={3}>Name it (e.g. <strong>Ask<span style={{ color: '#CC0000' }}>Bro</span></strong>) and select your workspace</StepItem>
         <StepItem num={4}>Under Capabilities: check <strong>Read content</strong> only</StepItem>
         <StepItem num={5}>Click Save - copy the <strong>Internal Integration Secret</strong> (starts with <code style={{ fontSize: '12px', backgroundColor: '#F4F3F0', padding: '1px 4px', borderRadius: '4px' }}>secret_</code>)</StepItem>
       </div>

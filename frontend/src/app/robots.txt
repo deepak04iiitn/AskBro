@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /upload
+Disallow: /upload/
+Disallow: /admin
+Disallow: /admin/
+Disallow: /onboarding
+Disallow: /onboarding/
+Disallow: /integrations
+Disallow: /integrations/
+
+Sitemap: https://askbro.app/sitemap.xml

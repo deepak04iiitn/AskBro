@@ -1,7 +1,9 @@
+import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { Copy, Check } from 'lucide-react'
 import CitationCard from './CitationCard'
 
 // Warm neutral theme matching the app palette
@@ -150,6 +152,37 @@ function stripPageNumbers(text) {
   return text.replace(/\[Source:[^\]]*\]/gi, '').replace(/\n{3,}/g, '\n\n').trim()
 }
 
+function CopyButton({ text, className = '' }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // clipboard not available
+    }
+  }, [text])
+
+  return (
+    <button
+      onClick={handleCopy}
+      title={copied ? 'Copied!' : 'Copy'}
+      className={`flex items-center gap-1 transition-colors ${className}`}
+      style={{ color: copied ? '#2C6E49' : '#9A9590' }}
+    >
+      {copied
+        ? <Check size={13} strokeWidth={2.5} />
+        : <Copy size={13} strokeWidth={2} />
+      }
+      <span className="np-mono text-[10px] font-bold uppercase tracking-widest">
+        {copied ? 'Copied' : 'Copy'}
+      </span>
+    </button>
+  )
+}
+
 export default function MessageBubble({ message, activeSourceId, onOpenSource }) {
   const isUser = message.role === 'user'
   const content = isUser ? message.content : stripPageNumbers(message.content || '')
@@ -175,6 +208,7 @@ export default function MessageBubble({ message, activeSourceId, onOpenSource })
           >
             {content}
           </div>
+          <CopyButton text={content} className="px-1 hover:opacity-80" />
         </>
       ) : (
         <div className="w-full flex gap-3 items-start">
@@ -204,6 +238,12 @@ export default function MessageBubble({ message, activeSourceId, onOpenSource })
                     style={{ backgroundColor: '#CC0000' }}
                   />
                 )}
+              </div>
+            )}
+
+            {!message.streaming && content && (
+              <div className="mt-2">
+                <CopyButton text={content} className="hover:opacity-80" />
               </div>
             )}
 

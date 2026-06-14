@@ -59,6 +59,10 @@ def _format_block(payload: dict) -> str:
     return f"[Source: {repo}]\n{chunk_text}"
 
 
+_MAX_CHUNK_CHARS = 2000   # truncate any single chunk to this length
+_MAX_CONTEXT_CHARS = 16000  # total context ceiling (~4k tokens, safe for Groq)
+
+
 def build_context(
     hits: list[ScoredPoint],
     top_n: int = 10,
@@ -97,7 +101,17 @@ def build_context(
     elif not selected and hits:
         selected = hits[:1]
 
-    context = "\n\n".join(_format_block(h.payload or {}) for h in selected)
+    blocks: list[str] = []
+    total_chars = 0
+    for h in selected:
+        block = _format_block(h.payload or {})
+        if len(block) > _MAX_CHUNK_CHARS:
+            block = block[:_MAX_CHUNK_CHARS] + "\n… [truncated]"
+        if total_chars + len(block) > _MAX_CONTEXT_CHARS:
+            break
+        blocks.append(block)
+        total_chars += len(block)
+    context = "\n\n".join(blocks)
 
     # ── Build citation doc IDs (tighter threshold) ────────────────
     citation_min = best_score * citation_threshold

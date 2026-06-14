@@ -222,7 +222,7 @@ export default function CreateWorkspaceForm() {
         {/* Masthead header */}
         <div className="flex items-center justify-center gap-3 px-8 py-6 border-b border-[#111111]" style={{ background: '#111111' }}>
           <img src="/AskBro_Logo.png" alt="AskBro" className="h-7 w-7 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
-          <span className="np-serif font-black text-[1.5rem] leading-none" style={{ color: '#F9F9F7' }}>AskBro</span>
+          <span className="np-serif font-black text-[1.5rem] leading-none" style={{ color: '#F9F9F7' }}>Ask<span style={{ color: '#CC0000' }}>Bro</span></span>
         </div>
 
         {/* Form body */}

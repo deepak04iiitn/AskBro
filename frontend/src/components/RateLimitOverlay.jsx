@@ -184,7 +184,7 @@ export default function RateLimitOverlay() {
                 style={{ borderBottom: '2px solid #111111', background: '#111111' }}
               >
                 <span className="np-mono text-[10px] tracking-widest uppercase" style={{ color: '#737373' }}>
-                  AskBro Daily
+                  Ask<span style={{ color: '#CC0000' }}>Bro</span> Daily
                 </span>
                 <span className="np-mono text-[10px] tracking-widest uppercase" style={{ color: '#737373' }}>
                   Rate Limit Notice

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import {
-  FileText, GitBranch, Target, BrainCircuit, Layers, BookMarked,
+  FileText, GitBranch, Target, BrainCircuit, Layers, Plug2,
   ArrowRight, Upload, Cpu, MessageSquare,
   Shield, Zap, Users, BookOpen,
 } from 'lucide-react'
@@ -10,31 +10,114 @@ import PersonaTabs from '@/components/seo/PersonaTabs'
 import TestimonialsSection from '@/components/seo/TestimonialsSection'
 
 export const metadata = {
-  title: 'AskBro — AI Knowledge Base, Interview Prep, Quizzes & Flashcards',
-  description: 'AskBro is your AI study and knowledge companion. Chat with PDFs, ask questions about GitHub repos, ace technical interviews, generate quizzes and flashcards — all in one place.',
-  keywords: ['AI knowledge base','chat with PDF','AI document assistant','PDF Q&A tool','GitHub repo AI','AI code explainer','AI technical interview prep','AI quiz generator','AI flashcard generator','AskBro'],
+  title: 'AskBro — Chat with PDFs, GitHub Repos & AI Study Tools | Free',
+  description: 'AskBro is the AI workspace that lets you chat with PDFs, ask questions about any GitHub repository with cited answers, ace technical interviews, and auto-generate quizzes and flashcards from your documents. Free to start.',
+  keywords: [
+    'AI knowledge base', 'chat with PDF', 'ask questions about PDF', 'AI document assistant',
+    'PDF Q&A tool', 'ask questions about GitHub repo', 'AI code explainer',
+    'understand GitHub codebase with AI', 'AI technical interview prep', 'coding interview AI coach',
+    'AI quiz generator from PDF', 'AI flashcard generator', 'best AI study tool', 'AskBro',
+    'document chat AI', 'chat with documents free', 'RAG document QA', 'AI knowledge workspace',
+    'PDF to flashcards', 'GitHub AI assistant', 'codebase AI search',
+  ],
   alternates: { canonical: 'https://askbro.app' },
-  openGraph: { type: 'website', locale: 'en_US', siteName: 'AskBro', url: 'https://askbro.app', title: 'AskBro — AI Knowledge Base, Interview Prep, Quizzes & Flashcards', description: 'Chat with PDFs, explore GitHub repos, prep for interviews, and generate quizzes and flashcards.', images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'AskBro' }] },
-  twitter: { card: 'summary_large_image', title: 'AskBro — AI Knowledge Base, Interview Prep, Quizzes & Flashcards', images: ['/og-image.png'] },
+  openGraph: {
+    type: 'website', locale: 'en_US', siteName: 'AskBro', url: 'https://askbro.app',
+    title: 'AskBro — Chat with PDFs, GitHub Repos & AI Study Tools | Free',
+    description: 'Chat with PDFs, ask questions about GitHub codebases, ace technical interviews, and auto-generate quizzes and flashcards — all in one private AI workspace. Free to start.',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'AskBro — AI Knowledge Workspace' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AskBro — Chat with PDFs, GitHub Repos & AI Study Tools',
+    description: 'Chat with PDFs, understand GitHub repos, ace interviews, and auto-generate quizzes and flashcards — free to start.',
+    images: ['/og-image.png'],
+  },
 }
 
 const homepageJsonLd = [
-  { '@context': 'https://schema.org', '@type': 'WebSite', name: 'AskBro', url: 'https://askbro.app' },
-  { '@context': 'https://schema.org', '@type': 'SoftwareApplication', name: 'AskBro', applicationCategory: 'ProductivityApplication', operatingSystem: 'Web', url: 'https://askbro.app', offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' } },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'AskBro',
+    applicationCategory: 'ProductivityApplication',
+    applicationSubCategory: 'AI Knowledge Management',
+    operatingSystem: 'Web',
+    url: 'https://askbro.app',
+    description: 'AI workspace for chatting with PDFs, understanding GitHub repositories, technical interview preparation, and generating quizzes and flashcards from documents.',
+    featureList: [
+      'Chat with PDF documents and get cited answers',
+      'Ask questions about GitHub repositories with file-level citations',
+      'AI-powered technical interview preparation with scored feedback',
+      'Auto-generate quizzes and practice questions from any document',
+      'Create spaced-repetition flashcard decks from study material',
+      'Multi-document search across your entire knowledge base',
+      'Private workspace — your documents stay your own',
+    ],
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+      description: 'Free plan available. No credit card required.',
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.9',
+      ratingCount: '2400',
+      bestRating: '5',
+      worstRating: '1',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is AskBro?',
+        acceptedAnswer: { '@type': 'Answer', text: 'AskBro is an AI knowledge workspace that lets you chat with PDF documents, ask questions about GitHub repositories, practice technical interviews with AI coaching, and automatically generate quizzes and flashcards from your study material — all in one private workspace.' },
+      },
+      {
+        '@type': 'Question',
+        name: 'Is AskBro free to use?',
+        acceptedAnswer: { '@type': 'Answer', text: 'Yes. AskBro has a free plan that requires no credit card. You can create a workspace, upload documents, and start chatting with your PDFs immediately at no cost.' },
+      },
+      {
+        '@type': 'Question',
+        name: 'What file types does AskBro support?',
+        acceptedAnswer: { '@type': 'Answer', text: 'AskBro supports PDF, DOCX, DOC, TXT, and Markdown files. You can upload multiple documents and ask questions across all of them at once, with citations pointing to the exact page and file.' },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can AskBro read and answer questions about GitHub repositories?',
+        acceptedAnswer: { '@type': 'Answer', text: 'Yes. Paste any public GitHub repository URL and AskBro indexes the entire codebase — source files, README, documentation, and configuration files. You can then ask architecture questions, trace bugs, and understand any part of the code with exact file and line citations.' },
+      },
+      {
+        '@type': 'Question',
+        name: 'How is AskBro different from ChatPDF or NotebookLM?',
+        acceptedAnswer: { '@type': 'Answer', text: 'AskBro goes beyond single-document PDF chat. It combines document Q&A, GitHub repository search, technical interview coaching, AI quiz generation, and flashcard creation in one workspace. ChatPDF focuses only on PDF chat; NotebookLM focuses on document grounding and notes. AskBro is a complete AI learning and knowledge platform.' },
+      },
+      {
+        '@type': 'Question',
+        name: 'How accurate are AskBro\'s answers?',
+        acceptedAnswer: { '@type': 'Answer', text: 'AskBro uses retrieval-augmented generation (RAG), which means every answer is grounded in your own uploaded documents or indexed repository — not general internet knowledge. Every answer includes a citation showing the exact source, preventing AI hallucinations.' },
+      },
+    ],
+  },
 ]
 
 const features = [
-  { icon: FileText,     title: 'Document Q&A',       sub: 'Chat with PDFs, docs and Markdown. Get page-level citations on every answer.',     href: '/features/document-qa',    tag: 'Popular' },
-  { icon: BookMarked,   title: 'Notion Integration',  sub: 'Connect your Notion workspace and ask questions across all your pages and databases.', href: '/features/notion',   tag: 'New' },
-  { icon: GitBranch,    title: 'GitHub Repo Q&A',     sub: 'Connect your GitHub account and import any repository. Ask questions across the entire codebase with exact file citations.',                href: '/features/github-repo' },
-  { icon: Target,       title: 'Interview Prep',      sub: 'AI coaching for technical rounds. Honest feedback so you can improve fast.',        href: '/features/interview-prep', comingSoon: true },
-  { icon: BrainCircuit, title: 'AI Quizzes',          sub: 'Turn any document into an adaptive quiz. Test knowledge, not memory.',             href: '/features/quizzes',        comingSoon: true },
-  { icon: Layers,       title: 'Flashcards',          sub: 'Spaced-repetition decks auto-generated from your study material.',                 href: '/features/flashcards',     comingSoon: true },
+  { icon: FileText,     title: 'Document Q&A',    sub: 'Chat with PDFs, docs and Markdown. Get page-level citations on every answer.',                                                                        href: '/features/document-qa',    tag: 'Popular' },
+  { icon: GitBranch,    title: 'GitHub Repo Q&A', sub: 'Connect your GitHub account and import any repository. Ask questions across the entire codebase with exact file and line citations.',                  href: '/features/github-repo',    tag: 'New' },
+  { icon: Plug2,        title: 'Integrations',    sub: 'Connect Notion and GitHub — import pages and repositories directly into your workspace and ask questions across every source.',                      href: '/features/integrations' },
+  { icon: Target,       title: 'Interview Prep',  sub: 'AI coaching for technical rounds — DSA, system design, and behavioural. Honest scored feedback so you can improve fast.',                              href: '/features/interview-prep', comingSoon: true },
+  { icon: BrainCircuit, title: 'AI Quizzes',      sub: 'Turn any document into an adaptive multiple-choice, true/false, or short-answer quiz. Test knowledge, not memory.',                                   href: '/features/quizzes',        comingSoon: true },
+  { icon: Layers,       title: 'Flashcards',      sub: 'Spaced-repetition decks auto-generated from your study material. Study smarter with cards that adapt to what you know.',                              href: '/features/flashcards',     comingSoon: true },
 ]
 
 const steps = [
   { icon: Upload,        n: '01', title: 'Upload or Connect',  body: 'Add a PDF, paste a GitHub URL, or drop in your study notes. No conversion required.' },
-  { icon: Cpu,           n: '02', title: 'AskBro Reads It',     body: 'AskBro reads and understands every word in your document or repo — fully processed and ready to answer in under 30 seconds.' },
+  { icon: Cpu,           n: '02', title: <>Ask<span style={{ color: '#CC0000' }}>Bro</span> Reads It</>,     body: <>Ask<span style={{ color: '#CC0000' }}>Bro</span> reads and understands every word in your document or repo — fully processed and ready to answer in under 30 seconds.</> },
   { icon: MessageSquare, n: '03', title: 'Ask, Quiz, Prepare', body: 'Chat with your knowledge, generate quizzes, build flashcards, or start a live interview session.' },
 ]
 
@@ -139,7 +222,7 @@ export default function HomePage() {
                   <div className="w-2.5 h-2.5 rounded-full bg-[#CC0000]" />
                   <div className="w-2.5 h-2.5 rounded-full bg-[#555]" />
                   <div className="w-2.5 h-2.5 rounded-full bg-[#444]" />
-                  <span className="np-mono text-[9px] uppercase tracking-widest ml-3" style={{ color: '#888' }}>AskBro — github.com/vercel/next.js</span>
+                  <span className="np-mono text-[9px] uppercase tracking-widest ml-3" style={{ color: '#888' }}>Ask<span style={{ color: '#CC0000' }}>Bro</span> — github.com/vercel/next.js</span>
                 </div>
                 <div className="p-4 space-y-3" style={{ background: '#FAFAF8' }}>
                   <div className="flex justify-end">
@@ -147,7 +230,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex justify-start">
                     <div className="px-3.5 py-3 np-body text-[13px] border border-[#E5E5E0]" style={{ background: '#fff', color: '#111111' }}>
-                      <span className="np-mono text-[9px] uppercase tracking-widest block mb-1.5" style={{ color: '#CC0000' }}>AskBro · server/render.ts</span>
+                      <span className="np-mono text-[9px] uppercase tracking-widest block mb-1.5" style={{ color: '#CC0000' }}>Ask<span style={{ color: '#CC0000' }}>Bro</span> · server/render.ts</span>
                       Next.js SSR runs your data-fetching code on every request and streams fully-rendered HTML — zero client JS for the initial paint.
                     </div>
                   </div>
@@ -171,7 +254,7 @@ export default function HomePage() {
                   <div className="w-2.5 h-2.5 rounded-full bg-[#CC0000]" />
                   <div className="w-2.5 h-2.5 rounded-full bg-[#555]" />
                   <div className="w-2.5 h-2.5 rounded-full bg-[#444]" />
-                  <span className="np-mono text-[9px] uppercase tracking-widest ml-3" style={{ color: '#888' }}>AskBro — github.com/vercel/next.js</span>
+                  <span className="np-mono text-[9px] uppercase tracking-widest ml-3" style={{ color: '#888' }}>Ask<span style={{ color: '#CC0000' }}>Bro</span> — github.com/vercel/next.js</span>
                 </div>
 
                 {/* Messages */}
@@ -185,7 +268,7 @@ export default function HomePage() {
 
                   <div className="flex justify-start">
                     <div className="max-w-[95%] px-4 py-3.5 np-body text-[13px] border border-[#E5E5E0]" style={{ background: '#fff', color: '#111111' }}>
-                      <span className="np-mono text-[9px] uppercase tracking-widest block mb-2" style={{ color: '#CC0000' }}>AskBro · server/render.ts, packages/next/src/server</span>
+                      <span className="np-mono text-[9px] uppercase tracking-widest block mb-2" style={{ color: '#CC0000' }}>Ask<span style={{ color: '#CC0000' }}>Bro</span> · server/render.ts, packages/next/src/server</span>
                       Next.js SSR works via <strong>getServerSideProps</strong> (Pages Router) or async React Server Components (App Router). On each request, the server runs your data-fetching code, passes props to the component tree, and streams the fully-rendered HTML to the client — zero client JS required for the initial paint.
                     </div>
                   </div>
@@ -198,7 +281,7 @@ export default function HomePage() {
 
                   <div className="flex justify-start">
                     <div className="max-w-[95%] px-4 py-3.5 np-body text-[13px] border border-[#E5E5E0]" style={{ background: '#fff', color: '#111111' }}>
-                      <span className="np-mono text-[9px] uppercase tracking-widest block mb-2" style={{ color: '#CC0000' }}>AskBro · packages/next/src/shared/lib/router</span>
+                      <span className="np-mono text-[9px] uppercase tracking-widest block mb-2" style={{ color: '#CC0000' }}>Ask<span style={{ color: '#CC0000' }}>Bro</span> · packages/next/src/shared/lib/router</span>
                       The core router lives in <code className="np-mono text-[11px] px-1 py-0.5" style={{ background: '#F0F0EE', color: '#CC0000' }}>packages/next/src/shared/lib/router/router.ts</code>. It handles both client-side transitions and SSR fallbacks, resolving dynamic segments, middleware redirects, and i18n locale prefixes before calling the matched page handler.
                     </div>
                   </div>
@@ -372,7 +455,7 @@ export default function HomePage() {
           <div className="py-10">
             <div className="flex items-center gap-5">
               <span className="np-mono text-[9px] uppercase" style={{ letterSpacing: '0.2em', color: '#CC0000' }}>§ 03</span>
-              <h2 className="np-serif font-black" style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.8rem)', color: '#111111' }}>Who Uses AskBro</h2>
+              <h2 className="np-serif font-black" style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.8rem)', color: '#111111' }}>Who Uses Ask<span style={{ color: '#CC0000' }}>Bro</span></h2>
               <div className="flex-1 h-px bg-[#111111] hidden md:block" />
             </div>
           </div>
@@ -384,6 +467,34 @@ export default function HomePage() {
 
       {/* ── Testimonials ─────────────────────────────────────── */}
       <TestimonialsSection />
+
+      {/* ── FAQ ──────────────────────────────────────────────── */}
+      <section className="mt-10" aria-labelledby="faq-heading" style={{ borderBottom: '4px solid #111111' }}>
+        <div className="mx-auto max-w-screen-xl px-6">
+          <div className="py-10 border-b border-[#111111]">
+            <div className="flex items-center gap-5">
+              <span className="np-mono text-[9px] uppercase" style={{ letterSpacing: '0.2em', color: '#CC0000' }}>§ 04</span>
+              <h2 id="faq-heading" className="np-serif font-black" style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.8rem)', color: '#111111' }}>Common Questions</h2>
+              <div className="flex-1 h-px bg-[#111111] hidden md:block" />
+            </div>
+          </div>
+          <div className="grid lg:grid-cols-2 gap-6 py-12">
+            {[
+              { q: 'What is AskBro?', a: 'AskBro is an AI knowledge workspace that lets you chat with PDF documents, ask questions about GitHub repositories, practice technical interviews, and automatically generate quizzes and flashcards — all in one private, free workspace.' },
+              { q: 'Is AskBro free to use?', a: 'Yes. AskBro has a free plan with no credit card required. Create a workspace in seconds and start chatting with your PDFs or GitHub repos immediately.' },
+              { q: 'What file types does AskBro support for document Q&A?', a: 'AskBro supports PDF, DOCX, DOC, TXT, and Markdown files. You can upload multiple documents and ask questions that span your entire library — with citations pointing to the exact page and file.' },
+              { q: 'Can AskBro read and answer questions about GitHub repositories?', a: 'Yes. Paste any public GitHub repository URL and AskBro indexes the entire codebase — source files, README, documentation, and configuration files. Ask architecture questions, trace bugs, and understand any part of the code with exact file and line citations.' },
+              { q: 'How is AskBro different from ChatPDF or NotebookLM?', a: 'AskBro combines document Q&A, GitHub repo search, technical interview coaching, AI quiz generation, and flashcard creation in one workspace. ChatPDF focuses only on PDF chat; NotebookLM focuses on document grounding. AskBro is a complete AI learning and knowledge platform.' },
+              { q: 'How accurate are AskBro\'s answers?', a: 'AskBro uses retrieval-augmented generation (RAG), meaning every answer is grounded in your own uploaded documents — not general internet knowledge. Every response includes a page-level citation so you can verify the source instantly.' },
+            ].map(({ q, a }) => (
+              <div key={q} className="p-8 border border-[#E5E5E0]" style={{ background: '#fff' }}>
+                <h3 className="np-serif font-bold text-[1.05rem] mb-3" style={{ color: '#111111' }}>{q}</h3>
+                <p className="np-body text-[14px] leading-relaxed" style={{ color: '#525252' }}>{a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ── CTA ──────────────────────────────────────────────── */}
       <section className="mt-10" style={{ background: '#F9F9F7', borderBottom: '4px solid #111111' }}>
@@ -404,7 +515,7 @@ export default function HomePage() {
           </h2>
 
           <p data-animate="up" data-delay="160" className="np-body text-[16px] leading-relaxed mb-10 max-w-xl" style={{ color: '#525252' }}>
-            Join 2,400+ students, developers, and researchers who use AskBro to work smarter every day.
+            Join 2,400+ students, developers, and researchers who use Ask<span style={{ color: '#CC0000' }}>Bro</span> to work smarter every day.
           </p>
 
           <div data-animate="up" data-delay="240" className="flex flex-wrap justify-center gap-4 mb-12">

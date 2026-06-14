@@ -190,7 +190,7 @@ export default function UseCasePageShell({ icon: Icon, persona, headline, taglin
             Start working smarter today
           </h2>
           <p data-animate="up" data-delay="160" className="np-body text-[16px] mb-8 max-w-lg" style={{ color: '#525252' }}>
-            Free to start. No credit card required. Join 2,400+ users already on AskBro.
+            Free to start. No credit card required. Join 2,400+ users already on Ask<span style={{ color: '#CC0000' }}>Bro</span>.
           </p>
           <div data-animate="up" data-delay="240">
             <Link href="/create" className="inline-flex items-center gap-2 px-8 py-4 np-sans text-[12px] font-bold uppercase tracking-widest transition-opacity hover:opacity-85" style={{ background: '#CC0000', color: '#F9F9F7', border: '2px solid #CC0000' }}>

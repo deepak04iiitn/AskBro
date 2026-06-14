@@ -5,15 +5,26 @@ import {
 } from 'lucide-react'
 
 export const metadata = {
-  title: 'AI Quiz Generator — Create Quizzes from Documents | AskBro',
-  description: 'Generate multiple-choice, true/false, and short-answer quizzes from any document in seconds. Track scores and identify weak areas. Try free.',
-  keywords: ['AI quiz generator from PDF', 'generate quiz from document', 'AI quiz creator', 'PDF to quiz', 'quiz generator AI', 'AskBro quizzes'],
+  title: 'AI Quiz Generator — Create Quizzes from PDF & Documents in Seconds | AskBro',
+  description: 'Generate multiple-choice, true/false, fill-in-the-blank, and short-answer quizzes from any PDF or document in seconds. Track scores, identify weak areas, and share quizzes with your team. Try free.',
+  keywords: [
+    'AI quiz generator from PDF', 'generate quiz from document', 'AI quiz creator', 'PDF to quiz',
+    'quiz generator AI', 'auto quiz generator', 'create quiz from notes AI', 'AI test generator',
+    'quiz from PDF free', 'AI study quiz', 'generate practice questions from document',
+    'multiple choice quiz generator AI', 'AskBro quizzes', 'document to quiz AI',
+  ],
   alternates: { canonical: 'https://askbro.app/features/quizzes' },
   openGraph: {
-    title: 'AI Quiz Generator — Create Quizzes from Documents | AskBro',
-    description: 'Generate multiple-choice, true/false, and short-answer quizzes from any document in seconds.',
+    title: 'AI Quiz Generator — Create Quizzes from PDF & Documents in Seconds | AskBro',
+    description: 'Generate multiple-choice, true/false, and short-answer quizzes from any document in seconds. Track scores and identify weak areas. Free to try.',
     url: 'https://askbro.app/features/quizzes',
-    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'AskBro AI Quiz Generator' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Quiz Generator — Create Quizzes from PDF & Documents | AskBro',
+    description: 'Turn any PDF or document into a multiple-choice or true/false quiz in seconds. Track scores and study smarter. Free to start.',
+    images: ['/og-image.png'],
   },
 }
 
@@ -23,7 +34,10 @@ const faqJsonLd = {
   mainEntity: [
     { '@type': 'Question', name: 'What types of questions does AskBro generate?', acceptedAnswer: { '@type': 'Answer', text: 'AskBro generates multiple-choice (single and multiple answer), true/false, fill-in-the-blank, and short-answer questions. You can choose the question type or let AskBro decide based on the content.' } },
     { '@type': 'Question', name: 'How many questions can AskBro generate from a document?', acceptedAnswer: { '@type': 'Answer', text: 'AskBro can generate up to 50 questions per document session. You can specify the exact number and question types before generating.' } },
-    { '@type': 'Question', name: 'Can I track my quiz scores over time?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. AskBro tracks your score for each quiz session and shows you which topics and questions you consistently get wrong so you can focus your study.' } },
+    { '@type': 'Question', name: 'Can I track my quiz scores over time?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. AskBro tracks your score for each quiz session and shows you which topics and questions you consistently get wrong so you can focus your study time on weak areas.' } },
+    { '@type': 'Question', name: 'Can I share quizzes with classmates or team members?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. Workspace members can all access the same quizzes and take them independently, each seeing their own score. This makes AskBro ideal for study groups, classrooms, and team knowledge checks.' } },
+    { '@type': 'Question', name: 'How does AskBro quiz generation compare to manually writing questions?', acceptedAnswer: { '@type': 'Answer', text: 'Writing good quiz questions manually takes hours. AskBro generates a complete quiz from any document in seconds, with plausible distractors and difficulty settings. You can edit any generated questions to fine-tune them.' } },
+    { '@type': 'Question', name: 'Does AskBro generate quizzes in different difficulty levels?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. You can set easy, medium, or hard difficulty before generating. AskBro adjusts question complexity and the plausibility of wrong answers to match your chosen difficulty level.' } },
   ],
 }
 
@@ -45,8 +59,10 @@ const steps = [
 const faqItems = [
   { q: 'What types of questions does AskBro generate?', a: 'AskBro generates multiple-choice (single and multiple answer), true/false, fill-in-the-blank, and short-answer questions. You can choose the question type or let AskBro decide based on the content.' },
   { q: 'How many questions can AskBro generate from a document?', a: 'AskBro can generate up to 50 questions per document session. You can specify the exact number and question types before generating.' },
-  { q: 'Can I track my quiz scores over time?', a: 'Yes. AskBro tracks your score for each quiz session and shows you which topics and questions you consistently get wrong so you can focus your study.' },
-  { q: 'Can I use quizzes for a team or classroom?', a: 'Yes. Share quizzes with your workspace members. Any workspace member can take the same quiz and see their individual scores.' },
+  { q: 'Can I track my quiz scores over time?', a: 'Yes. AskBro tracks your score for each quiz session and shows you which topics and questions you consistently get wrong so you can focus your study time on weak areas.' },
+  { q: 'Can I use quizzes for a team or classroom?', a: 'Yes. Workspace members can all access the same quizzes and take them independently, each seeing their own score. Ideal for study groups, classrooms, and team knowledge checks.' },
+  { q: 'How does AskBro quiz generation compare to writing questions manually?', a: 'Writing good quiz questions manually takes hours. AskBro generates a complete quiz from any document in seconds, with plausible distractors and difficulty settings. You can edit any generated question to fine-tune it.' },
+  { q: 'Does AskBro generate quizzes in different difficulty levels?', a: 'Yes. Set easy, medium, or hard difficulty before generating. AskBro adjusts question complexity and the plausibility of wrong answers to match your chosen level.' },
 ]
 
 const related = [

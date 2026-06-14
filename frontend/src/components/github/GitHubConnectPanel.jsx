@@ -205,7 +205,7 @@ export default function GitHubConnectPanel({ status, onStatusChange }) {
           </div>
           <div className="p-6">
             <p className="np-body text-[13px] leading-[1.65] mb-5" style={{ color: '#3D3C3A' }}>
-              Authorise AskBro on GitHub. This gives access to all your repos — public and private — plus any organisations you belong to. No token copying required.
+              Authorise Ask<span style={{ color: '#CC0000' }}>Bro</span> on GitHub. This gives access to all your repos — public and private — plus any organisations you belong to. No token copying required.
             </p>
             {error && (
               <div className="px-4 py-3 mb-4" style={{ borderLeft: '3px solid #CC0000' }}>

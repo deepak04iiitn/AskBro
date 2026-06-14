@@ -13,6 +13,7 @@ const NAV_LINKS = [
     children: [
       { href: '/features/document-qa',    label: 'Document Q&A',    sub: 'Chat with PDFs & docs' },
       { href: '/features/github-repo',    label: 'GitHub Repo Q&A', sub: 'Understand any codebase' },
+      { href: '/features/integrations',   label: 'Integrations',    sub: 'Connect Notion & GitHub' },
       { href: '/features/interview-prep', label: 'Interview Prep',  sub: 'Ace technical interviews', comingSoon: true },
       { href: '/features/quizzes',        label: 'AI Quizzes',      sub: 'Generate quizzes from docs', comingSoon: true },
       { href: '/features/flashcards',     label: 'Flashcards',      sub: 'Spaced-repetition study',    comingSoon: true },
@@ -37,6 +38,12 @@ const NAV_LINKS = [
   },
   { label: 'Blog', href: '/blog' },
 ]
+
+function renderLabel(label) {
+  if (!label.includes('AskBro')) return label
+  const [before, after] = label.split('AskBro')
+  return <>{before}Ask<span style={{ color: '#CC0000' }}>Bro</span>{after}</>
+}
 
 function DropdownMenu({ label, children }) {
   const [open, setOpen] = useState(false)
@@ -84,7 +91,7 @@ function DropdownMenu({ label, children }) {
               className="block px-4 py-2.5 border-b border-[#E5E5E0] last:border-b-0 transition-colors duration-150 hover:bg-[#111111] hover:text-[#F9F9F7] group"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="np-sans text-[11px] font-semibold uppercase tracking-widest block">{item.label}</span>
+                <span className="np-sans text-[11px] font-semibold uppercase tracking-widest block">{renderLabel(item.label)}</span>
                 {item.comingSoon && (
                   <span className="np-mono text-[8px] font-bold uppercase shrink-0 px-1.5 py-0.5" style={{ background: '#F0EDE6', color: '#737373', border: '1px solid #D9D7D2', letterSpacing: '0.1em' }}>
                     Soon
@@ -147,7 +154,7 @@ export default function Navbar() {
                 className="np-serif font-black tracking-tight leading-none"
                 style={{ fontSize: '1.75rem', color: '#111111' }}
               >
-                AskBro
+                Ask<span style={{ color: '#CC0000' }}>Bro</span>
               </span>
             </div>
           </Link>
@@ -259,7 +266,7 @@ export default function Navbar() {
                             className="flex items-center justify-between py-2.5 np-sans text-[11px] font-semibold uppercase tracking-widest hover:text-[#CC0000] transition-colors border-b border-[#E5E5E0] last:border-b-0"
                             style={{ color: '#525252' }}
                           >
-                            {child.label}
+                            {renderLabel(child.label)}
                             {child.comingSoon && (
                               <span className="np-mono text-[8px] font-bold uppercase px-1.5 py-0.5 ml-2" style={{ background: '#F0EDE6', color: '#737373', border: '1px solid #D9D7D2', letterSpacing: '0.1em' }}>
                                 Soon

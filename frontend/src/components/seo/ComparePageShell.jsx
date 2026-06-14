@@ -45,7 +45,7 @@ export default function ComparePageShell({ competitor, headline, tagline, descri
           <span>/</span>
           <span>Compare</span>
           <span>/</span>
-          <span style={{ color: '#111111' }}>AskBro vs {competitor}</span>
+          <span style={{ color: '#111111' }}>Ask<span style={{ color: '#CC0000' }}>Bro</span> vs {competitor}</span>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export default function ComparePageShell({ competitor, headline, tagline, descri
                 <thead>
                   <tr style={{ borderBottom: '2px solid #111111' }}>
                     <th className="p-5 text-left np-mono text-[10px] uppercase tracking-widest font-semibold border-r border-[#E5E5E0]" style={{ color: '#737373', width: '40%', background: '#F9F9F7' }}>Feature</th>
-                    <th className="p-5 text-center np-sans text-[13px] font-black uppercase border-r border-[#E5E5E0]" style={{ color: '#111111', background: 'rgba(204,0,0,0.04)' }}>AskBro</th>
+                    <th className="p-5 text-center np-sans text-[13px] font-black uppercase border-r border-[#E5E5E0]" style={{ color: '#111111', background: 'rgba(204,0,0,0.04)' }}>Ask<span style={{ color: '#CC0000' }}>Bro</span></th>
                     <th className="p-5 text-center np-sans text-[13px] font-semibold uppercase" style={{ color: '#A3A3A3', background: '#F9F9F7' }}>{competitor}</th>
                   </tr>
                 </thead>
@@ -114,7 +114,7 @@ export default function ComparePageShell({ competitor, headline, tagline, descri
             <div className="py-10">
               <div data-animate="left" className="flex items-center gap-5">
                 <span className="np-mono text-[9px] uppercase" style={{ letterSpacing: '0.2em', color: '#CC0000' }}>§ 02</span>
-                <h2 className="np-serif font-black" style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.8rem)', color: '#111111' }}>Why AskBro Wins</h2>
+                <h2 className="np-serif font-black" style={{ fontSize: 'clamp(1.6rem, 3.5vw, 2.8rem)', color: '#111111' }}>Why Ask<span style={{ color: '#CC0000' }}>Bro</span> Wins</h2>
                 <div className="flex-1 h-px bg-[#111111] hidden md:block" />
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function ComparePageShell({ competitor, headline, tagline, descri
         <div className="mx-auto max-w-screen-xl px-6 py-20 flex flex-col items-center text-center">
           <p data-animate="up" className="np-mono text-[10px] font-semibold uppercase mb-5 px-3 py-1.5 border border-[#E5E5E0]" style={{ letterSpacing: '0.2em', color: '#CC0000', background: 'rgba(204,0,0,0.05)' }}>★ The Verdict</p>
           <h2 data-animate="up" data-delay="80" className="np-serif font-black mb-5 max-w-2xl" style={{ fontSize: 'clamp(2rem, 4.5vw, 3.5rem)', color: '#111111', lineHeight: 0.95, letterSpacing: '-0.02em' }}>
-            Make the switch to AskBro
+            Make the switch to Ask<span style={{ color: '#CC0000' }}>Bro</span>
           </h2>
           <p data-animate="up" data-delay="160" className="np-body text-[16px] mb-8 max-w-lg" style={{ color: '#525252' }}>
             Free to start. No credit card required. See the difference yourself.

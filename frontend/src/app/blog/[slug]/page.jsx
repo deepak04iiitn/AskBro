@@ -19,7 +19,23 @@ export async function generateMetadata({ params }) {
     description: post.description,
     keywords: post.tags ?? [],
     alternates: { canonical: `https://askbro.app/blog/${post.slug}` },
-    openGraph: { type: 'article', title: post.title, description: post.description, url: `https://askbro.app/blog/${post.slug}`, images: [{ url: '/og-image.png', width: 1200, height: 630 }] },
+    openGraph: {
+      type: 'article',
+      title: post.title,
+      description: post.description,
+      url: `https://askbro.app/blog/${post.slug}`,
+      images: [{ url: '/og-image.png', width: 1200, height: 630, alt: post.title }],
+      publishedTime: post.date,
+      modifiedTime: post.updated_at ?? post.date,
+      authors: [post.author ?? 'AskBro Team'],
+      tags: post.tags ?? [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.description,
+      images: ['/og-image.png'],
+    },
   }
 }
 
@@ -110,11 +126,22 @@ export default async function BlogPostPage({ params }) {
   const readingTime = post.reading_time ?? post.readingTime
 
   const articleJsonLd = {
-    '@context': 'https://schema.org', '@type': 'Article',
-    headline: post.title, description: post.description, datePublished: post.date,
-    author: { '@type': 'Organization', name: post.author ?? 'AskBro', url: 'https://askbro.app' },
-    publisher: { '@type': 'Organization', name: 'AskBro', url: 'https://askbro.app', logo: { '@type': 'ImageObject', url: 'https://askbro.app/AskBro_Logo.png' } },
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.description,
+    datePublished: post.date,
+    dateModified: post.updated_at ?? post.date,
+    image: { '@type': 'ImageObject', url: 'https://askbro.app/og-image.png', width: 1200, height: 630 },
+    author: { '@type': 'Organization', name: post.author ?? 'AskBro Team', url: 'https://askbro.app' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'AskBro',
+      url: 'https://askbro.app',
+      logo: { '@type': 'ImageObject', url: 'https://askbro.app/AskBro_Logo.png', width: 512, height: 512 },
+    },
     mainEntityOfPage: { '@type': 'WebPage', '@id': `https://askbro.app/blog/${post.slug}` },
+    keywords: post.tags?.join(', '),
   }
 
   // Related: other published posts sharing at least one tag

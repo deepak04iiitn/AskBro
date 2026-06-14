@@ -5,15 +5,27 @@ import {
 } from 'lucide-react'
 
 export const metadata = {
-  title: 'GitHub Repo Q&A — Understand Any Codebase with AI | AskBro',
-  description: 'Paste a GitHub URL and ask questions about the codebase. AskBro indexes the code, docs and README then gives cited answers. Try it free.',
-  keywords: ['ask questions about GitHub repo', 'AI code explainer', 'GitHub codebase Q&A', 'AI code search', 'understand codebase with AI', 'AskBro GitHub'],
+  title: 'GitHub Repo Q&A — Ask Questions About Any Codebase with AI | AskBro',
+  description: 'Paste any GitHub URL and ask questions about the codebase in plain English. AskBro indexes every file, the README, and docs, then gives cited answers with exact file paths and line numbers. Try it free.',
+  keywords: [
+    'ask questions about GitHub repo', 'AI code explainer', 'GitHub codebase Q&A', 'AI code search',
+    'understand codebase with AI', 'AI GitHub assistant', 'codebase navigator AI',
+    'understand open source codebase', 'GitHub repo AI chat', 'AI code understanding tool',
+    'ask questions about source code', 'AI developer tool', 'code search AI', 'onboard to codebase AI',
+    'AskBro GitHub', 'legacy code AI', 'GitHub repo summarizer',
+  ],
   alternates: { canonical: 'https://askbro.app/features/github-repo' },
   openGraph: {
-    title: 'GitHub Repo Q&A — Understand Any Codebase with AI | AskBro',
-    description: 'Paste a GitHub URL and ask questions about the codebase. Code cited answers, instantly.',
+    title: 'GitHub Repo Q&A — Ask Questions About Any Codebase with AI | AskBro',
+    description: 'Paste a GitHub URL and ask architecture questions, trace bugs, and understand any codebase — with exact file and line citations. Free to try.',
     url: 'https://askbro.app/features/github-repo',
-    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'AskBro GitHub Repo Q&A' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'GitHub Repo Q&A — Understand Any Codebase with AI | AskBro',
+    description: 'Paste a GitHub URL and ask questions about the codebase. Get cited answers with exact file and line numbers. Free to start.',
+    images: ['/og-image.png'],
   },
 }
 
@@ -21,9 +33,12 @@ const faqJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
   mainEntity: [
-    { '@type': 'Question', name: 'How does AskBro index a GitHub repository?', acceptedAnswer: { '@type': 'Answer', text: 'AskBro clones the public repository, reads all code files, the README, and documentation, then builds a semantic vector index that enables natural-language questions about the codebase.' } },
+    { '@type': 'Question', name: 'How does AskBro index a GitHub repository?', acceptedAnswer: { '@type': 'Answer', text: 'AskBro clones the public repository, reads all code files, the README, and documentation, then builds a semantic vector index that enables natural-language questions about the codebase. Most repositories are indexed in under two minutes.' } },
     { '@type': 'Question', name: 'Does AskBro support private GitHub repositories?', acceptedAnswer: { '@type': 'Answer', text: 'AskBro currently supports public GitHub repositories. Private repo support with personal access tokens is on the roadmap.' } },
-    { '@type': 'Question', name: 'What languages and file types can AskBro index?', acceptedAnswer: { '@type': 'Answer', text: 'AskBro indexes most programming languages including Python, JavaScript, TypeScript, Go, Rust, Java, C++, and more. It also reads Markdown documentation and configuration files.' } },
+    { '@type': 'Question', name: 'What programming languages and file types can AskBro index?', acceptedAnswer: { '@type': 'Answer', text: 'AskBro indexes most programming languages including Python, JavaScript, TypeScript, Go, Rust, Java, C++, Ruby, PHP, and more. It also reads Markdown documentation, YAML and JSON configuration files, and README files.' } },
+    { '@type': 'Question', name: 'Can I ask questions about multiple GitHub repositories at once?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. Add multiple repositories to your workspace and AskBro will search across all of them, citing which repo and file each answer came from.' } },
+    { '@type': 'Question', name: 'How is AskBro GitHub Q&A different from GitHub Copilot?', acceptedAnswer: { '@type': 'Answer', text: 'GitHub Copilot is an inline code completion tool that helps you write code. AskBro GitHub Repo Q&A lets you ask natural-language questions about an existing codebase — understanding architecture, tracing bugs, and onboarding to a new repo — with answers that cite specific files and lines.' } },
+    { '@type': 'Question', name: 'How long does it take to index a large GitHub repository?', acceptedAnswer: { '@type': 'Answer', text: 'Most repositories index in under two minutes. Very large monorepos (100,000+ files) may take slightly longer. AskBro prioritises source files, README, and documentation for fast initial indexing.' } },
   ],
 }
 
@@ -43,10 +58,12 @@ const steps = [
 ]
 
 const faqItems = [
-  { q: 'How does AskBro index a GitHub repository?', a: 'AskBro clones the public repository, reads all code files, the README, and documentation, then builds a semantic vector index that enables natural-language questions about the codebase.' },
+  { q: 'How does AskBro index a GitHub repository?', a: 'AskBro clones the public repository, reads all code files, the README, and documentation, then builds a semantic vector index that enables natural-language questions about the codebase. Most repositories are fully indexed in under two minutes.' },
   { q: 'Does AskBro support private GitHub repositories?', a: 'AskBro currently supports public GitHub repositories. Private repo support with personal access tokens is on the roadmap.' },
-  { q: 'What languages and file types can AskBro index?', a: 'AskBro indexes most programming languages including Python, JavaScript, TypeScript, Go, Rust, Java, C++, and more. It also reads Markdown documentation and configuration files.' },
+  { q: 'What programming languages and file types can AskBro index?', a: 'AskBro indexes most programming languages including Python, JavaScript, TypeScript, Go, Rust, Java, C++, Ruby, PHP, and more. It also reads Markdown documentation, YAML/JSON configuration files, and README files.' },
   { q: 'Can I ask questions about multiple repositories at once?', a: 'Yes. Add multiple repositories to your workspace and AskBro will search across all of them, citing which repo and file each answer came from.' },
+  { q: 'How is AskBro GitHub Q&A different from GitHub Copilot?', a: 'GitHub Copilot is an inline code completion tool that helps you write new code. AskBro GitHub Repo Q&A helps you understand existing codebases — asking architecture questions, tracing bugs, and onboarding — with answers that cite specific files and line numbers.' },
+  { q: 'How long does it take to index a large GitHub repository?', a: 'Most repositories index in under two minutes. Very large monorepos may take slightly longer. AskBro prioritises source files and README for fast initial indexing.' },
 ]
 
 const related = [

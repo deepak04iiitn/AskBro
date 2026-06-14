@@ -9,6 +9,7 @@ const footerSections = [
     links: [
       { href: '/features/document-qa',    label: 'Document Q&A' },
       { href: '/features/github-repo',    label: 'GitHub Repo Q&A' },
+      { href: '/features/integrations',   label: 'Integrations' },
       { href: '/features/interview-prep', label: 'Interview Prep' },
       { href: '/features/quizzes',        label: 'AI Quizzes' },
       { href: '/features/flashcards',     label: 'Flashcards' },
@@ -67,7 +68,7 @@ export default function PublicLayout({ children }) {
             <div className="max-w-md">
               <Link href="/" className="flex items-center gap-3 mb-5" aria-label="AskBro">
                 <img src="/AskBro_Logo.png" alt="AskBro" className="h-10 w-10 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
-                <span className="np-serif font-black leading-none tracking-tight" style={{ fontSize: '2rem', color: '#F9F9F7' }}>AskBro</span>
+                <span className="np-serif font-black leading-none tracking-tight" style={{ fontSize: '2rem', color: '#F9F9F7' }}>Ask<span style={{ color: '#CC0000' }}>Bro</span></span>
               </Link>
                 <p className="np-body text-[14px] leading-relaxed mb-6" style={{ color: '#999' }}>
                   The AI workspace that turns your documents, GitHub repos, and study material into answers — instantly.
@@ -132,7 +133,7 @@ export default function PublicLayout({ children }) {
         {/* Bottom bar */}
         <div className="mx-auto max-w-screen-xl px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-3" style={{ borderTop: '1px solid #1A1A1A' }}>
           <p className="np-mono text-[10px] uppercase" style={{ letterSpacing: '0.15em', color: '#555' }}>
-            © {year} AskBro · All rights reserved
+            © {year} Ask<span style={{ color: '#CC0000' }}>Bro</span> · All rights reserved
           </p>
           <p className="np-mono text-[10px] uppercase" style={{ letterSpacing: '0.15em', color: '#555' }}>
             Built for curious minds · AI Edition

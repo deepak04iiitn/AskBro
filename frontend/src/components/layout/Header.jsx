@@ -8,7 +8,7 @@ export default function Header() {
 
   return (
     <header className="h-14 border-b border-zinc-200 bg-white flex items-center px-4 shrink-0">
-      <span className="text-base font-bold tracking-tight text-zinc-900 select-none">AskBro</span>
+      <span className="text-base font-bold tracking-tight text-zinc-900 select-none">Ask<span style={{ color: '#CC0000' }}>Bro</span></span>
 
       <div className="ml-auto flex items-center gap-3">
         {user && (

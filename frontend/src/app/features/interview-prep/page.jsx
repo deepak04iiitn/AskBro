@@ -5,15 +5,27 @@ import {
 } from 'lucide-react'
 
 export const metadata = {
-  title: 'AI Interview Prep — Ace Technical Interviews | AskBro',
-  description: 'Practice DSA, system design and behavioural interviews with AI coaching. Upload a job description for targeted prep. Get instant feedback. Try free.',
-  keywords: ['AI interview prep', 'technical interview practice AI', 'coding interview AI coach', 'system design interview prep', 'DSA interview practice', 'AskBro interview prep'],
+  title: 'AI Interview Prep — Practice DSA, System Design & Behavioural Interviews | AskBro',
+  description: 'Practice data structures, system design, and behavioural interviews with AI coaching and instant scored feedback. Upload a job description for targeted prep tailored to the exact role. Try free.',
+  keywords: [
+    'AI interview prep', 'technical interview practice AI', 'coding interview AI coach',
+    'system design interview prep', 'DSA interview practice', 'AI mock interview',
+    'behavioural interview AI', 'STAR method interview practice', 'job description interview prep',
+    'software engineering interview prep AI', 'LeetCode AI coach', 'AI technical interview simulator',
+    'interview prep tool free', 'AskBro interview prep', 'AI interview feedback',
+  ],
   alternates: { canonical: 'https://askbro.app/features/interview-prep' },
   openGraph: {
-    title: 'AI Interview Prep — Ace Technical Interviews | AskBro',
-    description: 'Practice DSA, system design and behavioural interviews with AI coaching and instant feedback.',
+    title: 'AI Interview Prep — Practice DSA, System Design & Behavioural Interviews | AskBro',
+    description: 'Practice technical and behavioural interviews with AI coaching. Upload a job description for targeted prep and get instant scored feedback. Free to try.',
     url: 'https://askbro.app/features/interview-prep',
-    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'AskBro AI Interview Prep' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AI Interview Prep — Practice DSA, System Design & Behavioural Interviews | AskBro',
+    description: 'Upload a job description, practice targeted interview questions, and get honest scored AI feedback. Free to start.',
+    images: ['/og-image.png'],
   },
 }
 
@@ -22,8 +34,11 @@ const faqJsonLd = {
   '@type': 'FAQPage',
   mainEntity: [
     { '@type': 'Question', name: 'What types of interviews does AskBro help with?', acceptedAnswer: { '@type': 'Answer', text: 'AskBro supports technical coding (DSA), system design, behavioural (STAR method), and company-specific interview preparation. You can also upload a job description for highly targeted practice.' } },
-    { '@type': 'Question', name: 'How does AskBro give feedback on interview answers?', acceptedAnswer: { '@type': 'Answer', text: 'AskBro analyses your answer for completeness, accuracy, communication clarity, and depth. It provides a score and specific suggestions on what to improve for each answer.' } },
+    { '@type': 'Question', name: 'How does AskBro give feedback on interview answers?', acceptedAnswer: { '@type': 'Answer', text: 'AskBro analyses your answer for completeness, accuracy, communication clarity, and depth. It provides a score and specific suggestions on what to improve for each answer — not generic feedback.' } },
     { '@type': 'Question', name: 'Can I practice with a specific job description?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. Paste or upload a job description and AskBro tailors the interview questions to match the role, company, and required skills mentioned in the JD.' } },
+    { '@type': 'Question', name: 'Is AskBro interview prep only for software engineers?', acceptedAnswer: { '@type': 'Answer', text: 'No. While AskBro is especially powerful for technical roles, behavioural and general interview prep works for any role — product managers, data scientists, designers, and more.' } },
+    { '@type': 'Question', name: 'How is AskBro interview prep different from LeetCode?', acceptedAnswer: { '@type': 'Answer', text: 'LeetCode is a problem bank you practice from on your own. AskBro acts as an AI interviewer: it asks questions, evaluates your specific answers, gives a score, and provides a model answer with improvement tips. It also covers system design and behavioural rounds, not just coding problems.' } },
+    { '@type': 'Question', name: 'Can I do unlimited interview practice sessions?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. AskBro generates fresh questions every session so you are never memorising the same scenarios. Practice as many times as you need until you feel genuinely confident.' } },
   ],
 }
 
@@ -44,9 +59,11 @@ const steps = [
 
 const faqItems = [
   { q: 'What types of interviews does AskBro help with?', a: 'AskBro supports technical coding (DSA), system design, behavioural (STAR method), and company-specific interview preparation. You can also upload a job description for highly targeted practice.' },
-  { q: 'How does AskBro give feedback on interview answers?', a: 'AskBro analyses your answer for completeness, accuracy, communication clarity, and depth. It provides a score and specific suggestions on what to improve for each answer.' },
+  { q: 'How does AskBro give feedback on interview answers?', a: 'AskBro analyses your answer for completeness, accuracy, communication clarity, and depth. It provides a score and specific suggestions on what to improve for each answer — not generic feedback.' },
   { q: 'Can I practice with a specific job description?', a: 'Yes. Paste or upload a job description and AskBro tailors the interview questions to match the role, company, and required skills mentioned in the JD.' },
-  { q: 'Is AskBro interview prep only for software engineers?', a: 'No. While AskBro is especially powerful for technical roles, behavioural and general interview prep work for any role. The job-description feature makes it relevant for product managers, data scientists, designers, and more.' },
+  { q: 'Is AskBro interview prep only for software engineers?', a: 'No. While AskBro is especially powerful for technical roles, behavioural and general interview prep works for any role — product managers, data scientists, designers, and more.' },
+  { q: 'How is AskBro interview prep different from LeetCode?', a: 'LeetCode is a problem bank you practice from on your own. AskBro acts as an AI interviewer: it asks questions, evaluates your specific answers, gives a score, and provides a model answer with improvement tips. It also covers system design and behavioural rounds, not just coding problems.' },
+  { q: 'Can I do unlimited interview practice sessions?', a: 'Yes. AskBro generates fresh questions every session so you are never memorising the same scenarios. Practice as many times as you need until you feel genuinely confident.' },
 ]
 
 const related = [

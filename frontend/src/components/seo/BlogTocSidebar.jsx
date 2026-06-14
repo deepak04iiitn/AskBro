@@ -79,7 +79,7 @@ export default function BlogTocSidebar({ content }) {
 
         {/* CTA box */}
         <div className="border-t border-[#111111] p-5" style={{ background: '#111111' }}>
-          <p className="np-sans text-[11px] font-semibold mb-1" style={{ color: '#F9F9F7' }}>Try AskBro free</p>
+          <p className="np-sans text-[11px] font-semibold mb-1" style={{ color: '#F9F9F7' }}>Try Ask<span style={{ color: '#CC0000' }}>Bro</span> free</p>
           <p className="np-mono text-[10px] mb-3" style={{ color: '#737373' }}>No credit card needed.</p>
           <a
             href="/create"

@@ -7,9 +7,28 @@ import { fetchPublishedPosts } from '@/lib/blogApi'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'The AskBro Journal — AI, Study Tips & Developer Guides',
-  description: 'Tips, guides, and insights for students, developers, and teams using AI to learn faster.',
+  title: 'The AskBro Journal — AI Study Tips, Developer Guides & PDF Chat Tutorials',
+  description: 'In-depth guides on chatting with PDFs using AI, understanding GitHub codebases, technical interview prep strategies, generating flashcards from notes, and the best AI study tools for students and developers in 2026.',
+  keywords: [
+    'AI study tips', 'chat with PDF guide', 'how to use AI for studying',
+    'GitHub codebase AI tutorial', 'AI interview prep tips', 'generate flashcards from notes',
+    'best AI tools for students 2026', 'AI document Q&A guide', 'developer AI tools',
+    'spaced repetition AI', 'RAG tutorial', 'AskBro blog',
+  ],
   alternates: { canonical: 'https://askbro.app/blog' },
+  openGraph: {
+    type: 'website',
+    title: 'The AskBro Journal — AI Study Tips, Developer Guides & PDF Chat Tutorials',
+    description: 'Guides on chatting with PDFs, understanding GitHub codebases, AI interview prep, flashcard generation, and the best AI study tools.',
+    url: 'https://askbro.app/blog',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'The AskBro Journal' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'The AskBro Journal — AI Study Tips & Developer Guides',
+    description: 'Guides on AI tools for studying, PDF chat, GitHub codebase Q&A, and technical interview prep.',
+    images: ['/og-image.png'],
+  },
 }
 
 export default async function BlogIndexPage() {

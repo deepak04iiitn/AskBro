@@ -103,7 +103,7 @@ export default function PersonaTabs() {
               <X className="w-3 h-3" style={{ color: '#CC0000' }} strokeWidth={2.5} />
             </div>
             <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#CC0000' }}>
-              Before AskBro
+              Before Ask<span style={{ color: '#CC0000' }}>Bro</span>
             </p>
           </div>
           <ul className="space-y-4">
@@ -123,7 +123,7 @@ export default function PersonaTabs() {
               <Check className="w-3 h-3" style={{ color: '#F9F9F7' }} strokeWidth={2.5} />
             </div>
             <p className="np-mono text-[9px] font-bold uppercase tracking-[0.2em]" style={{ color: '#111111' }}>
-              With AskBro
+              With Ask<span style={{ color: '#CC0000' }}>Bro</span>
             </p>
           </div>
           <ul className="space-y-4 mb-8">

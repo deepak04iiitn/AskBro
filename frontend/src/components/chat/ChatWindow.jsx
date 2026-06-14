@@ -109,7 +109,7 @@ function EmptyState({ readyCount, onSuggest }) {
       </h2>
       {readyCount === 0 && (
         <p className="np-body text-[14px] leading-relaxed max-w-sm mt-3" style={{ color: '#737373' }}>
-          Upload a document or connect Notion to start asking questions.
+          Upload a document or connect GitHub / Notion to start asking questions.
         </p>
       )}
 
@@ -121,7 +121,7 @@ function EmptyState({ readyCount, onSuggest }) {
           </Link>
           <Link href="/integrations" className="btn-outline-ink inline-flex items-center gap-1.5 px-5 h-10">
             <Puzzle className="w-3.5 h-3.5" strokeWidth={2} />
-            Connect Notion
+            Connect GitHub / Notion
           </Link>
         </div>
       )}

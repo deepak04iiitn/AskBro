@@ -421,7 +421,7 @@ export default function IntegrationsPage() {
         <Sidebar />
       </div>
 
-      <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#F0F4FF' }}>
+      <main className="flex-1 overflow-y-auto" style={{ backgroundColor: '#F0EDE6' }}>
 
         {/* ── Top bar ─────────────────────────────────────────── */}
         <div

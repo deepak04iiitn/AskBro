@@ -11,4 +11,4 @@ Disallow: /onboarding/
 Disallow: /integrations
 Disallow: /integrations/
 
-Sitemap: https://askbro.app/sitemap.xml
+Sitemap: https://www.askbro.pro/sitemap.xml

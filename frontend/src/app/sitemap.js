@@ -1,6 +1,6 @@
 import { fetchPublishedPosts } from '@/lib/blogApi'
 
-const BASE = 'https://askbro.app'
+const BASE = 'https://www.askbro.pro'
 
 export default async function sitemap() {
   // Dynamically include all published blog posts

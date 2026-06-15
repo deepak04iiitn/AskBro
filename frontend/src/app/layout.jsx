@@ -86,6 +86,9 @@ const globalJsonLd = [
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
+      <head>
+        <Script src="https://analytics.ahrefs.com/analytics.js" data-key="AIGYHFnQ7Twif1b5wYVqKA" strategy="beforeInteractive" />
+      </head>
       <body
         className="min-h-screen"
         style={{
@@ -97,7 +100,6 @@ export default function RootLayout({ children }) {
         <JsonLd data={globalJsonLd} />
         {children}
         <RateLimitOverlay />
-        <Script src="https://analytics.ahrefs.com/analytics.js" data-key="AIGYHFnQ7Twif1b5wYVqKA" strategy="afterInteractive" />
       </body>
     </html>
   )

@@ -1,5 +1,6 @@
 import './globals.css'
 import { Inter, JetBrains_Mono } from 'next/font/google'
+import Script from 'next/script'
 import RateLimitOverlay from '@/components/RateLimitOverlay'
 import JsonLd from '@/components/seo/JsonLd'
 
@@ -96,6 +97,7 @@ export default function RootLayout({ children }) {
         <JsonLd data={globalJsonLd} />
         {children}
         <RateLimitOverlay />
+        <Script src="https://analytics.ahrefs.com/analytics.js" data-key="AIGYHFnQ7Twif1b5wYVqKA" strategy="afterInteractive" />
       </body>
     </html>
   )

@@ -75,7 +75,7 @@ export default function AdminLoginPage() {
           <p className="np-body text-[13px] mb-7" style={{ color: '#737373' }}>
             {step === 'credentials'
               ? 'Enter your admin credentials to receive a one-time password.'
-              : `Enter the 6-digit OTP sent to ${email}`}
+              : 'Enter the 6-digit OTP sent to your registered email.'}
           </p>
 
           <AnimatePresence mode="wait">
